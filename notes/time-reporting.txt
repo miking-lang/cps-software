@@ -1,0 +1,12 @@
+21/11:
+Frej: The meeting about how to structure the git repo and libraries etc. Worked with 3D-prints for the spider. 1,5h
+Martin: Meeting, see above 1h
+
+22/11:
+Frej: Status meeting. Printed parts and cleaned parts. Found a setting on the printer that lowers the temperature after it is done. I enabled that setting to save energy. Explained parts of the code to Wiktor. 2h
+
+23/11:
+Frej: Changed some dimensions and printed and cleaned parts. Read more about the setting stand-by settings. 1h
+
+24/11:
+Frej: Printed some parts, hopefully the last ones. 0,5h

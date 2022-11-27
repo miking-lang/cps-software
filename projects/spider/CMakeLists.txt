@@ -11,6 +11,10 @@ target_link_libraries(cps_dxl PUBLIC
 	dxl_x64_c
 )
 
+# CPS Accelerometer library
+add_library(cps_accel STATIC
+	"${CPS_LIBRARY_DIR}/accel/accel.c")
+
 # Spider controller
 add_executable(spider
 	src/main.c
@@ -24,11 +28,13 @@ target_compile_definitions(spider PUBLIC
 target_include_directories(spider PUBLIC
 	src/
 	"${CPS_LIBRARY_DIR}/dxl/"
+	"${CPS_LIBRARY_DIR}/accel/"
 )
-target_link_directories(spider PUBLIC
+target_link_directories(cps_dxl PUBLIC
 	# This is where DynamixelSDK's libraries end up by default
 	/usr/local/lib/
 )
 target_link_libraries(spider PUBLIC
 	cps_dxl
+	cps_accel
 )

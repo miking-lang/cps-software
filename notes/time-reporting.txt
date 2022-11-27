@@ -10,3 +10,12 @@ Frej: Changed some dimensions and printed and cleaned parts. Read more about the
 
 24/11:
 Frej: Printed some parts, hopefully the last ones. 0,5h
+
+25/11:
+Frej: Added some files to the new repos. Started to read about how to make C-libraries. Rinsed off the last parts after the cleaning. 2h
+
+27/11:
+Frej: Weighted the parts and took photos of them. Tested to insert threaded inserts into the ABS plastic. Reprinted lower elbow because the stick was too thick for the ball bearing. 3h
+
+Next week:
+Assemble the spider and test the code for the motors on an assembled spider.

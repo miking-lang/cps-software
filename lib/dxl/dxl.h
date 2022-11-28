@@ -56,6 +56,8 @@ void dxl_print_error(void);
 // Changes the dynamixel servo's profile to the time profile, and moves to the specified angle during a specified time period (seconds)
 dxl_err_t dxl_servo_move_duration(uint8_t id, uint32_t angle, uint32_t duration);
 
+dxl_err_t dxl_servo_move_duration_abs(uint8_t id, uint32_t angle, uint32_t duration);
+
 // Changes the dynamixel servo's profile to the velocity profile, and moves to the specified angle with a specified velocity (revolutions/min)
 void dxl_servo_move_velocity(uint8_t id, uint32_t angle, uint32_t speed, bool relative);
 

@@ -178,3 +178,23 @@ dxl_err_t dxl_servo_move_duration(uint8_t id, uint32_t angle, uint32_t duration)
 
     DXL_RET_ON_ERR(ret = setGoalPosition(id, angle));
 }
+
+dxl_err_t dxl_servo_move_duration_abs(uint8_t id, uint32_t angle, uint32_t duration) {
+    dxl_err_t ret;
+    
+    // In order to change drive mode, which is located in the EEPROM data storage, we need to disable torqe
+    DXL_RET_ON_ERR(disable_torque(id));    
+    
+    //Set current drive mode to time profile
+    DXL_RET_ON_ERR(ret = setDriveMode(id, TIME_PROFILE));
+    
+    // Enable torque again
+    DXL_RET_ON_ERR(setEnableTorque(id) != DXL_ERR_OK);
+    // Set the duration, which is the profile velocity when in time profile
+    DXL_RET_ON_ERR(setProfileVelocity(id, duration));
+    
+    // Profile acceleration represents the time during which to accelerate, I set this to 1/5th of the total time:
+    DXL_RET_ON_ERR(setProfileAcceleration(id, duration/5));
+
+    DXL_RET_ON_ERR(ret = setGoalPosition(id, angle));
+}

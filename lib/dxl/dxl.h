@@ -5,6 +5,8 @@
 #include <stdbool.h>
 
 #define DXL_ERROR_CHECK(stmt) if ((stmt) != DXL_ERR_OK) { dxl_print_error(); abort(); }
+#define DXL_RET_ON_ERR(stmt) if ((ret = (stmt)) != DXL_ERR_OK) { return ret; }
+
 
 #define DXL_PROTOCOL_VERSION 2
 #define DXL_TIME_PROFILE     4
@@ -51,16 +53,16 @@ void dxl_print_error(void);
 /*
  * Higher-level functions, encapsulating several commands
  */
-//Changes the dynamixel servo's profile to the time profile, and moves to the specified angle during a specified time period (seconds)
-void dxl_servo_move_duration(uint8_t id, uint32_t angle, uint32_t duration, bool relative);
+// Changes the dynamixel servo's profile to the time profile, and moves to the specified angle during a specified time period (seconds)
+dxl_err_t dxl_servo_move_duration(uint8_t id, uint32_t angle, uint32_t duration);
 
-//Changes the dynamixel servo's profile to the velocity profile, and moves to the specified angle with a specified velocity (revolutions/min)
+// Changes the dynamixel servo's profile to the velocity profile, and moves to the specified angle with a specified velocity (revolutions/min)
 void dxl_servo_move_velocity(uint8_t id, uint32_t angle, uint32_t speed, bool relative);
 
-//Moves the servo smoothly using the Dynamixel servo motor's Trapezoidal velocity profile
+// Moves the servo smoothly using the Dynamixel servo motor's Trapezoidal velocity profile
 void dxl_servo_move(uint8_t id, uint32_t angle, bool relative);
 
-//Move multiple servos smoothly, without caring about their duration or velocity
+// Move multiple servos smoothly, without caring about their duration or velocity
 void dxl_servo_move_many(int numOfServos, uint8_t* idList, uint32_t* goalPositions, bool relative);
 
 // Move multiple servos at once, with durations specified for each servo

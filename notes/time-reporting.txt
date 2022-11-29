@@ -19,3 +19,6 @@ Frej: Weighted the parts and took photos of them. Tested to insert threaded inse
 
 Next week:
 Assemble the spider and test the code for the motors on an assembled spider.
+
+28/11:
+Frej: Printed and cleaned some parts, explained some accelerometer code to Wiktor. 1h

@@ -22,3 +22,9 @@ Assemble the spider and test the code for the motors on an assembled spider.
 
 28/11:
 Frej: Printed and cleaned some parts, explained some accelerometer code to Wiktor. 1h
+
+29/11:
+Frej: Status meeting and planning the weeks work. Cleaned parts. 2h
+
+30/11:
+Frej: Rinsed some parts. Tried to solder wires together for the motors (we have to few outputs on the chip). Did not went so well because we would need wider solder tips. Printed elbow parts with more space for the servos. 3,5h

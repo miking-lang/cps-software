@@ -42,7 +42,7 @@ cps_err_t cps_i2c_read16(int fd, uint8_t reg, uint16_t *result) {
 
 cps_err_t cps_i2c_write16(int fd, uint8_t reg, uint16_t data) {
     /* write 2 bytes */
-    if (i2c_smbus_write_word_data(fd, reg, data) != 2) {
+    if (i2c_smbus_write_word_data(fd, reg, data) < 0) {
         return CPS_ERR_SYS;
     }
 

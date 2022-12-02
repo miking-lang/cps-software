@@ -8,7 +8,7 @@ set(CPS_LIBRARY_DIR "../../lib")
 add_library(cps_dxl STATIC
 	"${CPS_LIBRARY_DIR}/dxl/dxl.c")
 target_link_libraries(cps_dxl PUBLIC
-	dxl_x64_c
+	dxl_sbc_c
 )
 
 # CPS Accelerometer library

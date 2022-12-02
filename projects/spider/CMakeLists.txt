@@ -4,20 +4,7 @@ project(SpiderRobot VERSION 1.0)
 
 set(CPS_LIBRARY_DIR "../../lib")
 
-# CPS DXL Servo library
-add_library(cps_dxl STATIC
-	"${CPS_LIBRARY_DIR}/dxl/dxl.c")
-target_link_libraries(cps_dxl PUBLIC
-	dxl_sbc_c
-)
-
-# CPS Accelerometer library
-add_library(cps_accel STATIC
-	"${CPS_LIBRARY_DIR}/accel/accel.c")
-target_link_libraries(cps_accel PUBLIC
-	m
-	i2c
-)
+add_subdirectory("${CPS_LIBRARY_DIR}/" "cps")
 
 # Spider controller
 add_executable(spider

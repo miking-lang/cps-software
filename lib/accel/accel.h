@@ -1,8 +1,5 @@
 #pragma once
-
-#define CPS_RET_ON_ERR(stmt) if ((ret = (stmt)) != CPS_ERR_OK) { return ret; }
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#include "cps.h"
 
 typedef enum {
     ACC_SCALE_2_G   = 0 << 3,
@@ -24,13 +21,6 @@ typedef struct {
     cps_accel_range_t accel_range;
     cps_gyro_range_t gyro_range;
 } cps_accel_t;
-
-typedef enum {
-    CPS_ERR_OK = 0,
-    CPS_ERR_FAIL,   /* generic error */
-    CPS_ERR_SYS,    /* system error (check errno) */
-    CPS_ERR_ARG,    /* bad argument */
-} cps_err_t;
 
 typedef enum {
     ACC_DIR_X,

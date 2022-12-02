@@ -51,6 +51,7 @@ cps_err_t cps_i2c_write16(int fd, uint8_t reg, uint16_t data) {
 
 cps_err_t cps_accel_init(cps_accel_t *acc, const char *device, int i2c_addr,
         cps_accel_range_t accel_range, cps_gyro_range_t gyro_range) {
+    cps_err_t ret;
     int fd;
 
     if ((fd = open(device, O_RDWR)) < 0) {

@@ -14,6 +14,10 @@ target_link_libraries(cps_dxl PUBLIC
 # CPS Accelerometer library
 add_library(cps_accel STATIC
 	"${CPS_LIBRARY_DIR}/accel/accel.c")
+target_link_libraries(cps_accel PUBLIC
+	m
+	i2c
+)
 
 # Spider controller
 add_executable(spider

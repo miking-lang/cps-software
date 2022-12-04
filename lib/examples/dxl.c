@@ -27,7 +27,8 @@ int main(int argc, char *argv[]) {
 	 * or CPS_RET_ON_ERR.
 	 */
 	cps_err_t ret;
-	int id, pos;
+	int id;
+	uint32_t pos;
 
 	if (argc != 2) {
 		fprintf(stderr, "usage: %s <servo-id>\n", argv[0]);

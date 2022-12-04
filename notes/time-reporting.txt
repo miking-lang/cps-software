@@ -1,30 +1,39 @@
-21/11:
+### 21/11:
 Frej: The meeting about how to structure the git repo and libraries etc. Worked with 3D-prints for the spider. 1,5h
 Martin: Meeting, see above 1h
 
-22/11:
+### 22/11:
 Frej: Status meeting. Printed parts and cleaned parts. Found a setting on the printer that lowers the temperature after it is done. I enabled that setting to save energy. Explained parts of the code to Wiktor. 2h
 
-23/11:
+### 23/11:
 Frej: Changed some dimensions and printed and cleaned parts. Read more about the setting stand-by settings. 1h
 
-24/11:
+### 24/11:
 Frej: Printed some parts, hopefully the last ones. 0,5h
 
-25/11:
+### 25/11:
 Frej: Added some files to the new repos. Started to read about how to make C-libraries. Rinsed off the last parts after the cleaning. 2h
 
-27/11:
+### 27/11:
 Frej: Weighted the parts and took photos of them. Tested to insert threaded inserts into the ABS plastic. Reprinted lower elbow because the stick was too thick for the ball bearing. 3h
 
 Next week:
 Assemble the spider and test the code for the motors on an assembled spider.
 
-28/11:
+### 28/11:
 Frej: Printed and cleaned some parts, explained some accelerometer code to Wiktor. 1h
 
-29/11:
+Martin: Put together two robot arms, modified some code to be able to move these. Everything worked well, as it was less than 9 servos. 5h
+
+### 29/11:
 Frej: Status meeting and planning the weeks work. Cleaned parts. 2h
 
-30/11:
+Martin: Meeting with the group + John. Another meeting where we also discussed the container crane project, what we’re going to do the coming week. 1.5h
+
+### 30/11:
 Frej: Rinsed some parts. Tried to solder wires together for the motors (we have to few outputs on the chip). Did not went so well because we would need wider solder tips. Printed elbow parts with more space for the servos. 3,5h
+
+Martin: Fixed with wires to the motor together with Frej. We were going to solder copper wires together, but it didn’t work, maybe because there was too little flux and because the soldering iron was too narrow. 4h
+
+### 1/12
+Martin: Wiktor soldered together the copper wires using his soldering equipment, I tested that the wires worked properly and then started working on the CAD-model for the container crane project. 4h

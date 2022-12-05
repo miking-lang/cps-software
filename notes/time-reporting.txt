@@ -27,12 +27,16 @@ Martin: Put together two robot arms, modified some code to be able to move these
 
 Axel: The parts for the container project arrived! Started thinking about them. Examined and minorly contributed to the refactoring. 0.5h
 
+Wiktor: Worked on the rewrite, and got others up to speed on what I've done so far. Checked with Martin and Frej what the intentions of some code parts were. Worked on accelerometer and checked documentation to confirm registers used. 2.5h
+
 ### 29/11:
 Frej: Status meeting and planning the weeks work. Cleaned parts. 2h    
 
 Martin: Meeting with the group + John. Another meeting where we also discussed the container crane project, what we’re going to do the coming week. 1.5h
 
 Axel: Status meeting, created a plan for the container project. Started to figure out the stepper motor with Wiktor and got started on the model of the container project. 2,5h 
+
+Wiktor: Status meeting, planning meeting concerning the container project. Worked on the stepper motor, figuring out how it should be controlled, and starting soldering it to break out the connections. 3.5h
     
 ### 30/11:
 Frej: Rinsed some parts. Tried to solder wires together for the motors (we have to few outputs on the chip). Did not went so well because we would need wider solder tips. Printed elbow parts with more space for the servos. 3,5h
@@ -41,11 +45,17 @@ Martin: Fixed with wires to the motor together with Frej. We were going to solde
 
 Axel: Kept working on the model for the container project. 1,5h
 
+Wiktor: Looked into existing stepper motor libraries and sketched some code for our motor. 0.5h
+
 ### 1/12
 Martin: Wiktor soldered together the copper wires using his soldering equipment, I tested that the wires worked properly and then started working on the CAD-model for the container crane project. 4h
 
+Wiktor: Soldered servo wires and the stepper motor "breakout". Got stepper motor turning with some example Arduino code. Individual meeting. Fixed a but in the accelerometer rewrite and cleaned up the code a bit. 4h
+
 ### 2/12
 Axel: Short individual meeting with David. Almost finished the CAD of the cart for the model. 3h
+
+Wiktor: Code cleanup, made sure everything compiles and works. Split some common code out, and wrote small example programs to demonstrate coding style intentions and function usage for accel and dxl libraries.
 
 ### 3/12
 Axel: Finishing touches on the CAD of the cart for the model. 0,5h            

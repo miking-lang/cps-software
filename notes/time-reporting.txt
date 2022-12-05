@@ -25,15 +25,27 @@ Frej: Printed and cleaned some parts, explained some accelerometer code to Wikto
 
 Martin: Put together two robot arms, modified some code to be able to move these. Everything worked well, as it was less than 9 servos. 5h
 
+Axel: The parts for the container project arrived! Started thinking about them. Examined and minorly contributed to the refactoring. 0.5h
+
 ### 29/11:
-Frej: Status meeting and planning the weeks work. Cleaned parts. 2h
+Frej: Status meeting and planning the weeks work. Cleaned parts. 2h    
 
 Martin: Meeting with the group + John. Another meeting where we also discussed the container crane project, what we’re going to do the coming week. 1.5h
 
+Axel: Status meeting, created a plan for the container project. Started to figure out the stepper motor with Wiktor and got started on the model of the container project. 2,5h 
+    
 ### 30/11:
 Frej: Rinsed some parts. Tried to solder wires together for the motors (we have to few outputs on the chip). Did not went so well because we would need wider solder tips. Printed elbow parts with more space for the servos. 3,5h
 
 Martin: Fixed with wires to the motor together with Frej. We were going to solder copper wires together, but it didn’t work, maybe because there was too little flux and because the soldering iron was too narrow. 4h
 
+Axel: Kept working on the model for the container project. 1,5h
+
 ### 1/12
 Martin: Wiktor soldered together the copper wires using his soldering equipment, I tested that the wires worked properly and then started working on the CAD-model for the container crane project. 4h
+
+### 2/12
+Axel: Short individual meeting with David. Almost finished the CAD of the cart for the model. 3h
+
+### 3/12
+Axel: Finishing touches on the CAD of the cart for the model. 0,5h            

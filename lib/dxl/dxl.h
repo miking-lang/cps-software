@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #include "cps.h"
 
@@ -25,6 +26,10 @@
 #define DXL_ADDR_PresentInputVoltage  144
 #define DXL_ADDR_Moving  122
 
+#ifndef DXL_MAX_SERVOS
+    #define DXL_MAX_SERVOS 24
+#endif
+
 typedef enum {
     DXL_ERR_OK = 0,
     DXL_ERR_FAIL, /* generic error */
@@ -37,6 +42,13 @@ typedef enum {
     DXL_ERR_RX_CORRUPT,
     DXL_ERR_NOT_AVAILABLE,
 } dxl_err_t;
+
+typedef struct {
+    uint8_t id;
+    int angle;
+    int dur;
+} movedata_t;
+
 extern int g_dxl_port_num;
 
 /* Initialize DynamixelSDK with the provided tty */
@@ -51,25 +63,32 @@ void dxl_print_error(void);
 /*
  * Higher-level functions, encapsulating several commands
  */
-// Changes the dynamixel servo's profile to the time profile, and moves to the specified angle during a specified time period (seconds)
-cps_err_t dxl_servo_move_duration(uint8_t id, uint32_t angle, uint32_t duration);
 
-cps_err_t dxl_servo_move_duration_abs(uint8_t id, uint32_t angle, uint32_t duration);
+// Goes to the specified angle in without checking drive mode
+cps_err_t dxl_servo_move_abs(movedata_t data);
 
-// Changes the dynamixel servo's profile to the velocity profile, and moves to the specified angle with a specified velocity (revolutions/min)
-void dxl_servo_move_velocity(uint8_t id, uint32_t angle, uint32_t speed, bool relative);
+// Changes the dynamixel servo's drive mode if necessary,
+// and moves to the specified angle...
+// ...during a specified time period (seconds)
+cps_err_t dxl_servo_move_duration_abs(movedata_t data);
+// ...or with a specified velicity
+cps_err_t dxl_servo_move_velocity_abs(movedata_t data);
 
-// Moves the servo smoothly using the Dynamixel servo motor's Trapezoidal velocity profile
-void dxl_servo_move(uint8_t id, uint32_t angle, bool relative);
+// Does the same thing as above but relatively
+cps_err_t dxl_servo_move(movedata_t data);
+cps_err_t dxl_servo_move_duration(movedata_t data);
+cps_err_t dxl_servo_move_velocity(movedata_t data);
 
-// Move multiple servos smoothly, without caring about their duration or velocity
-void dxl_servo_move_many(int numOfServos, uint8_t* idList, uint32_t* goalPositions, bool relative);
+// Move multiple servos at once to absolute position,
+// with durations or velocity specified for each servo
+cps_err_t dxl_servo_move_many_abs(movedata_t data[], size_t count);
+cps_err_t dxl_servo_move_many_duration_abs(movedata_t data[], size_t count);
+cps_err_t dxl_servo_move_many_velocity_abs(movedata_t data[], size_t count);
 
-// Move multiple servos at once, with durations specified for each servo
-void dxl_servo_move_many_duration(int numOfServos, uint8_t* idList, uint32_t* goalPositions, uint32_t* durations, bool relative);
-
-// Move multiple servos at once, with velocities specified for each servo
-void dxl_servo_move_many_velocity(int numOfServos, uint8_t* idList, uint32_t* goalPostions, uint32_t* velocities, bool relative);
+// Move multiple servos at once to relative position, with durations specified for each servo
+cps_err_t dxl_servo_move_many(movedata_t data[], size_t count);
+cps_err_t dxl_servo_move_many_duration(movedata_t data[], size_t count);
+cps_err_t dxl_servo_move_many_velocity(movedata_t data[], size_t count);
 
 /*
  * Lower-level functions, for directly communicating with the servos
@@ -80,8 +99,11 @@ cps_err_t dxl_set_id(uint8_t id);
 //Set a secondary to group specific servos. For example, all elbow joints could get the same secondary ID
 cps_err_t dxl_set_secondary_id(uint8_t id, uint8_t secondaryID);
 
+//TODO: Implement this
 //Sets the minimum and maximum positions for the servo struct pointed to by the servo pointer
 cps_err_t dxl_set_mix_max_positions(uint8_t id, uint32_t minPos, uint32_t maxPos);
+
+cps_err_t dxl_get_torque(uint8_t id, bool *status);
 
 //Enable torque for the servo represented by the Servo struct servo
 cps_err_t dxl_enable_torque(uint8_t id);
@@ -103,6 +125,10 @@ cps_err_t dxl_set_profile_acceleration(uint8_t id, uint32_t acceleration);
 
 //Sets the drive mode of this servo. For more info, check: https://emanual.robotis.com/docs/en/dxl/x/xm430-w350/#drive-mode10
 cps_err_t dxl_set_drive_mode(uint8_t id, uint8_t driveMode);
+
+cps_err_t dxl_get_drive_mode(uint8_t id, uint8_t *result);
+
+cps_err_t dxl_set_drive_mode_safe(uint8_t id, uint8_t driveMode);
 
 
 //------------------------------------  The functions below are for getting parameters from the servo's addresses ----------------------------------

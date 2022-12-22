@@ -3,11 +3,14 @@
 #include "cps.h"
 
 const char *cps_err_t_str[] = {
-    [CPS_ERR_OK]    = "CPS_ERR_OK",
-    [CPS_ERR_FAIL]  = "CPS_ERR_FAIL",
-    [CPS_ERR_SYS]   = "CPS_ERR_SYS",
-    [CPS_ERR_DXL]   = "CPS_ERR_DXL",
-    [CPS_ERR_ARG]   = "CPS_ERR_ARG",
+    [CPS_ERR_OK]         = "CPS_ERR_OK",
+    [CPS_ERR_FAIL]       = "CPS_ERR_FAIL",
+    [CPS_ERR_SYS]        = "CPS_ERR_SYS",
+    [CPS_ERR_DXL]        = "CPS_ERR_DXL",
+    [CPS_ERR_ARG]        = "CPS_ERR_ARG",
+    [CPS_ERR_DRIVE_MODE] = "CPS_ERR_DRIVE_MODE",
+    [CPS_ERR_TORQUE_OFF] = "CPS_ERR_TORQUE_OFF",
+    [CPS_ERR_TORQUE_ON]  = "CPS_ERR_TORQUE_ON",
 };
 
 __attribute__((weak)) void dxl_print_error(void) {}

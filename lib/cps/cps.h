@@ -20,6 +20,9 @@ typedef enum {
     CPS_ERR_SYS,    /* system error (check errno) */
     CPS_ERR_DXL,	/* DXL error (see dxl_print_error) */
     CPS_ERR_ARG,    /* bad argument */
+    CPS_ERR_DRIVE_MODE, /* wrong drive mode on the DXL */
+    CPS_ERR_TORQUE_OFF, /* torque off when trying to move DXL */
+    CPS_ERR_TORQUE_ON, /* torque on when trying to change drive mode on DXL */
 } cps_err_t;
 
 extern const char *cps_err_t_str[];

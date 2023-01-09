@@ -49,6 +49,35 @@ target_link_libraries(accel-example PUBLIC
 	cps_accel
 )
 
+# CPS Distance library
+# TODO: Check if m is needed
+add_library(cps_distance STATIC
+	"distance/distance.c")
+target_link_libraries(cps_distance PUBLIC
+	cps_com
+	pigpio
+)
+set_target_properties(cps_distance PROPERTIES
+	EXCLUDE_FROM_ALL TRUE
+)
+
+# CPS Accelerometer example
+add_executable(distance-example EXCLUDE_FROM_ALL
+	"examples/distance.c"
+)
+target_compile_options(distance-example PUBLIC
+	-Wall -Wextra -g
+)
+target_compile_definitions(distance-example PUBLIC
+	LINUX _GNU_SOURCE
+)
+target_include_directories(distance-example PUBLIC
+	"distance/"
+)
+target_link_libraries(distance-example PUBLIC
+	cps_distance
+)
+
 # CPS DynamixelSDK example
 add_executable(dxl-example EXCLUDE_FROM_ALL
 	"examples/dxl.c"

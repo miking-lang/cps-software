@@ -7,12 +7,17 @@
 #include "dxl.h"
 #include "positions.h"
 
+/**
+ * Uses the time.h function nanosleep to sleep for tms milliseconds.
+ * 
+ * @param tms milliseconds to sleep
+ * @return int 0 on successfully sleeping for tms milliseconds, -1 otherwise. errno is set to indicate the error.
+ */
 int msdelay(long tms) {
     struct timespec ts;
     int ret;
 
-    if (tms < 0)
-    {
+    if (tms < 0) {
         errno = EINVAL;
         return -1;
     }
@@ -27,11 +32,23 @@ int msdelay(long tms) {
     return ret;
 }
 
+/**
+ * An array with the servos listed in a more managable order.
+ * 
+ * First all ROTATE_SHOULDER-servos,
+ * then all LIFT_SHOULDER
+ * and last all ELBOW-servos.
+ * 
+ * Always in the order: front-left, front-right, back-left, back-right.
+ */
 uint8_t all_ids[12] = {
     FL_ROTATE_SHOULDER, FR_ROTATE_SHOULDER, BL_ROTATE_SHOULDER, BR_ROTATE_SHOULDER,
     FL_LIFT_SHOULDER, FR_LIFT_SHOULDER, BL_LIFT_SHOULDER, BR_LIFT_SHOULDER,
     FL_ELBOW, FR_ELBOW, BL_ELBOW, BR_ELBOW};
 
+/**
+ * Disables the torque of all 12 motors of the spider.
+ */
 void spider_disable_all_torques(void) {
     cps_err_t ret;
     for (uint8_t i = 1; i <= 12; i++) {
@@ -39,13 +56,22 @@ void spider_disable_all_torques(void) {
     }
 }
 
-int spider_init(uint8_t driveMode) {
+/**
+ * Initializes all 12 servos of the spider.
+ * 
+ * Sets the specified drive mode and enables the torque.
+ * The drive mode could be either DXL_TIME_PROFILE or DXL_VELOCITY_PROFILE.
+ * In drive mode DXL_TIME_PROFILE, a duration is specified for all commands.
+ * In drive mode DXL_VELOCITY_PROFILE, a velocity is specified for all commands.
+ * 
+ * @param driveMode the specified drive mode
+ */
+void spider_init(uint8_t driveMode) {
     cps_err_t ret;
     for (int i = 0; i < 12; i++) {
         CPS_RET_ON_ERR(dxl_set_drive_mode(all_ids[i], driveMode));
         CPS_RET_ON_ERR(dxl_enable_torque(all_ids[i]));
     }
-    return 0;
 }
 
 int spider_get_drive_mode() {
@@ -58,10 +84,17 @@ int spider_get_drive_mode() {
     //printf("\n");
     return 0;
 }
-
+//TODO: Should this be moved to the top?
 #include <dynamixel_sdk/dynamixel_sdk.h>
 #include <dynamixel_sdk/protocol2_packet_handler.h>
 
+/**
+ * Waits for input before continuing.
+ * 
+ * Exits the program if q is inserted. Continues with the commands on any other input.
+ * 
+ * @param prompt message to prompt before waiting for input
+ */
 void ask_quit(const char *prompt) {
     //return; //uncomment to make it skip waiting for input
     puts(prompt);
@@ -70,6 +103,14 @@ void ask_quit(const char *prompt) {
     return;
 }
 
+/**
+ * Executes an array of cmd_t commands.
+ * 
+ * The commands are executed in the order they appear in the array.
+ * 
+ * @param commands an array of cmd_t commands
+ * @param count number of cmd_t commands
+ */
 void cmd_exec(cmd_t commands[], size_t count) {
     cps_err_t ret;
     for (size_t i = 0; i < count; i++) {
@@ -94,8 +135,13 @@ void cmd_exec(cmd_t commands[], size_t count) {
     }
 }
 
-
-int read_all(int duration){
+//TODO: Remove function or make the prints as a CMD_MOVE_SYNC_ABS command.
+/**
+ * Prints the code for a command to go to the position that the spider has at at the moment.
+ * 
+ * @param duration wanted duration for the produced command
+ */
+void read_all(int duration){
 	cps_err_t ret;
 	uint32_t current_pos;
 
@@ -152,8 +198,6 @@ int read_all(int duration){
 		printf(", %d", duration);
 	}
 	printf("};\n");
-
-	return 0;
 }
 
 /*
@@ -228,7 +272,9 @@ void martin_repeat(int repetitions){
 }
 */
 
-
+/**
+ * Example to make the spider do 3 push ups.
+ */
 void push_up_x3(void) {
     cmd_exec(prepare_push_up, sizeof(prepare_push_up)/sizeof(*prepare_push_up));
     for(int i = 0; i < 3; i++){
@@ -237,7 +283,9 @@ void push_up_x3(void) {
     cmd_exec(exit_push_up, sizeof(exit_push_up)/sizeof(*exit_push_up));
     return;
 }
-
+/**
+ * Example to make the spider wave.
+ */
 void nr1(void) {
     for (int i = 0; i < 2; i++) {
         cmd_exec(lay2stand, sizeof(lay2stand)/sizeof(*lay2stand));

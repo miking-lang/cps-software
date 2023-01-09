@@ -46,7 +46,7 @@ typedef enum {
 typedef struct {
     uint8_t id;
     int angle;
-    int dur;
+    int dur; //TODO: Maybe change the name of this. Could be duration or velocity.
 } movedata_t;
 
 extern int g_dxl_port_num;

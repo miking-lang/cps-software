@@ -131,7 +131,6 @@ cps_err_t dxl_servo_move_many_abs(movedata_t data[], size_t count) {
     for (size_t i = 0; i < count; i++) {
         movedata_t *servo = &data[i];
 
-        // In order to change drive mode, which is located in the EEPROM data storage, we need to disable torqe
         CPS_RET_ON_ERR(dxl_set_profile_velocity(servo->id, servo->dur));
 
         uint8_t dxl_addparam_result = groupSyncWriteAddParam(groupwrite_num, servo->id, servo->angle, 4);

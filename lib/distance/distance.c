@@ -13,33 +13,35 @@ P1  Name  gpio    used for
 
 #define ECHO_PIN    8
 #define TRIGGER_PIN 7
+#define MM_PER_TICK 0.173
 
 /* forward prototypes */
 
-void cps_distance_send_pulse(void);
+void cps_dist_send_pulse(void);
 
-void cps_distance_sonar_echo(int gpio, int level, uint32_t tick, void* distanceP);
+void cps_dist_sonar_echo(unsigned gpio, unsigned level, uint32_t tick,
+                             void *distanceP);
 
-cps_err_t cps_distance_init(cps_distance_t *dist) {
+cps_err_t cps_dist_init(cps_dist_t *dist) {
     if (gpioInitialise() < 0) return CPS_ERR_FAIL; //TODO: maybe change this
     // pigpio initialised okay.
-    
+
     gpioSetMode(TRIGGER_PIN, PI_OUTPUT); //Set trigger to output
     gpioWrite(TRIGGER_PIN, PI_OFF); //Write 0 to trigger
 
     gpioSetMode(ECHO_PIN, PI_INPUT); //Set echo to input
 
-    gpioSetTimerFunc(0, 50, cps_distance_send_pulse); /* send pulse every 50ms */
+    gpioSetTimerFunc(0, 50, cps_dist_send_pulse); /* send pulse every 50ms */
 
     dist->distance = -1;
     void* distanceP = (void*)&dist->distance;
 
-    gpioSetAlertFuncEx(ECHO_PIN, cps_distance_sonar_echo, distanceP); //Run cps_distance_sonar_echo when echo pin changes state
+    gpioSetAlertFuncEx(ECHO_PIN, cps_dist_sonar_echo, distanceP); //Run cps_dist_sonar_echo when echo pin changes state
 
     return CPS_ERR_OK;
 }
 
-cps_err_t cps_distance_get_distance(cps_distance_t *dist, uint32_t *result) {
+cps_err_t cps_dist_get_distance(const cps_dist_t *dist, uint32_t *result) {
 
     if (dist->distance < 0) {
         return CPS_ERR_NOT_READY;
@@ -49,11 +51,11 @@ cps_err_t cps_distance_get_distance(cps_distance_t *dist, uint32_t *result) {
     return CPS_ERR_OK;
 }
 
-void cps_distance_terminate() {
+void cps_dist_terminate(void) {
     gpioTerminate();
 }
 
-void cps_distance_send_pulse(void) {
+void cps_dist_send_pulse(void) {
    /* trigger a sonar reading */
 
    gpioWrite(TRIGGER_PIN, PI_ON);
@@ -63,19 +65,25 @@ void cps_distance_send_pulse(void) {
    gpioWrite(TRIGGER_PIN, PI_OFF);
 }
 
-void cps_distance_sonar_echo(int gpio, int level, uint32_t tick, void* distanceP) {//tick = number of millisecounds since boot
-    static uint32_t startTick, firstTick = 0;
+void cps_dist_sonar_echo(unsigned gpio, unsigned level, uint32_t tick,
+                             void *distanceP) {
+    if (gpio == ECHO_PIN) {
+        static bool valid = false;
+        static uint32_t start;
 
-    int diffTick, distance;
-
-    if (!firstTick) firstTick = tick; //initialize firstTick 
-
-    if (level == PI_ON) {//Rising edge, pulse is sent
-       startTick = tick;
-    }
-    else if (level == PI_OFF) {//Falling edge, pulse is recieved
-        diffTick = tick - startTick;
-        distance = (int)(diffTick * 0.173); //the one way distance
-        *(int*)distanceP = distance;
+        if (level == 0) {
+            /* Rising edge, pulse is sent */
+            start = tick;
+            valid = true;
+        } else if (level == 1 && valid) {
+            /* Falling edge, pulse is received */
+            uint32_t diff;
+            if (tick < start)
+                /* wraparound occured */
+                diff = ((uint32_t)-1) - start + 1 + tick;
+            else
+                diff = start - tick;
+            *(int32_t *)distanceP = (int32_t)(diff * MM_PER_TICK);
+        }
     }
 }

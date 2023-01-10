@@ -5,14 +5,14 @@
 #include <pigpio.h>
 
 typedef struct {
-    int pinNumber;
-    int distance;
-} cps_distance_t;
+    unsigned pinNumber;
+    int32_t distance;
+} cps_dist_t;
 
-cps_err_t cps_distance_init(cps_distance_t *dist);
+cps_err_t cps_dist_init(cps_dist_t *dist);
 
 //Returns the distance measured by the distance sensor in mm.
-cps_err_t cps_distance_get_distance(cps_distance_t *dist, uint32_t *result);
+cps_err_t cps_dist_get_distance(cps_dist_t *dist, uint32_t *result);
 
 //Terminates GPIO.
-void cps_distance_terminate();
+void cps_dist_terminate(void);

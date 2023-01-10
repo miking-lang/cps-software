@@ -73,7 +73,7 @@ cps_err_t dxl_init(const char *tty);
  * 
  * @return See source of #dxl_get_error
  */
-cps_err_t dxl_get_error(void);
+dxl_err_t dxl_get_error(void);
 
 /**
  * @brief Print last DynamixelSDK errors to stderr.
@@ -121,7 +121,7 @@ cps_err_t dxl_set_secondary_id(uint8_t id, uint8_t secondaryID);
 
 //TODO: Implement this
 //Sets the minimum and maximum positions for the servo struct pointed to by the servo pointer
-cps_err_t dxl_set_mix_max_positions(uint8_t id, uint32_t minPos, uint32_t maxPos);
+cps_err_t dxl_set_min_max_positions(uint8_t id, uint32_t minPos, uint32_t maxPos);
 
 cps_err_t dxl_get_torque(uint8_t id, bool *status);
 

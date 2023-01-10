@@ -24,7 +24,7 @@ cps_err_t dxl_init(const char *tty) {
     return CPS_ERR_OK;
 }
 
-cps_err_t dxl_get_error(void) {
+dxl_err_t dxl_get_error(void) {
     switch (getLastTxRxResult2(g_dxl_port_num)) {
     case COMM_SUCCESS       : return DXL_ERR_OK;
     case COMM_PORT_BUSY     : return DXL_ERR_PORT_BUSY;
@@ -44,7 +44,7 @@ void dxl_print_error(void) {
     int comm_result = getLastTxRxResult2(g_dxl_port_num);
     int comm_error = getLastRxPacketError2(g_dxl_port_num);
     if (comm_result != COMM_SUCCESS) {
-        fprintf(stderr, "comm_result:  %d, %s\n", getTxRxResult2(comm_result));
+        fprintf(stderr, "comm_result: %s\n", getTxRxResult2(comm_result));
     }
     if (comm_error != 0) {
         fprintf(stderr, "comm_error: %s\n", getRxPacketError2(comm_error));
@@ -233,11 +233,9 @@ cps_err_t dxl_set_secondary_id(uint8_t id, uint8_t secondaryID) {
 }
 
 cps_err_t dxl_set_min_max_positions(uint8_t id, uint32_t minPos, uint32_t maxPos) {
-    cps_err_t ret = DXL_ERR_OK;
-
     write4ByteTxRx2(g_dxl_port_num, id, DXL_ADDR_MinPosition, minPos);
-    if ((ret = dxl_get_error()) != DXL_ERR_OK)
-        return ret;
+    if (dxl_get_error() != DXL_ERR_OK)
+        return CPS_ERR_DXL;
     write4ByteTxRx2(g_dxl_port_num, id, DXL_ADDR_MaxPosition, maxPos);
     return (dxl_get_error() == DXL_ERR_OK) ? CPS_ERR_OK : CPS_ERR_DXL;
 }

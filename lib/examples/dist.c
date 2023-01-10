@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "distance.h"
+#include "dist.h"
 
 int main(void) {
     /* cps_err_t ret needs to be defined in functions that use CPS_ERR_CHECK

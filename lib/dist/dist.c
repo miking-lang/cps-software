@@ -1,4 +1,6 @@
-#include "distance.h"
+#include <stdbool.h>
+
+#include "dist.h"
 
 /*
 
@@ -15,12 +17,31 @@ P1  Name  gpio    used for
 #define TRIGGER_PIN 7
 #define MM_PER_TICK 0.173
 
-/* forward prototypes */
+static void cps_dist_send_pulse(void) {
+   /* trigger a sonar reading */
 
-void cps_dist_send_pulse(void);
+   gpioWrite(TRIGGER_PIN, PI_ON);
+   gpioDelay(10); /* 10us trigger pulse */
+   gpioWrite(TRIGGER_PIN, PI_OFF);
+}
 
-void cps_dist_sonar_echo(unsigned gpio, unsigned level, uint32_t tick,
-                             void *distanceP);
+static void cps_dist_sonar_echo(int gpio, int level, uint32_t tick,
+                             void *distanceP) {
+    if (gpio == ECHO_PIN) {
+        static bool valid = false;
+        static uint32_t start;
+
+        if (level == 1) {
+            /* Rising edge, pulse is sent */
+            start = tick;
+            valid = true;
+        } else if (level == 0 && valid) {
+            /* Falling edge, pulse is received */
+            /* tick can overflow, but that works out nonetheless */
+            *(int32_t *)distanceP = (int32_t)((tick - start) * MM_PER_TICK);
+        }
+    }
+}
 
 cps_err_t cps_dist_init(cps_dist_t *dist) {
     if (gpioInitialise() < 0) return CPS_ERR_FAIL; //TODO: maybe change this
@@ -53,37 +74,4 @@ cps_err_t cps_dist_get_distance(const cps_dist_t *dist, uint32_t *result) {
 
 void cps_dist_terminate(void) {
     gpioTerminate();
-}
-
-void cps_dist_send_pulse(void) {
-   /* trigger a sonar reading */
-
-   gpioWrite(TRIGGER_PIN, PI_ON);
-
-   gpioDelay(10); /* 10us trigger pulse */
-
-   gpioWrite(TRIGGER_PIN, PI_OFF);
-}
-
-void cps_dist_sonar_echo(unsigned gpio, unsigned level, uint32_t tick,
-                             void *distanceP) {
-    if (gpio == ECHO_PIN) {
-        static bool valid = false;
-        static uint32_t start;
-
-        if (level == 0) {
-            /* Rising edge, pulse is sent */
-            start = tick;
-            valid = true;
-        } else if (level == 1 && valid) {
-            /* Falling edge, pulse is received */
-            uint32_t diff;
-            if (tick < start)
-                /* wraparound occured */
-                diff = ((uint32_t)-1) - start + 1 + tick;
-            else
-                diff = start - tick;
-            *(int32_t *)distanceP = (int32_t)(diff * MM_PER_TICK);
-        }
-    }
 }

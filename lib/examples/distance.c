@@ -14,7 +14,7 @@ int main(void) {
     uint32_t result;
     for (int i = 0; i < 10; i++) {
         sleep(1);
-        if (cps_distance_get_distance(&dist, &result) == CPS_ERR_FAIL) {
+        if (cps_distance_get_distance(&dist, &result) == CPS_ERR_NOT_READY) {
             printf("needs to wait for signal to come back\n");
         }
         printf("distance (mm): %d\n", result);

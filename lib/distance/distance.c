@@ -42,7 +42,7 @@ cps_err_t cps_distance_init(cps_distance_t *dist) {
 cps_err_t cps_distance_get_distance(cps_distance_t *dist, uint32_t *result) {
 
     if (dist->distance < 0) {
-        return CPS_ERR_FAIL; //TODO: Maybe change this.
+        return CPS_ERR_NOT_READY;
     }
 
     *result = dist->distance;

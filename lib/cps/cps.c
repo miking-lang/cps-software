@@ -8,6 +8,7 @@ const char *cps_err_t_str[] = {
     [CPS_ERR_SYS]        = "CPS_ERR_SYS",
     [CPS_ERR_DXL]        = "CPS_ERR_DXL",
     [CPS_ERR_ARG]        = "CPS_ERR_ARG",
+    [CPS_ERR_NOT_READY]  = "CPS_ERR_NOT_READY",
     [CPS_ERR_DRIVE_MODE] = "CPS_ERR_DRIVE_MODE",
     [CPS_ERR_TORQUE_OFF] = "CPS_ERR_TORQUE_OFF",
     [CPS_ERR_TORQUE_ON]  = "CPS_ERR_TORQUE_ON",

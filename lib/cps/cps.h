@@ -56,6 +56,8 @@ typedef enum {
     CPS_ERR_DXL,
     /** bad argument */
     CPS_ERR_ARG,
+    /** not ready, try again later */
+    CPS_ERR_NOT_READY,
     /** wrong drive mode on the DXL */
     CPS_ERR_DRIVE_MODE,
     /** torque off when trying to move DXL */

@@ -1,10 +1,7 @@
 #pragma once
 #include "cps.h"
 
-#include <stdint.h>
-#include <stdio.h>
 #include <unistd.h>
-#include <time.h>
 #include <pigpio.h>
 
 typedef struct {

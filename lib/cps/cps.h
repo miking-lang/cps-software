@@ -25,6 +25,7 @@
  */
 #ifndef CPS_STRICT_ERR
     #define CPS_STRICT_ERR 0
+#endif
 
 #if CPS_STRICT_ERR == 0
     /**

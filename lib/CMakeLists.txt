@@ -46,17 +46,17 @@ set_target_properties(cps_accel PROPERTIES
 )
 
 # CPS Distance library
-add_library(cps_distance STATIC
-	"distance/distance.c"
+add_library(cps_dist STATIC
+	"dist/dist.c"
 )
-target_compile_options(cps_distance PUBLIC
+target_compile_options(cps_dist PUBLIC
 	-Wall -Wextra -g
 )
-target_link_libraries(cps_distance PUBLIC
+target_link_libraries(cps_dist PUBLIC
 	cps_com
 	pigpio
 )
-set_target_properties(cps_distance PROPERTIES
+set_target_properties(cps_dist PROPERTIES
 	EXCLUDE_FROM_ALL TRUE
 )
 
@@ -95,18 +95,18 @@ target_link_libraries(accel-example PUBLIC
 )
 
 # CPS Distance example
-add_executable(distance-example EXCLUDE_FROM_ALL
-	"examples/distance.c"
+add_executable(dist-example EXCLUDE_FROM_ALL
+	"examples/dist.c"
 )
-target_compile_options(distance-example PUBLIC
+target_compile_options(dist-example PUBLIC
 	-Wall -Wextra -g
 )
-target_compile_definitions(distance-example PUBLIC
+target_compile_definitions(dist-example PUBLIC
 	LINUX _GNU_SOURCE
 )
-target_include_directories(distance-example PUBLIC
-	"distance/"
+target_include_directories(dist-example PUBLIC
+	"dist/"
 )
-target_link_libraries(distance-example PUBLIC
-	cps_distance
+target_link_libraries(dist-example PUBLIC
+	cps_dist
 )

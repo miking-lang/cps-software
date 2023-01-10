@@ -128,7 +128,7 @@ cps_err_t cps_accel_read_angle(cps_accel_t *acc, cps_accel_dir_t axis,
     switch (axis) {
     case ACC_DIR_X: {
         CPS_RET_ON_ERR(cps_accel_read_accel(acc, ACC_DIR_Y, &data));
-        /* TODO: should this be clamped or scaled? */
+        /** @TODO should this be clamped or scaled? */
         data = MAX(-1.0, MIN(1.0, data));
         angle_rad = asin(data);
         break;

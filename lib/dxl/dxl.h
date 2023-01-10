@@ -1,3 +1,10 @@
+/**
+ * @file accel.h
+ * @brief Library for working with Dynamixel motors.
+ * 
+ * @details
+ * DynamixelSDK is used as the backend library.
+ */
 #pragma once
 
 #include <stdlib.h>
@@ -51,13 +58,26 @@ typedef struct {
 
 extern int g_dxl_port_num;
 
-/* Initialize DynamixelSDK with the provided tty */
+/**
+ * @brief Initialize DynamixelSDK.
+ * 
+ * @param tty path to tty device mapped to the Dynamixel controller
+ * 
+ * @retval CPS_ERR_FAIL DynamixelSDK failed to initialize
+ * @retval CPS_ERR_OK no error
+ */
 cps_err_t dxl_init(const char *tty);
 
-/* Return the last error, if any, otherwise DXL_ERR_OK */
+/**
+ * @brief Return the last DynamixelSDK error.
+ * 
+ * @return See source of #dxl_get_error
+ */
 cps_err_t dxl_get_error(void);
 
-/* Print last error to stderr */
+/**
+ * @brief Print last DynamixelSDK errors to stderr.
+ */
 void dxl_print_error(void);
 
 /*

@@ -20,7 +20,8 @@ int main(void) {
 	for (;;) {
 		float result;
 
-		/* read acceleration in the X direction and do error checking
+		/* read acceleration in the X direction and angle around the X-axis
+		 * and do error checking
 		 *
 		 * if a function that returns cps_err_t (basically all of them) has
 		 * to return a value (e.g. cps_accel_read_accel has to return
@@ -30,15 +31,24 @@ int main(void) {
 		 * i.e. `result' will store the return value
 		 */
 		CPS_ERR_CHECK(cps_accel_read_accel(&acc, ACC_DIR_X, &result));
-		printf("x: % 2.3f", result);
+		printf("acc x: % 2.3f", result);
+
+		CPS_ERR_CHECK(cps_accel_read_angle(&acc, ACC_DIR_X, &result));
+		printf(" | ang x: % 2.3f", result);
 
 		/* same, this time for y */
 		CPS_ERR_CHECK(cps_accel_read_accel(&acc, ACC_DIR_Y, &result));
-		printf(" | y: % 2.3f", result);
+		printf(" | acc y: % 2.3f", result);
+
+		CPS_ERR_CHECK(cps_accel_read_angle(&acc, ACC_DIR_Y, &result));
+		printf(" | ang y: % 2.3f", result);
 
 		/* and for z */
 		CPS_ERR_CHECK(cps_accel_read_accel(&acc, ACC_DIR_Z, &result));
-		printf(" | z: % 2.3f\n", result);
+		printf(" | acc z: % 2.3f\n", result);
+
+		// Angle around Z-direction is not measurable
+
 		usleep(1000 * 500);
 	}
 

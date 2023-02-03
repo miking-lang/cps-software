@@ -7,6 +7,8 @@
 cps_err_t spider_init(void) {
     cps_err_t ret;
     for (int id = 1; id <= NUM_SERVOS; id++) {
+        /* make sure torque is disabled */
+        CPS_RET_ON_ERR(dxl_disable_torque(id));
         CPS_RET_ON_ERR(dxl_set_drive_mode(id, DXL_TIME_PROFILE));
         CPS_RET_ON_ERR(dxl_enable_torque(id));
     }
@@ -15,6 +17,7 @@ cps_err_t spider_init(void) {
 }
 
 void do_pushups(int count) {
+    cmd_exec(lay_limbs, sizeof(lay_limbs)/sizeof(*lay_limbs));
     cmd_exec(prepare_push_up, sizeof(prepare_push_up)/sizeof(*prepare_push_up));
     for(int i = 0; i < count; i++){
         cmd_exec(push_up, sizeof(push_up)/sizeof(*push_up));
@@ -23,6 +26,7 @@ void do_pushups(int count) {
 }
 
 void do_wave(void) {
+    cmd_exec(lay_limbs, sizeof(lay_limbs)/sizeof(*lay_limbs));
     cmd_exec(lay2stand, sizeof(lay2stand)/sizeof(*lay2stand));
     cmd_exec(wave_shoulder, sizeof(wave_shoulder)/sizeof(*wave_shoulder));
     cmd_exec(stand2lay, sizeof(stand2lay)/sizeof(*stand2lay));
@@ -34,7 +38,7 @@ int main(void) {
     CPS_ERR_CHECK(spider_init());
 
     // uncomment ONE of these to perform the desired action sequence
-    // do_pushups(3);
+    do_pushups(3);
     // do_wave();
 
     return 0;

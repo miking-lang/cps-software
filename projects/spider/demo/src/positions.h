@@ -5,25 +5,7 @@
 #define HEIGHT 600
 
 cmd_t lay2stand[] = {
-    /* lay limbs flat */
-    CMD_INPUT("lay limbs flat"),
-    CMD_MOVE_SYNC_ABS(
-        {FL_ROTATE_SHOULDER,     2048,  500},
-        {FR_ROTATE_SHOULDER,     2048,  500},
-        {BL_ROTATE_SHOULDER,     2048,  500},
-        {BR_ROTATE_SHOULDER,     2048,  500},
-
-        {FL_LIFT_SHOULDER,       2110,  500},
-        {FR_LIFT_SHOULDER,       2120,  500},
-        {BL_LIFT_SHOULDER,       2125,  500},
-        {BR_LIFT_SHOULDER,       2110,  500},
-
-        {FL_ELBOW,               2048,  500},
-        {FR_ELBOW,               1950,  500},
-        {BL_ELBOW,               2150,  500},
-        {BR_ELBOW,               2048,  500},
-    ),
-    CMD_DELAYDBG(500),
+    /* start from lay_limbs[] */
     /* raise limbs */
     CMD_INPUT("raise limbs"),
     CMD_MOVE_SYNC_REL(
@@ -196,33 +178,16 @@ cmd_t lay_limbs[] = {
         {BR_LIFT_SHOULDER,       2110,  3000},
 
         {FL_ELBOW,               2048,  3000},
-        {FR_ELBOW,               1950,  3000},
-        {BL_ELBOW,               2150,  3000},
-        {BR_ELBOW,               2048,  3000},
-    ),
-    CMD_DELAYDBG(3000)
-};
-
-cmd_t prepare_push_up[] = {
-    /* lay limbs flat */
-    CMD_INPUT("lay limbs flat"),
-    CMD_MOVE_SYNC_ABS(
-        {FL_ROTATE_SHOULDER,     2048,  3000},
-        {FR_ROTATE_SHOULDER,     2048,  3000},
-        {BL_ROTATE_SHOULDER,     2048,  3000},
-        {BR_ROTATE_SHOULDER,     2048,  3000},
-
-        {FL_LIFT_SHOULDER,       2110,  3000},
-        {FR_LIFT_SHOULDER,       2120,  3000},
-        {BL_LIFT_SHOULDER,       2125,  3000},
-        {BR_LIFT_SHOULDER,       2110,  3000},
-
-        {FL_ELBOW,               2048,  3000},
-        {FR_ELBOW,               1950,  3000},
-        {BL_ELBOW,               2150,  3000},
+        {FR_ELBOW,               1850,  3000},
+        {BL_ELBOW,               2100,  3000},
         {BR_ELBOW,               2048,  3000},
     ),
     CMD_DELAYDBG(3000),
+    CMD_INPUT("limbs now flat")
+};
+
+cmd_t prepare_push_up[] = {
+    /* start from lay_limbs[] */
     CMD_INPUT("raise limbs"),
     CMD_MOVE_SYNC_REL(
         {FL_ROTATE_SHOULDER,      200, 1200},

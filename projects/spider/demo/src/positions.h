@@ -172,13 +172,13 @@ cmd_t lay_limbs[] = {
         {BL_ROTATE_SHOULDER,     2048,  3000},
         {BR_ROTATE_SHOULDER,     2048,  3000},
 
-        {FL_LIFT_SHOULDER,       2110,  3000},
-        {FR_LIFT_SHOULDER,       2120,  3000},
-        {BL_LIFT_SHOULDER,       2125,  3000},
-        {BR_LIFT_SHOULDER,       2110,  3000},
+        {FL_LIFT_SHOULDER,       2048,  3000},
+        {FR_LIFT_SHOULDER,       2048,  3000},
+        {BL_LIFT_SHOULDER,       2048,  3000},
+        {BR_LIFT_SHOULDER,       2048,  3000},
 
         {FL_ELBOW,               2048,  3000},
-        {FR_ELBOW,               1850,  3000},
+        {FR_ELBOW,               1900,  3000},
         {BL_ELBOW,               2100,  3000},
         {BR_ELBOW,               2048,  3000},
     ),

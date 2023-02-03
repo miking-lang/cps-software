@@ -64,12 +64,6 @@ To rebuild:
 make
 ```
 
-To execute:
-```bash
-# navigate to demo/build/
-./spider
-```
-
 ### Example Code
 `demo/src/main.c` contains example code to either have the spider do pushups or perform a wave. Select which action to perform by uncommenting the corresponding function call in `main.c`. See Appendix A for a line-by-line explanation of the code.
 
@@ -87,7 +81,13 @@ Before running the generated executable, a few physical things need to be taken 
 5. The controller must be supplied with external power.
 6. The controller must be turned on (via an onboard switch).
 
-Once all of these are observed, the generated executable may be run as `./spider` from CMake's build directory. If the program fails, or the expected movement is not observed, please carefully check the steps above again. Common failure points include not connecting USB or external power.
+To execute:
+```bash
+# navigate to demo/build/
+./spider
+```
+
+If the program fails, or the expected movement is not observed, please carefully check the steps above again. Common failure points include not connecting USB or external power.
 
 ### Results
 If everything went well, this should have resulted in the spider performing the selected action (either pushups or a wave).

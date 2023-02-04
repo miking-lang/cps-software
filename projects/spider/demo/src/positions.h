@@ -65,7 +65,7 @@ cmd_t lay2stand[] = {
         {FL_ELBOW, 1400, 1500},
     ),
     CMD_DELAYDBG(1500),
-    CMD_INPUT("done"),
+    CMD_INPUT("now it stands"),
     //CMD_DELAYDBG(5000),
 };
 
@@ -178,12 +178,11 @@ cmd_t lay_limbs[] = {
         {BR_LIFT_SHOULDER,       2048,  3000},
 
         {FL_ELBOW,               2048,  3000},
-        {FR_ELBOW,               1900,  3000},
-        {BL_ELBOW,               2100,  3000},
+        {FR_ELBOW,               1920,  3000},
+        {BL_ELBOW,               2150,  3000},
         {BR_ELBOW,               2048,  3000},
     ),
     CMD_DELAYDBG(3000),
-    CMD_INPUT("limbs now flat")
 };
 
 cmd_t prepare_push_up[] = {
@@ -251,7 +250,6 @@ cmd_t push_up[] = {
         {BR_LIFT_SHOULDER,        -HEIGHT,  800},
     ),
     CMD_DELAYDBG(1300),
-    CMD_INPUT("done")
 };
 
 cmd_t exit_push_up[] = {

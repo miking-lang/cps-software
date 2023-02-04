@@ -1,6 +1,9 @@
 #include "dxl.h"
+#include "accel.h"
+#include "dist.h"
 #include "ctrl.h"
 #include "positions.h"
+#include <stdio.h>
 
 #define NUM_SERVOS 12
 
@@ -34,8 +37,27 @@ void do_wave(void) {
 
 int main(void) {
     cps_err_t ret;
+    cps_accel_t acc;
+    cps_dist_t dist;
+
     CPS_ERR_CHECK(dxl_init("/dev/ttyUSB0"));
+    CPS_ERR_CHECK(cps_accel_init(&acc, "/dev/i2c-1", 0x68, ACC_SCALE_2_G,
+		GYRO_SCALE_2000_DEG));
+    CPS_ERR_CHECK(cps_dist_init(&dist));
     CPS_ERR_CHECK(spider_init());
+
+    float angle;
+    CPS_ERR_CHECK(cps_accel_read_angle(&acc, ACC_DIR_Y, &angle));
+	printf("angle around y-axis: % 2.3f\n", angle);
+
+    uint32_t distance;
+    for (int i = 0; i < 3; i++) {
+        sleep(1);
+        if (cps_dist_get_distance(&dist, &distance) == CPS_ERR_NOT_READY) {
+            printf("needs to wait for signal to come back\n");
+        }
+        printf("distance (mm): %d\n", distance);
+    }
 
     // uncomment ONE of these to perform the desired action sequence
     // do_pushups(3);

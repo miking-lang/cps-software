@@ -1,13 +1,13 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 #include "cam_client.h"
 
-#define PORT 12351
-#define RPI_IP "130.229.159.97"
+#define PORT 12350
 
 //TODO: Error handling
-int cam_init(int* sock, int* client_fd) {
+int cam_init(char* cam_ip, int* sock, int* client_fd) {
     struct sockaddr_in serv_addr;
     if ((*sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         printf("\n Socket creation error \n");
@@ -18,7 +18,7 @@ int cam_init(int* sock, int* client_fd) {
     serv_addr.sin_port = htons(PORT);
  
     // Convert IPv4 and IPv6 addresses from text to binary form
-    if (inet_pton(AF_INET, RPI_IP, &serv_addr.sin_addr)
+    if (inet_pton(AF_INET, cam_ip, &serv_addr.sin_addr)
         <= 0) {
         printf(
             "\nInvalid address/ Address not supported \n");
@@ -36,8 +36,17 @@ int cam_init(int* sock, int* client_fd) {
 }
 
 //TODO: Error handling
-void cam_get_image(int sock, char* res) {
-    uint8_t command = 1;
+int cam_get_image(int sock, char* res, const char* format) {
+    uint8_t command;
+    if (!strcmp(format, "png")) {
+        command = 1;
+    }
+    else if (!strcmp(format, "bmp")) {
+        command = 2;
+    }
+    else {
+        return -1;
+    }
     send(sock, &command, 1, 0);
 
     int step = 0;
@@ -49,10 +58,21 @@ void cam_get_image(int sock, char* res) {
         }
         bytes_read += step;
 
-        if (*(res + bytes_read - 7) == 'E' && *(res + bytes_read - 6) == 'N' && *(res + bytes_read - 5) == 'D') {
-            break;
+        if (!strcmp(format, "png")) {
+            if (*(res + bytes_read - 7) == 'E' && *(res + bytes_read - 6) == 'N' && *(res + bytes_read - 5) == 'D') {
+                break;
+            }
+        }
+        else if (!strcmp(format, "bmp")) {
+            if (bytes_read >= IMAGE_SIZE) {
+                break;
+            }
+        }
+        else {
+            return -1;
         }
     }
+    return 0;
 }
 
 int cam_close(int client_fd) {

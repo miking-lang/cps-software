@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+//compile with gcc cam_example.c cam_client.c -o cam.out
+
 long long get_current_time_with_ms (void) {
     struct timeval te;
     gettimeofday(&te, NULL); // get current time
@@ -10,30 +12,71 @@ long long get_current_time_with_ms (void) {
     return milliseconds;
 }
 
-int main(int argc, char const* argv[]) {
+void alternating(void) {
     int sock, client_fd;
-    cam_init(&sock, &client_fd);
-
+    cam_init("193.10.37.141", &sock, &client_fd);
     char buffer[IMAGE_SIZE] = { 0 };
     FILE* fp;
     char ind[4];
     long long starttime = get_current_time_with_ms();
-    printf("starttime: %lld\n", starttime);
-    for (int i = 70; i <= 80; i++) { //Takes 10 images and stores them in files
-        printf("i: %d\n", i);
-        cam_get_image(sock, buffer); //Takes about 130 ms with 640*480
-        printf("cam_get_image done\n");
+    for (int i = 1; i <= 10; i++) { //Takes 10 images and stores them in files
+        if (i % 2 == 0) {
+            //Takes about 30 ms with 128*128 resolution. 130 ms with 640*480
+            if (cam_get_image(sock, buffer, "png") == -1) {
+                printf("Invalid file format: png\n");
+            }
+        }
+        else {
+            //Takes about 30 ms with 128*128 resolution. 130 ms with 640*480
+            if (cam_get_image(sock, buffer, "bmp") == -1) {
+                printf("Invalig file format: bmp\n");
+            }
+        }
         sprintf(ind, "%d", i);
         char filename[20] = "file_";
         strcat(filename, ind);
-        strcat(filename, ".png");
+        if (i % 2 == 0) {
+            strcat(filename, ".png");
+        }
+        else {
+            strcat(filename, ".bmp");
+        }
 	    fp = fopen (filename, "w+");
+        printf("saved %s\n", filename);
 	    fwrite(buffer, 1, IMAGE_SIZE, fp);
     }
-    printf("time: %lld", (get_current_time_with_ms() - starttime));
+    printf("time: %lld\n", (get_current_time_with_ms() - starttime));
     fclose(fp);
 
     // closing the connected socket
 	cam_close(client_fd);
+}
+
+void save_bmp() {
+    int sock, client_fd;
+    cam_init("193.10.37.141", &sock, &client_fd);
+    char buffer[IMAGE_SIZE] = { 0 };
+    FILE* fp;
+
+    // Takes about 30 ms with 128*128 resolution. 130 ms with 640*480
+    if (cam_get_image(sock, buffer, "bmp") == -1) {
+        printf("Invalig file format: bmp\n");
+    }
+
+    fp = fopen("image.bmp", "w+");
+    printf("saved %s\n", "image.bmp");
+	fwrite(buffer, 1, IMAGE_SIZE, fp);
+
+    fclose(fp);
+
+    // closing the socket connection
+	cam_close(client_fd);
+}
+
+int main(int argc, char const* argv[]) {
+
+    // Uncomment one of these to test the camera.
+    // save_bmp();
+    alternating();
     return 0;
 }

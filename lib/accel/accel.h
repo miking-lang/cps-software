@@ -63,7 +63,7 @@ cps_err_t cps_accel_init(cps_accel_t *acc, const char *device, int i2c_addr,
  * 
  * @param acc accelerometer IC struct
  * @param dir accelerometer direction to query
- * @param[out] result storage for resulting value
+ * @param[out] result storage for resulting value in g-forces
  * 
  * @retval CPS_ERR_ARG invalid direction
  * @retval CPS_ERR_SYS i2c error
@@ -77,7 +77,7 @@ cps_err_t cps_accel_read_accel(cps_accel_t *acc, cps_accel_dir_t dir,
  * 
  * @param acc accelerometer IC struct
  * @param dir gyroscope direction to query
- * @param[out] result storage for resulting value
+ * @param[out] result storage for resulting value in degrees per seconds (°/s)
  * 
  * @retval CPS_ERR_ARG invalid direction
  * @retval CPS_ERR_SYS i2c error
@@ -91,7 +91,7 @@ cps_err_t cps_accel_read_gyro(cps_accel_t *acc, cps_accel_dir_t dir,
  * 
  * @param acc accelerometer IC struct
  * @param axis selected axis (only #ACC_DIR_X or #ACC_DIR_Y)
- * @param[out] result storage for resulting value
+ * @param[out] result storage for resulting value in degrees (°)
  * 
  * @retval CPS_ERR_ARG invalid axis
  * @retval CPS_ERR_SYS i2c error

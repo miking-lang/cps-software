@@ -14,7 +14,10 @@ long long get_current_time_with_ms (void) {
 
 void alternating(void) {
     int sock, client_fd;
-    cam_init("193.10.37.141", &sock, &client_fd);
+    if (cam_init("193.10.37.141", &sock, &client_fd) == -1) {
+        printf("can not initiate camera\n");
+        return;
+    }
     char buffer[IMAGE_SIZE] = { 0 };
     FILE* fp;
     char ind[4];
@@ -22,14 +25,16 @@ void alternating(void) {
     for (int i = 1; i <= 10; i++) { //Takes 10 images and stores them in files
         if (i % 2 == 0) {
             //Takes about 30 ms with 128*128 resolution. 130 ms with 640*480
-            if (cam_get_image(sock, buffer, "png") == -1) {
+            if (cam_get_image(sock, PNG, buffer) == -1) {
                 printf("Invalid file format: png\n");
+                return;
             }
         }
         else {
             //Takes about 30 ms with 128*128 resolution. 130 ms with 640*480
-            if (cam_get_image(sock, buffer, "bmp") == -1) {
+            if (cam_get_image(sock, BMP, buffer) == -1) {
                 printf("Invalig file format: bmp\n");
+                return;
             }
         }
         sprintf(ind, "%d", i);
@@ -54,13 +59,17 @@ void alternating(void) {
 
 void save_bmp() {
     int sock, client_fd;
-    cam_init("193.10.37.141", &sock, &client_fd);
+    if (cam_init("193.10.37.141", &sock, &client_fd) == -1) {
+        printf("can not initiate camera\n");
+        return;
+    }
     char buffer[IMAGE_SIZE] = { 0 };
     FILE* fp;
 
     // Takes about 30 ms with 128*128 resolution. 130 ms with 640*480
-    if (cam_get_image(sock, buffer, "bmp") == -1) {
+    if (cam_get_image(sock, BMP, buffer) == -1) {
         printf("Invalig file format: bmp\n");
+        return;
     }
 
     fp = fopen("image.bmp", "w+");
@@ -76,7 +85,7 @@ void save_bmp() {
 int main(int argc, char const* argv[]) {
 
     // Uncomment one of these to test the camera.
-    // save_bmp();
-    alternating();
+    save_bmp();
+    // alternating();
     return 0;
 }

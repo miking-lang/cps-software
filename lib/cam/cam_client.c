@@ -36,12 +36,12 @@ int cam_init(char* cam_ip, int* sock, int* client_fd) {
 }
 
 //TODO: Error handling
-int cam_get_image(int sock, char* res, const char* format) {
+int cam_get_image(int sock, cam_img_format format, char* res) {
     uint8_t command;
-    if (!strcmp(format, "png")) {
+    if (format == PNG) {
         command = 1;
     }
-    else if (!strcmp(format, "bmp")) {
+    else if (format == BMP) {
         command = 2;
     }
     else {
@@ -58,12 +58,12 @@ int cam_get_image(int sock, char* res, const char* format) {
         }
         bytes_read += step;
 
-        if (!strcmp(format, "png")) {
+        if (format == PNG) {
             if (*(res + bytes_read - 7) == 'E' && *(res + bytes_read - 6) == 'N' && *(res + bytes_read - 5) == 'D') {
                 break;
             }
         }
-        else if (!strcmp(format, "bmp")) {
+        else if (format == BMP) {
             if (bytes_read >= IMAGE_SIZE) {
                 break;
             }

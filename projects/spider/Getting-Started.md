@@ -126,4 +126,28 @@ Example code for both of the sensors is available under `cps-software/lib/exampl
 Each library in CPS contains documentation in its header file(s) (located in `cps-software/lib/<library>/<library>.h`). That documentation will eventially be provided in HTML form as an external reference.
 
 ## Camera
-TBW
+Note: This part does not have complete error checking.
+
+```bash
+#On the Raspberry Pi
+#Navigate to cps-software/lib/cam
+python3 cam_RPi.py
+```
+
+The above will start a small python server ready to provide images to clients. If you get an error message that the port is used, change `port` in `cam/cam_RPi.py` and `PORT` in `cam/cam_client.c` to something else.
+
+Compile:
+```bash
+#On the Raspberry Pi (another terminal) or any other machine connected to Internet
+#Navigate to cps-software/lib/cam
+gcc cam_example.c cam_client.c -o cam.out
+```
+
+`cps-software/lib/cam/cam_example.c` contains example code of how to use the camera. Uncomment one of the function calls in main and run with:
+```bash
+#Navigate to cps-software/lib/cam
+./cam.out
+```
+`png` and/or `bmp` images should now have been stored on the file system.
+
+`cps-software/lib/cam/cam_client.h` contains detailed information about the camera functions.

@@ -151,3 +151,94 @@ gcc cam_example.c cam_client.c -o cam.out
 `png` and/or `bmp` images should now have been stored on the file system.
 
 `cps-software/lib/cam/cam_client.h` contains detailed information about the camera functions.
+
+## Appendix A
+TBW
+
+## Appendix B
+### Terminology and Discussion
+Different spider movements are described as a series of position changes. These changes often involve several servos moving simultaneously. This is refenced to as _synchronous movement_.
+
+Movement can either be _relative_ or _absolute_. Most of the movements are defined as relative, apart from some special ones, like the zero-position (spider laying with its legs stretched out). Note, that relative movement of `X` units followed by a relative movement of `-X` units may not necessarily result in the servo returning to its original position. Complex sequences of movement may require absolute movement at times to reset any deviations. An issue encountered often is servos being unable to complete the full movement due to resistance from e.g. a table. Possible solution could be to make the spider lift its legs a little, one by one, to ensure the servos have reached their target positions.
+
+### Example and Explanation
+Consider the following command sequence:
+```c
+cmd_t lay_limbs[] = {
+    /* lay limbs flat */
+    CMD_INPUT("lay limbs flat"),
+    CMD_MOVE_SYNC_ABS(
+        {FL_ROTATE_SHOULDER,     2048,  3000},
+        {FR_ROTATE_SHOULDER,     2048,  3000},
+        {BL_ROTATE_SHOULDER,     2048,  3000},
+        {BR_ROTATE_SHOULDER,     2048,  3000},
+
+        {FL_LIFT_SHOULDER,       2048,  3000},
+        {FR_LIFT_SHOULDER,       2048,  3000},
+        {BL_LIFT_SHOULDER,       2048,  3000},
+        {BR_LIFT_SHOULDER,       2048,  3000},
+
+        {FL_ELBOW,               2048,  3000},
+        {FR_ELBOW,               1900,  3000},
+        {BL_ELBOW,               2100,  3000},
+        {BR_ELBOW,               2048,  3000},
+    ),
+    CMD_DELAY(3000),
+    CMD_INPUT("limbs now flat")
+};
+```
+
+
+which is executed via
+```c
+cmd_exec(lay_limbs, sizeof(lay_limbs)/sizeof(*lay_limbs));
+```
+
+Here is a breakdown of the commands:
+```c
+CMD_INPUT("lay limbs flat"),
+```
+print `lay limbs flat` and wait for user to press `ENTER`.
+
+```c
+CMD_MOVE_SYNC_ABS(
+    {FL_ROTATE_SHOULDER,     2048,  3000},
+    {FR_ROTATE_SHOULDER,     2048,  3000},
+    {BL_ROTATE_SHOULDER,     2048,  3000},
+    {BR_ROTATE_SHOULDER,     2048,  3000},
+
+    {FL_LIFT_SHOULDER,       2048,  3000},
+    {FR_LIFT_SHOULDER,       2048,  3000},
+    {BL_LIFT_SHOULDER,       2048,  3000},
+    {BR_LIFT_SHOULDER,       2048,  3000},
+
+    {FL_ELBOW,               2048,  3000},
+    {FR_ELBOW,               1900,  3000},
+    {BL_ELBOW,               2100,  3000},
+    {BR_ELBOW,               2048,  3000},
+),
+```
+_synchronously_ (see `Terminology and Discussion`) move all 12 servos to their "starting" positions. `CMD_MOVE_SYNC_ABS` takes in a comma-separated sequence of structs. Struct format is
+```c
+{servo_id, position, duration}
+```
+i.e. move servo `servo_id` to `position` over the course of `duration` milliseconds.
+Note that not all servos need to be specified every time.
+
+```c
+CMD_DELAY(3000),
+```
+This causes a delay for 3 seconds. This delay is needed, since the servo movement (via `CMD_MOVE_SYNC_ABS`) is non-blocking. If a servo is sent a relative move command before the previous one has finished, it may end up in an unexpected position. However, sometimes it is beneficial to have shorter delays, to have several actions "flow" into each other. This only works if two consecutive actions do _NOT_ utilize the same servos.
+
+```c
+CMD_INPUT("limbs now flat")
+```
+This simply present another prompt to the user. `ENTER` is required to proceed.
+
+__NOTE__: currently, `CMD_DELAY` and `CMD_DELAYDBG` are used incorrectly in places where the other one should be used, therefore it is not advise to disable `CMD_DELAYDBG`.
+There also exists `CMD_DELAYDBG`. For definition and for turning it off, see bottom of `ctrl.h`. Debug delays are useful to add some temporary delays, with the possibility of turning them off easily via
+```c
+#define CMD_DELAYDBG
+```
+
+While normal delays are a required part of the command sequence, debug delays are there only for temporary purposes.

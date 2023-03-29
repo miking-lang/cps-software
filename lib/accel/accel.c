@@ -15,6 +15,11 @@ static float cps_accel_scale_mod(cps_accel_range_t range) {
     case ACC_SCALE_4_G   : return 0x2000;
     case ACC_SCALE_8_G   : return 0x1000;
     case ACC_SCALE_16_G  : return 0x0800;
+    default: {
+        cps_err_t ret;
+        /** If this happens, acc->accel_range had an invalid value */
+        CPS_ERR_CHECK(CPS_ERR_ARG);
+    }
     }
 }
 
@@ -24,6 +29,11 @@ static float cps_gyro_scale_mod(cps_gyro_range_t range) {
     case GYRO_SCALE_500_DEG : return  65.5;
     case GYRO_SCALE_1000_DEG: return  32.8;
     case GYRO_SCALE_2000_DEG: return  16.4;
+    default: {
+        cps_err_t ret;
+        /** If this happens, acc->gyro_range had an invalid value */
+        CPS_ERR_CHECK(CPS_ERR_ARG);
+    }
     }
 }
 
@@ -89,7 +99,7 @@ cps_err_t cps_accel_read_accel(cps_accel_t *acc, cps_accel_dir_t dir,
     default: return CPS_ERR_ARG;
     }
 
-    if (cps_i2c_read16(acc->fd, reg, &data) < 0) {
+    if (cps_i2c_read16(acc->fd, reg, (uint16_t *)&data) < 0) {
         return CPS_ERR_SYS;
     }
 
@@ -110,7 +120,7 @@ cps_err_t cps_accel_read_gyro(cps_accel_t *acc, cps_accel_dir_t dir,
     default: return CPS_ERR_ARG;
     }
 
-    if (cps_i2c_read16(acc->fd, reg, &data) < 0) {
+    if (cps_i2c_read16(acc->fd, reg, (uint16_t *)&data) < 0) {
         return CPS_ERR_SYS;
     }
 
@@ -128,7 +138,7 @@ cps_err_t cps_accel_read_angle(cps_accel_t *acc, cps_accel_dir_t axis,
     switch (axis) {
     case ACC_DIR_X: {
         CPS_RET_ON_ERR(cps_accel_read_accel(acc, ACC_DIR_Y, &data));
-        /* TODO: should this be clamped or scaled? */
+        /** @TODO should this be clamped or scaled? */
         data = MAX(-1.0, MIN(1.0, data));
         angle_rad = asin(data);
         break;

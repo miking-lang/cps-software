@@ -5,7 +5,7 @@ Software artifacts and documentation for cyber-physical systems projects.
 [projects](projects) contains folders with files specific to each project. There are currently two projects included: 
 
 ### [Spider](projects/spider) 
-[](projects/spider/assembly/images/assembly/full.png)
+![](projects/spider/assembly/images/assembly/full.png)
 Quadruped robot. The folder for this project contains: 
 * Assembly instructions.
 * Bill of materials. 

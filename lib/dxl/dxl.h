@@ -18,6 +18,9 @@
 #define DXL_TIME_PROFILE     4
 #define DXL_VELOCITY_PROFILE 0
 
+#define DXL_EXTENDED_POSITION_CONTROL 4
+#define DXL_POSITION_CONTROL 3
+
 #define DXL_ADDR_BaudRate  8
 #define DXL_ADDR_EnableTorque  64
 #define DXL_ADDR_GoalPosition  116
@@ -27,6 +30,7 @@
 #define DXL_ADDR_MinPosition  52
 #define DXL_ADDR_MaxPosition  48
 #define DXL_ADDR_DriveMode  10
+#define DXL_ADDR_OperatingMode 11
 #define DXL_ADDR_Id  7
 #define DXL_ADDR_SecondaryId  12
 #define DXL_ADDR_PresentVelocity  128
@@ -150,6 +154,8 @@ cps_err_t dxl_get_drive_mode(uint8_t id, uint8_t *result);
 
 cps_err_t dxl_set_drive_mode_safe(uint8_t id, uint8_t driveMode);
 
+//Set the operating mode of this servo. Check: https://emanual.robotis.com/docs/en/dxl/x/xm430-w210/#operating-mode11 
+cps_err_t dxl_set_operating_mode(uint8_t id, uint8_t operatingMode);
 
 //------------------------------------  The functions below are for getting parameters from the servo's addresses ----------------------------------
 

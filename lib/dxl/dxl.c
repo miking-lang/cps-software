@@ -308,6 +308,15 @@ cps_err_t dxl_get_drive_mode(uint8_t id, uint8_t *result) {
     return CPS_ERR_OK;
 }
 
+cps_err_t dxl_set_operating_mode(uint8_t id, uint8_t operatingMode){
+    bool torque;
+    dxl_get_torque(id, &torque);
+    if (torque)
+        return CPS_ERR_TORQUE_ON;
+    write1ByteTxRx2(g_dxl_port_num, id, DXL_ADDR_OperatingMode, operatingMode);
+    return (dxl_get_error() == DXL_ERR_OK) ? CPS_ERR_OK : CPS_ERR_DXL; 
+}
+
 cps_err_t dxl_get_current_position(uint8_t id, uint32_t *result) {
     uint32_t tmp;
 

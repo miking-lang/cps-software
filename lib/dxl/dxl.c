@@ -98,7 +98,6 @@ cps_err_t dxl_servo_move_velocity_abs(movedata_t servo) {
 cps_err_t dxl_servo_move(movedata_t data) {
     cps_err_t ret;
     uint32_t current_pos;
-    uint32_t dest;
 
     CPS_RET_ON_ERR(dxl_get_current_position(data.id, &current_pos));
     data.angle = current_pos + data.angle;
@@ -171,7 +170,6 @@ cps_err_t dxl_servo_move_many_velocity_abs(movedata_t data[], size_t count) {
 cps_err_t dxl_servo_move_many(movedata_t data[], size_t count) {
     cps_err_t ret;
     uint32_t current_pos;
-    uint32_t dest;
 
     movedata_t abs_data[DXL_MAX_SERVOS];
     if (count > DXL_MAX_SERVOS) {
@@ -189,7 +187,6 @@ cps_err_t dxl_servo_move_many(movedata_t data[], size_t count) {
 cps_err_t dxl_servo_move_many_duration(movedata_t data[], size_t count) {
     cps_err_t ret;
     uint32_t current_pos;
-    uint32_t dest;
 
     movedata_t abs_data[DXL_MAX_SERVOS];
     if (count > DXL_MAX_SERVOS) {
@@ -207,7 +204,6 @@ cps_err_t dxl_servo_move_many_duration(movedata_t data[], size_t count) {
 cps_err_t dxl_servo_move_many_velocity(movedata_t data[], size_t count) {
     cps_err_t ret;
     uint32_t current_pos;
-    uint32_t dest;
 
     movedata_t abs_data[DXL_MAX_SERVOS];
     if (count > DXL_MAX_SERVOS) {

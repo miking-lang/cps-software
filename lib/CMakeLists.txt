@@ -60,6 +60,21 @@ set_target_properties(cps_dist PROPERTIES
 	EXCLUDE_FROM_ALL TRUE
 )
 
+#CPS MG90S library
+add_library(cps_mg90s STATIC
+	"mg90s/mg90s.c"
+)
+target_compile_options(cps_mg90s PUBLIC
+	-Wall -Wextra -g
+)
+target_link_libraries(cps_mg90s PUBLIC
+	cps_com
+	i2c
+)
+set_target_properties(cps_mg90s PROPERTIES
+	EXCLUDE_FROM_ALL TRUE
+)
+
 # CPS DynamixelSDK example
 add_executable(dxl-example EXCLUDE_FROM_ALL
 	"examples/dxl.c"
@@ -109,4 +124,21 @@ target_include_directories(dist-example PUBLIC
 )
 target_link_libraries(dist-example PUBLIC
 	cps_dist
+)
+
+# CPS Distance example
+add_executable(mg90s-example EXCLUDE_FROM_ALL
+	"examples/mg90s.c"
+)
+target_compile_options(mg90s-example PUBLIC
+	-Wall -Wextra -g
+)
+target_compile_definitions(mg90s-example PUBLIC
+	LINUX _GNU_SOURCE
+)
+target_include_directories(mg90s-example PUBLIC
+	"mg90s/"
+)
+target_link_libraries(mg90s-example PUBLIC
+	cps_mg90s
 )

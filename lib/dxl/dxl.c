@@ -123,15 +123,11 @@ cps_err_t dxl_servo_move_velocity(movedata_t servo) {
 cps_err_t dxl_servo_move_many_abs(movedata_t data[], size_t count) {
     cps_err_t ret;
 
-    printf("In dxl_servo_move_many_abs. Count: %d\n", count);
-
-
     //TODO add error handling for groupwrite_num, also add define for length of goal position address
 
     int groupwrite_num = groupSyncWrite(g_dxl_port_num, DXL_PROTOCOL_VERSION, DXL_ADDR_GoalPosition, 4);
 
     for (size_t i = 0; i < count; i++) {
-        printf("In for. i: %d\n", i);
         movedata_t *servo = &data[i];
 
         CPS_RET_ON_ERR(dxl_set_profile_velocity(servo->id, servo->dur));

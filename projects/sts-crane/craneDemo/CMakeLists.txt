@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.15)
 
 project(CraneDemo VERSION 1.0)
 
-set(CPS_LIBRARY_DIR "../cps-software/lib")
+set(CPS_LIBRARY_DIR "../../../lib")
 
 add_subdirectory("${CPS_LIBRARY_DIR}/" "cps")
 
@@ -20,11 +20,15 @@ target_compile_definitions(demo PUBLIC
 )
 target_include_directories(demo PUBLIC
     "${CPS_LIBRARY_DIR}/dxl/"
+    "${CPS_LIBRARY_DIR}/accel/"
 )
 target_link_directories(cps_dxl PUBLIC
     # This is where DynamixelSDK's libraries end up by default
     /usr/local/lib/
 )
 target_link_libraries(demo PUBLIC
+    cps_accel
     cps_dxl
+    i2c
+    ncurses
 )

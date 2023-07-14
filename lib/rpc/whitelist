@@ -1,0 +1,11 @@
+dxl_get_current_position
+dxl_get_torque
+dxl_disable_torque
+dxl_enable_torque
+dxl_set_drive_mode
+dxl_get_drive_mode
+dxl_set_profile_velocity
+dxl_servo_move_many_abs
+dxl_servo_move_many_duration
+dxl_servo_move_many_duration_abs
+dxl_check_drive_mode_and_torque_on

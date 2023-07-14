@@ -65,6 +65,10 @@ typedef enum {
     CPS_ERR_TORQUE_OFF,
     /** torque on when trying to change drive mode on DXL */
     CPS_ERR_TORQUE_ON,
+    /** internal dynamic allocation failed */
+    CPS_ERR_NO_MEM,
+    /** RPC read/write failed */
+    CPS_ERR_RPC_SOCKET,
 } cps_err_t;
 
 /** Reverse mapping from error codes to strings */

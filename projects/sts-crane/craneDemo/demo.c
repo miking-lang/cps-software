@@ -22,7 +22,27 @@
 #define BACK_SERVO_ID 3
 #define DRIVER_ID 4
 #define SKEWER_ID 5
-#define TIMEOUT 175 
+
+#define WHEELS_MIN -6500 // Right limit. Recalibrate after crane is put on rail.
+#define WHEELS_MAX 9300 // Left limit. Recalibrate after crane is put on rail.
+#define BACK_SERVO_MIN -11000 // Front limit.
+#define BACK_SERVO_MAX 6500 // Back limit.
+#define DRIVER_MIN 4000 // Lower limit.
+#define DRIVER_MAX 20000 // Upper limit.
+#define SKEWER_MIN 2000 // Clockwise limit.
+#define SKEWER_MAX 2400 // Counter-clockwise limit.
+
+#define WHEELS_SPEED_SCALE 20
+#define BACK_SERVO_SPEED_SCALE 10
+#define DRIVER_SPEED_SCALE 8
+#define SKEWER_SPEED_SCALE 1
+
+#define WHEELS_ACC 500
+#define BACK_SERVO_ACC 500
+#define DRIVER_ACC 300
+#define SKEWER_ACC 200
+
+#define TIMEOUT 100
 
 int file;
 
@@ -86,46 +106,49 @@ void initI2C(){
 
 void moveDriverSafe(int speed){
     cps_err_t ret;
-    movedata_t moveData = {DRIVER_ID, 100*speed, 100};
-    CPS_ERR_CHECK(dxl_servo_move_duration(moveData));
+    movedata_vel_t moveData = {DRIVER_ID, DRIVER_SPEED_SCALE*speed};
+    CPS_ERR_CHECK(dxl_servo_move_duration_velMode(moveData));
 }
 
 void moveSkewerSafe(int speed){
     cps_err_t ret;
-    movedata_t moveData = {SKEWER_ID, 10*speed, 100};
-    CPS_ERR_CHECK(dxl_servo_move_duration(moveData));
+    movedata_vel_t moveData = {SKEWER_ID, SKEWER_SPEED_SCALE*speed};
+    CPS_ERR_CHECK(dxl_servo_move_duration_velMode(moveData));
 }
 
 void moveTrolleySafe(int speed){
     cps_err_t ret;
-    movedata_t moveData = {BACK_SERVO_ID, 100*speed, 200};
-    CPS_ERR_CHECK(dxl_servo_move_duration(moveData));
+    movedata_vel_t moveData = {BACK_SERVO_ID, BACK_SERVO_SPEED_SCALE*speed};
+    CPS_ERR_CHECK(dxl_servo_move_duration_velMode(moveData));
 }
 
 void moveWheelsSafe(int speed){
     cps_err_t ret;
-    uint32_t position = 200*speed;
-    uint32_t duration = 200;
-    movedata_t moveData[] = {{BACK_WHEELS_ID, position, duration}, {FRONT_WHEELS_ID, position, duration}};
-    CPS_ERR_CHECK(dxl_servo_move_many_duration(moveData, 2));
+    uint32_t velocity = WHEELS_SPEED_SCALE*speed;
+    movedata_vel_t moveData[] = {{BACK_WHEELS_ID, velocity}, {FRONT_WHEELS_ID, velocity}};
+    CPS_ERR_CHECK(dxl_servo_move_many_duration_velMode(moveData, 2));
 }
 
 void initServos(){
     cps_err_t ret;
-    uint32_t pos;
-    uint8_t driveMode;
 
     CPS_ERR_CHECK(dxl_init("/dev/ttyUSB0"));
 
     for(int id = 1; id <= 5; id++) {
         CPS_ERR_CHECK(dxl_disable_torque(id));
-        CPS_ERR_CHECK(dxl_set_operating_mode(id, DXL_EXTENDED_POSITION_CONTROL));
-        CPS_ERR_CHECK(dxl_get_current_position(id, &pos));
-        CPS_ERR_CHECK(dxl_set_drive_mode_safe(id, DXL_TIME_PROFILE));
-        CPS_ERR_CHECK(dxl_set_profile_acceleration(id, 0));
+    }
 
+    CPS_ERR_CHECK(dxl_set_profile_acceleration(FRONT_WHEELS_ID, WHEELS_ACC));
+    CPS_ERR_CHECK(dxl_set_profile_acceleration(BACK_WHEELS_ID, WHEELS_ACC));
+    CPS_ERR_CHECK(dxl_set_profile_acceleration(BACK_SERVO_ID, BACK_SERVO_ACC));
+    CPS_ERR_CHECK(dxl_set_profile_acceleration(DRIVER_ID, DRIVER_ACC));
+    CPS_ERR_CHECK(dxl_set_profile_acceleration(SKEWER_ID, SKEWER_ACC));
+
+    for(int id = 1; id <= 5; id++) {
+        CPS_ERR_CHECK(dxl_set_drive_mode_safe(id, DXL_TIME_PROFILE));
+        CPS_ERR_CHECK(dxl_set_operating_mode(id, DXL_VELOCITY_CONTROL));
+        CPS_ERR_CHECK(dxl_set_profile_acceleration(id, 500));
         CPS_ERR_CHECK(dxl_enable_torque(id));
-        CPS_ERR_CHECK(dxl_get_drive_mode(id, &driveMode));
     }
 }
 
@@ -133,172 +156,192 @@ void initNcurses(){
     // Initialize ncurses
     initscr();
     // Disable line buffering, immediately fetch keystrokes
-    raw(); 
+    raw();
     // Enable function keys, arrows, etc.
-    keypad(stdscr, TRUE); 
+    keypad(stdscr, TRUE);
     // Don't echo() while we do getch
     noecho();
     // Hide cursor
-    curs_set(0); 
+    curs_set(0);
     // Enable non-blocking input
-    nodelay(stdscr, TRUE); 
+    nodelay(stdscr, TRUE);
 
     //Reduce delay for escape keys
     set_escdelay(25);
 }
 
+void moveOperation(int32_t operation, int speed, WINDOW *buffer) {
+    switch(operation){
+        case('a'): { //Driver up
+            wprintw(buffer, "Moving driver servo downwards\n");
+            moveDriverSafe(-speed);
+            break;
+        }
+        case('q'): { //Driver down
+            wprintw(buffer, "Moving driver servo upwards\n");
+            moveDriverSafe(speed);
+            break;
+        }
+        case('w'): {
+            wprintw(buffer, "Moving skewer counter-clockwise\n");
+            moveSkewerSafe(speed);
+            break;
+        }
+        case('s') : {
+            wprintw(buffer, "Moving skewer clockwise\n");
+            moveSkewerSafe(-speed);
+            break;
+        }
+        case(KEY_UP): { // Arrow up, trolley forward
+            wprintw(buffer, "Moving trolley backwards\n");
+            moveTrolleySafe(speed);
+            break;
+        }
+        case(KEY_DOWN): { // Arrow down, trolley backward
+            wprintw(buffer, "Moving trolley forwards\n");
+            moveTrolleySafe(-speed);
+            break;
+        }
+        case(KEY_RIGHT): { // Arrow right, wheels right
+            wprintw(buffer, "Moving crane right\n");
+            moveWheelsSafe(-speed);
+            break;
+        }
+        case(KEY_LEFT): { // Arrow left, wheels left
+            wprintw(buffer, "Moving crane left\n");
+            moveWheelsSafe(speed);
+            break;
+        }
+    }
+}
+
+bool withinLimits(int32_t operation) {
+    cps_err_t ret;
+    uint32_t position;
+    switch(operation) {
+        case('a'): {                //Driver up
+            CPS_ERR_CHECK(dxl_get_current_position(DRIVER_ID, &position));
+            return ((int)(position) <= DRIVER_MAX);
+        }
+        case('q'): {                //Driver down
+            CPS_ERR_CHECK(dxl_get_current_position(DRIVER_ID, &position));
+            return ((int)(position) >= DRIVER_MIN);
+        }
+        case('w'): {
+            CPS_ERR_CHECK(dxl_get_current_position(SKEWER_ID, &position));
+            return ((int)(position) <= SKEWER_MAX);
+        }
+        case('s') : {
+            CPS_ERR_CHECK(dxl_get_current_position(SKEWER_ID, &position));
+            return ((int)(position) >= SKEWER_MIN);
+        }
+        case(KEY_UP): {          // Arrow up, trolley forward
+            CPS_ERR_CHECK(dxl_get_current_position(BACK_SERVO_ID, &position));
+            return ((int)(position) <= BACK_SERVO_MAX);
+        }
+        case(KEY_DOWN): { // Arrow down, trolley backward
+            CPS_ERR_CHECK(dxl_get_current_position(BACK_SERVO_ID, &position));
+            return ((int)(position) >= BACK_SERVO_MIN);
+        }
+        case(KEY_RIGHT): {     // Arrow right, wheels right
+            CPS_ERR_CHECK(dxl_get_current_position(FRONT_WHEELS_ID, &position));
+            return ((int)(position) >= WHEELS_MIN);
+        }
+        case(KEY_LEFT): {     // Arrow left, wheels left
+            CPS_ERR_CHECK(dxl_get_current_position(FRONT_WHEELS_ID, &position));
+            return ((int)(position) <= WHEELS_MAX);
+        }
+    }
+    return false;
+}
+
 int main(){
+    cps_err_t ret;
     initNcurses();
 
     initServos();
 
     initI2C();
 
-    int breakLoop = 0;
-    int32_t lastKey = 0;
-    clock_t lastKeyPressTime = 0;
-    float result;
-    cps_accel_t acc;
-    cps_err_t ret;
-
+    int32_t ongoingOperation = 0; // start with no operation
     int speed = 1;
+
+    cps_accel_t acc;
+    float acc_result;
 
     // Create a new window for double-buffering
     WINDOW *buffer = newwin(0, 0, 0, 0);
 
     CPS_ERR_CHECK(cps_accel_init(&acc, "/dev/i2c-1", 0x68, ACC_SCALE_2_G, GYRO_SCALE_2000_DEG));
 
+    bool breakLoop = false;
     while(1){
+        //Read accelerometer values
+        CPS_ERR_CHECK(cps_accel_read_accel(&acc, ACC_DIR_X, &acc_result));
+		wprintw(buffer, "acc x: % 2.3f", acc_result);
+
+		CPS_ERR_CHECK(cps_accel_read_angle(&acc, ACC_DIR_X, &acc_result));
+		wprintw(buffer, " | ang x: % 2.3f", acc_result);
+
+		/* same, this time for y */
+		CPS_ERR_CHECK(cps_accel_read_accel(&acc, ACC_DIR_Y, &acc_result));
+		wprintw(buffer, " | acc y: % 2.3f", acc_result);
+
+		CPS_ERR_CHECK(cps_accel_read_angle(&acc, ACC_DIR_Y, &acc_result));
+		wprintw(buffer, " | ang y: % 2.3f", acc_result);
+
+		/* and for z */
+		CPS_ERR_CHECK(cps_accel_read_accel(&acc, ACC_DIR_Z, &acc_result));
+		wprintw(buffer, " | acc z: % 2.3f\n", acc_result);
         int key = getch();
         werase(buffer);  // Erase the memory buffer
 
-        if(key != ERR) {  // If a key is pressed...
-            lastKey = key;  // ...update the last key pressed...
-            lastKeyPressTime = clock();  // ...and the last keypress time.
+        if(key == ERR) { // If no key is pressed
+            if (ongoingOperation != 0 && !withinLimits(ongoingOperation)) {
+                moveOperation(ongoingOperation, 0, buffer);
+                ongoingOperation = 0;
+            }
+            continue;
         }
 
-        // If enough time has passed since the last keypress of the same key, treat it as a key release event.
-        if(clock() - lastKeyPressTime > TIMEOUT * CLOCKS_PER_SEC / 1000) {
-            lastKey = ERR;
+        if (key >= '1' && key <= '9') {
+            speed = key - '0';
         }
-
-        switch(lastKey){
-            case('z'): {               //Exit loop
-                breakLoop = 1;
-                break;
+        else if (key == 'a' || key == 'q' || key == 'w' || key == 's' || key == KEY_UP || key == KEY_DOWN || key == KEY_RIGHT || key == KEY_LEFT) {
+            moveOperation(ongoingOperation, 0, buffer);
+            if (key != ongoingOperation && withinLimits(key)) {
+                moveOperation(key, speed, buffer);
+                ongoingOperation = key;
             }
-            case(ERR) : {           //No key was pressed
-                wprintw(buffer, "Not moving anything\n");
-                break;
+            else {
+                ongoingOperation = 0;
             }
-            case('1') : {           //Activate high speed mode
-                speed = 1;
-                lastKey = ERR;
-                break;
-            }   
-            case('2'): {
-                speed = 2;
-                lastKey = ERR;
-                break;
-            }
-            case('3'): {
-                speed = 3;
-                lastKey = ERR;
-                break;
-            }
-            case('4'): {
-                speed = 4;
-                lastKey = ERR;
-                break;
-            }
-            case('5'): {
-                speed = 5;
-                lastKey = ERR;
-                break;
-            }
-            case('a'): {                //Driver up
-                wprintw(buffer, "Moving driver servo downwards\n");
-                moveDriverSafe(-speed);
-                break;
-            }
-            case('q'): {                //Driver down
-                wprintw(buffer, "Moving driver servo upwards\n");
-                moveDriverSafe(speed);
-                break;
-            }   
-            case('w'): {
-                wprintw(buffer, "Moving skewer counter-clockwise\n");
-                moveSkewerSafe(speed);
-                break;
-            }
-            case('s') : {
-                wprintw(buffer, "Moving skewer clockwise\n");
-                moveSkewerSafe(-speed);
-                break;
-            }
-            case(KEY_UP): {          // Arrow up, trolley forward
-                wprintw(buffer, "Moving trolley backwards\n");
-                moveTrolleySafe(speed);
-                break;
-            }
-            case(KEY_DOWN): { // Arrow down, trolley backward
-                wprintw(buffer, "Moving trolley forwards\n");
-                moveTrolleySafe(-speed);
-                break;
-            }
-            case(KEY_RIGHT): {     // Arrow right, wheels right
-                wprintw(buffer, "Moving crane right\n");
-                moveWheelsSafe(-speed);
-                break; 
-            }
-            case(KEY_LEFT): {     // Arrow left, wheels left
-                wprintw(buffer, "Moving crane left\n");
-                moveWheelsSafe(speed);
-                break;
-            }
-            case('m'): {        //Unlock mg90s servos
-                wprintw(buffer, "Unlocking twistlocks\n");
-                unlockHeadBlockServos();
-                lastKey = ERR;
-                usleep(100000);
-                break;
-            }
-            case('n'): {
-                wprintw(buffer, "Locking twistlocks\n");
-                lockHeadBlockServos();
-                lastKey = ERR;
-                usleep(100000);
-                break;
-            }             
+        }
+        else if (key == 'z') { //Exit loop
+            breakLoop = true;
+            moveOperation(ongoingOperation, 0, buffer);
+            ongoingOperation = 0;
+        }
+        else if (key == 'm') {        //Unlock mg90s servos
+            wprintw(buffer, "Unlocking twistlocks\n");
+            unlockHeadBlockServos();
+            usleep(100000);
+        }
+        else if (key == 'n') {
+            wprintw(buffer, "Locking twistlocks\n");
+            lockHeadBlockServos();
+            usleep(100000);
         }
 
         wprintw(buffer, "Speed: %d\n", speed);
 
-        //Read accelerometer values
-        CPS_ERR_CHECK(cps_accel_read_accel(&acc, ACC_DIR_X, &result));
-		wprintw(buffer, "acc x: % 2.3f", result);
 
-		CPS_ERR_CHECK(cps_accel_read_angle(&acc, ACC_DIR_X, &result));
-		wprintw(buffer, " | ang x: % 2.3f", result);
-
-		/* same, this time for y */
-		CPS_ERR_CHECK(cps_accel_read_accel(&acc, ACC_DIR_Y, &result));
-		wprintw(buffer, " | acc y: % 2.3f", result);
-
-		CPS_ERR_CHECK(cps_accel_read_angle(&acc, ACC_DIR_Y, &result));
-		wprintw(buffer, " | ang y: % 2.3f", result);
-
-		/* and for z */
-		CPS_ERR_CHECK(cps_accel_read_accel(&acc, ACC_DIR_Z, &result));
-		wprintw(buffer, " | acc z: % 2.3f\n", result);
-
-
-        mvwprintw(buffer, 10, 0, "->  : Move crane right \n <- : Move crane left\n\n v  : Move trolley towards you \n ^  : Move trolley away from you \n\n q  : Move headblock up \n a  : Move headblock down \n\n w  : Skew headblock clockwise \n s  : Skew headblock counter-clockwise \n\n n  : Unlock twistlocks \n m  : Lock twistlocks\n\n1-5 : Change speed\n\nz   : Exit program\n");
+        mvwprintw(buffer, 10, 0, "->  : Move crane right \n <- : Move crane left\n\n v  : Move trolley towards you \n ^  : Move trolley away from you \n\n q  : Move headblock up \n a  : Move headblock down \n\n w  : Skew headblock clockwise \n s  : Skew headblock counter-clockwise \n\n n  : Unlock twistlocks \n m  : Lock twistlocks\n\n1-9 : Change speed\n\nz   : Exit program\n");
 
         // Some delay to see the screen
         wrefresh(buffer);
 
-        usleep(100); // sleep for 0.01s
+        usleep(10000); // sleep for 0.0001s
         if(breakLoop) break;
     }
 

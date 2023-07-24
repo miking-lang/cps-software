@@ -15,15 +15,21 @@
 #include "cps.h"
 
 #define DXL_PROTOCOL_VERSION 2
+
+//Drive modes. All bits except bit 2 (Profile Configuration) are always set to 0.
 #define DXL_TIME_PROFILE     4
 #define DXL_VELOCITY_PROFILE 0
 
+//Operating modes
+#define DXL_VELOCITY_CONTROL 1
 #define DXL_EXTENDED_POSITION_CONTROL 4
+
 #define DXL_POSITION_CONTROL 3
 
 #define DXL_ADDR_BaudRate  8
 #define DXL_ADDR_EnableTorque  64
 #define DXL_ADDR_GoalPosition  116
+#define DXL_ADDR_GoalVelocity  104
 #define DXL_ADDR_PresentPosition  132
 #define DXL_ADDR_ProfileVelocity  112
 #define DXL_ADDR_ProfileAcceleration  108
@@ -54,11 +60,18 @@ typedef enum {
     DXL_ERR_NOT_AVAILABLE,
 } dxl_err_t;
 
+// Used in Position Control Mode and Extended Position Control Mode
 typedef struct {
     uint8_t id;
     int angle;
     int dur; //TODO: Maybe change the name of this. Could be duration or velocity.
 } movedata_t;
+
+// Used in Velocity Control Mode
+typedef struct {
+    uint8_t id;
+    int velocity;
+} movedata_vel_t;
 
 extern int g_dxl_port_num;
 
@@ -98,6 +111,9 @@ cps_err_t dxl_servo_move_duration_abs(movedata_t data);
 // ...or with a specified velicity
 cps_err_t dxl_servo_move_velocity_abs(movedata_t data);
 
+// Same as above but in Velocity Control Mode. It sets the Goal Velocity instead of the Goal Position.
+cps_err_t dxl_servo_move_duration_velMode(movedata_vel_t data);
+
 // Does the same thing as above but relatively
 cps_err_t dxl_servo_move(movedata_t data);
 cps_err_t dxl_servo_move_duration(movedata_t data);
@@ -108,6 +124,9 @@ cps_err_t dxl_servo_move_velocity(movedata_t data);
 cps_err_t dxl_servo_move_many_abs(movedata_t data[], size_t count);
 cps_err_t dxl_servo_move_many_duration_abs(movedata_t data[], size_t count);
 cps_err_t dxl_servo_move_many_velocity_abs(movedata_t data[], size_t count);
+
+// Same as above but in Velocity Control Mode.
+cps_err_t dxl_servo_move_many_duration_velMode(movedata_vel_t data[], size_t count);
 
 // Move multiple servos at once to relative position, with durations specified for each servo
 cps_err_t dxl_servo_move_many(movedata_t data[], size_t count);
@@ -141,6 +160,9 @@ cps_err_t dxl_set_baudrate(uint8_t id, uint8_t baudRateVal);
 //Set the servo's goal position, the position to which it should move
 cps_err_t dxl_set_goal_position(uint8_t id, uint32_t goalPosition);
 
+//Set the servo's goal velocity, the velocity which it should reach after acceleration
+cps_err_t dxl_set_goal_velocity(uint8_t id, uint32_t goalVelocity);
+
 //Sets the profile velocity. For more info what effect this has on the servo's motion, check: https://emanual.robotis.com/docs/en/dxl/x/xm430-w350/#quick-start
 cps_err_t dxl_set_profile_velocity(uint8_t id, uint32_t velocity);
 
@@ -156,6 +178,8 @@ cps_err_t dxl_set_drive_mode_safe(uint8_t id, uint8_t driveMode);
 
 //Set the operating mode of this servo. Check: https://emanual.robotis.com/docs/en/dxl/x/xm430-w210/#operating-mode11 
 cps_err_t dxl_set_operating_mode(uint8_t id, uint8_t operatingMode);
+
+cps_err_t dxl_get_operating_mode(uint8_t id, uint8_t *result);
 
 //------------------------------------  The functions below are for getting parameters from the servo's addresses ----------------------------------
 

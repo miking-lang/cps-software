@@ -62,6 +62,15 @@ cps_err_t dxl_servo_move_abs(movedata_t servo) {
     return CPS_ERR_OK;
 }
 
+cps_err_t dxl_servo_move_velMode(movedata_t servo) {
+    cps_err_t ret;
+
+    // Set the velocity
+    CPS_RET_ON_ERR(dxl_set_goal_velocity(servo.id, servo.angle));
+
+    return CPS_ERR_OK;
+}
+
 cps_err_t dxl_check_drive_mode_and_torque_on(uint8_t id, uint8_t wantedDriveMode) {
     cps_err_t ret;
 
@@ -85,6 +94,13 @@ cps_err_t dxl_servo_move_duration_abs(movedata_t servo) {
     cps_err_t ret;
     CPS_RET_ON_ERR(dxl_check_drive_mode_and_torque_on(servo.id, DXL_TIME_PROFILE));
     CPS_RET_ON_ERR(dxl_servo_move_abs(servo));
+    return CPS_ERR_OK;
+}
+
+cps_err_t dxl_servo_move_duration_velMode(movedata_vel_t servo) {
+    cps_err_t ret;
+    CPS_RET_ON_ERR(dxl_check_drive_mode_and_torque_on(servo.id, DXL_TIME_PROFILE));
+    CPS_RET_ON_ERR(dxl_set_goal_velocity(servo.id, servo.velocity));
     return CPS_ERR_OK;
 }
 
@@ -145,6 +161,27 @@ cps_err_t dxl_servo_move_many_abs(movedata_t data[], size_t count) {
     return CPS_ERR_OK;
 }
 
+cps_err_t dxl_servo_move_many_velMode(movedata_vel_t data[], size_t count) {
+    //TODO add error handling for groupwrite_num, also add define for length of goal position address
+
+    int groupwrite_num = groupSyncWrite(g_dxl_port_num, DXL_PROTOCOL_VERSION, DXL_ADDR_GoalVelocity, 4);
+
+    for (size_t i = 0; i < count; i++) {
+        movedata_vel_t *servo = &data[i];
+
+        uint8_t dxl_addparam_result = groupSyncWriteAddParam(groupwrite_num, servo->id, servo->velocity, 4);
+        assert(dxl_addparam_result);                //TODO: add error handling here
+    }
+
+    groupSyncWriteTxPacket(groupwrite_num);
+    if (dxl_get_error() != DXL_ERR_OK)
+        return CPS_ERR_DXL;
+
+    groupSyncWriteClearParam(groupwrite_num);
+
+    return CPS_ERR_OK;
+}
+
 cps_err_t dxl_servo_move_many_duration_abs(movedata_t data[], size_t count) {
     cps_err_t ret;
     for (size_t i = 0; i < count; i++) {
@@ -164,6 +201,17 @@ cps_err_t dxl_servo_move_many_velocity_abs(movedata_t data[], size_t count) {
     }
 
     CPS_RET_ON_ERR(dxl_servo_move_many_abs(data, count));
+    return CPS_ERR_OK;
+}
+
+cps_err_t dxl_servo_move_many_duration_velMode(movedata_vel_t data[], size_t count) {
+    cps_err_t ret;
+    for (size_t i = 0; i < count; i++) {
+        movedata_vel_t *servo = &data[i];
+        CPS_RET_ON_ERR(dxl_check_drive_mode_and_torque_on(servo->id, DXL_TIME_PROFILE));
+    }
+
+    CPS_RET_ON_ERR(dxl_servo_move_many_velMode(data, count));
     return CPS_ERR_OK;
 }
 
@@ -274,6 +322,11 @@ cps_err_t dxl_set_goal_position(uint8_t id, uint32_t goalPosition) {
     return (dxl_get_error() == DXL_ERR_OK) ? CPS_ERR_OK : CPS_ERR_DXL;
 }
 
+cps_err_t dxl_set_goal_velocity(uint8_t id, uint32_t goalVelocity) {
+    write4ByteTxRx2(g_dxl_port_num, id, DXL_ADDR_GoalVelocity, goalVelocity);
+    return (dxl_get_error() == DXL_ERR_OK) ? CPS_ERR_OK : CPS_ERR_DXL;
+}
+
 cps_err_t dxl_set_profile_velocity(uint8_t id, uint32_t velocity) {
     write4ByteTxRx2(g_dxl_port_num, id, DXL_ADDR_ProfileVelocity, velocity);
     return (dxl_get_error() == DXL_ERR_OK) ? CPS_ERR_OK : CPS_ERR_DXL;
@@ -304,13 +357,24 @@ cps_err_t dxl_get_drive_mode(uint8_t id, uint8_t *result) {
     return CPS_ERR_OK;
 }
 
-cps_err_t dxl_set_operating_mode(uint8_t id, uint8_t operatingMode){
+cps_err_t dxl_set_operating_mode(uint8_t id, uint8_t operatingMode) {
     bool torque;
     dxl_get_torque(id, &torque);
     if (torque)
         return CPS_ERR_TORQUE_ON;
     write1ByteTxRx2(g_dxl_port_num, id, DXL_ADDR_OperatingMode, operatingMode);
-    return (dxl_get_error() == DXL_ERR_OK) ? CPS_ERR_OK : CPS_ERR_DXL; 
+    return (dxl_get_error() == DXL_ERR_OK) ? CPS_ERR_OK : CPS_ERR_DXL;
+}
+
+cps_err_t dxl_get_operating_mode(uint8_t id, uint8_t *result) {
+    uint8_t tmp;
+
+    tmp = read1ByteTxRx2(g_dxl_port_num, id, DXL_ADDR_OperatingMode);
+    if (dxl_get_error() != DXL_ERR_OK)
+        return CPS_ERR_DXL;
+
+    *result = tmp;
+    return CPS_ERR_OK;
 }
 
 cps_err_t dxl_get_current_position(uint8_t id, uint32_t *result) {

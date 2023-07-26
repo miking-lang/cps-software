@@ -266,6 +266,11 @@ cps_err_t dxl_servo_move_many_velocity(movedata_t data[], size_t count) {
     return dxl_servo_move_many_velocity_abs(abs_data, count);
 }
 
+cps_err_t dxl_reboot(uint8_t id) {
+    reboot2(g_dxl_port_num, id);
+    return (dxl_get_error() == DXL_ERR_OK) ? CPS_ERR_OK : CPS_ERR_DXL;
+}
+
 cps_err_t dxl_set_id(uint8_t id) {
     write1ByteTxRx2(g_dxl_port_num, 1, DXL_ADDR_Id, id);
     return (dxl_get_error() == DXL_ERR_OK) ? CPS_ERR_OK : CPS_ERR_DXL;
@@ -314,6 +319,11 @@ cps_err_t dxl_disable_torque(uint8_t id) {
 
 cps_err_t dxl_set_baudrate(uint8_t id, uint8_t baudRateVal) {
     write1ByteTxRx2(g_dxl_port_num, id, DXL_ADDR_BaudRate, baudRateVal);
+    return (dxl_get_error() == DXL_ERR_OK) ? CPS_ERR_OK : CPS_ERR_DXL;
+}
+
+cps_err_t dxl_set_homing_offset(uint8_t id, uint32_t homingOffset) {
+    write4ByteTxRx2(g_dxl_port_num, id, DXL_ADDR_HomingOffset, homingOffset);
     return (dxl_get_error() == DXL_ERR_OK) ? CPS_ERR_OK : CPS_ERR_DXL;
 }
 
@@ -370,6 +380,17 @@ cps_err_t dxl_get_operating_mode(uint8_t id, uint8_t *result) {
     uint8_t tmp;
 
     tmp = read1ByteTxRx2(g_dxl_port_num, id, DXL_ADDR_OperatingMode);
+    if (dxl_get_error() != DXL_ERR_OK)
+        return CPS_ERR_DXL;
+
+    *result = tmp;
+    return CPS_ERR_OK;
+}
+
+cps_err_t dxl_get_homing_offset(uint8_t id, uint32_t *result) {
+    uint32_t tmp;
+
+    tmp = read4ByteTxRx2(g_dxl_port_num, id, DXL_ADDR_HomingOffset);
     if (dxl_get_error() != DXL_ERR_OK)
         return CPS_ERR_DXL;
 

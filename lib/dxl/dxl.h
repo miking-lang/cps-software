@@ -31,6 +31,7 @@
 #define DXL_ADDR_GoalPosition  116
 #define DXL_ADDR_GoalVelocity  104
 #define DXL_ADDR_PresentPosition  132
+#define DXL_ADDR_HomingOffset 20
 #define DXL_ADDR_ProfileVelocity  112
 #define DXL_ADDR_ProfileAcceleration  108
 #define DXL_ADDR_MinPosition  52
@@ -136,6 +137,8 @@ cps_err_t dxl_servo_move_many_velocity(movedata_t data[], size_t count);
 /*
  * Lower-level functions, for directly communicating with the servos
  */
+//Reboot a servo
+cps_err_t dxl_reboot(uint8_t id);
 //Set a unique ID for this servo. Before an ID is set it is assumed that the motor has ID 1, the default ID of Dynamixel motors
 cps_err_t dxl_set_id(uint8_t id);
 
@@ -156,6 +159,9 @@ cps_err_t dxl_disable_torque(uint8_t id);
 
 //Set the baud rate of this servo, which specifies how many times per second signals are transmitted/received to/from this servo from the controller
 cps_err_t dxl_set_baudrate(uint8_t id, uint8_t baudRateVal);
+
+//Returns the servo's Homing Offset. It is added to the Present Position after the servo is rebooted ot get the acctual position
+cps_err_t dxl_set_homing_offset(uint8_t id, uint32_t homingOffset);
 
 //Set the servo's goal position, the position to which it should move
 cps_err_t dxl_set_goal_position(uint8_t id, uint32_t goalPosition);
@@ -182,6 +188,9 @@ cps_err_t dxl_set_operating_mode(uint8_t id, uint8_t operatingMode);
 cps_err_t dxl_get_operating_mode(uint8_t id, uint8_t *result);
 
 //------------------------------------  The functions below are for getting parameters from the servo's addresses ----------------------------------
+
+//Returns the servo's Homing Offset. It is added to the Present Position after the servo is rebooted ot get the acctual position
+cps_err_t dxl_get_homing_offset(uint8_t id, uint32_t *result);
 
 //Returns the servo's current angle, where 0 degrees = 0 and 360 degrees = 4095
 cps_err_t dxl_get_current_position(uint8_t id, uint32_t *result);

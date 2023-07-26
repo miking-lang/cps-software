@@ -32,6 +32,16 @@
 #define SKEWER_MIN 2000 // Clockwise limit.
 #define SKEWER_MAX 2400 // Counter-clockwise limit.
 
+#define TWISTLOCK1_LOCKED 85
+#define TWISTLOCK2_LOCKED 85
+#define TWISTLOCK3_LOCKED 150
+#define TWISTLOCK4_LOCKED 160
+#define TWISTLOCK1_UNLOCKED 290
+#define TWISTLOCK2_UNLOCKED 290
+#define TWISTLOCK3_UNLOCKED 350
+#define TWISTLOCK4_UNLOCKED 350
+#define TWISTLOCK_STEPS 30
+
 #define WHEELS_SPEED_SCALE 20
 #define BACK_SERVO_SPEED_SCALE 10
 #define DRIVER_SPEED_SCALE 12
@@ -42,9 +52,8 @@
 #define DRIVER_ACC 300
 #define SKEWER_ACC 200
 
-#define TIMEOUT 100
-
 int file;
+int twistlocks_locked = false;
 
 void setPWMFreq(int file, int freq) {
     int prescale = (int)(25000000.0f / (4096 * freq) - 0.5f);
@@ -66,17 +75,33 @@ void setPWM(int file, int channel, int on, int off) {
 }
 
 void lockHeadBlockServos(){
-    setPWM(file, 13, 0, 290); // First servo at 90 degrees
-    setPWM(file, 14, 0, 290); // Second servo at 90 degrees
-    setPWM(file, 12, 0, 350); // Third servo at 90 degrees
-    setPWM(file, 15, 0, 350); // Fourth servo at 90 degrees
+    if (!twistlocks_locked) {
+        // Set servos from 0 to 90 degrees
+        for (float i = 0; i <= TWISTLOCK_STEPS; i++) {
+            setPWM(file, 13, 0, TWISTLOCK1_UNLOCKED * ((TWISTLOCK_STEPS-i)/TWISTLOCK_STEPS) + TWISTLOCK1_LOCKED * (i/TWISTLOCK_STEPS));
+            setPWM(file, 14, 0, TWISTLOCK2_UNLOCKED * ((TWISTLOCK_STEPS-i)/TWISTLOCK_STEPS) + TWISTLOCK2_LOCKED * (i/TWISTLOCK_STEPS));
+            setPWM(file, 12, 0, TWISTLOCK3_UNLOCKED * ((TWISTLOCK_STEPS-i)/TWISTLOCK_STEPS) + TWISTLOCK3_LOCKED * (i/TWISTLOCK_STEPS));
+            setPWM(file, 15, 0, TWISTLOCK4_UNLOCKED * ((TWISTLOCK_STEPS-i)/TWISTLOCK_STEPS) + TWISTLOCK4_LOCKED * (i/TWISTLOCK_STEPS));
+            usleep(30000);
+        }
+        twistlocks_locked = true;
+        usleep(100000);
+    }
 }
 
 void unlockHeadBlockServos(){
-    setPWM(file, 13, 0, 85); // First servo at 0 degrees
-    setPWM(file, 14, 0, 85); // Second servo at 0 degrees
-    setPWM(file, 12, 0, 150); // Third servo at 0 degrees
-    setPWM(file, 15, 0, 160); // Fourth servo at 0 degrees
+    if (twistlocks_locked) {
+        // Set servos from 90 to 0 degrees
+        for (float i = 0; i <= TWISTLOCK_STEPS; i++) {
+            setPWM(file, 13, 0, TWISTLOCK1_LOCKED * ((TWISTLOCK_STEPS-i)/TWISTLOCK_STEPS) + TWISTLOCK1_UNLOCKED * (i/TWISTLOCK_STEPS));
+            setPWM(file, 14, 0, TWISTLOCK2_LOCKED * ((TWISTLOCK_STEPS-i)/TWISTLOCK_STEPS) + TWISTLOCK2_UNLOCKED * (i/TWISTLOCK_STEPS));
+            setPWM(file, 12, 0, TWISTLOCK3_LOCKED * ((TWISTLOCK_STEPS-i)/TWISTLOCK_STEPS) + TWISTLOCK3_UNLOCKED * (i/TWISTLOCK_STEPS));
+            setPWM(file, 15, 0, TWISTLOCK4_LOCKED * ((TWISTLOCK_STEPS-i)/TWISTLOCK_STEPS) + TWISTLOCK4_UNLOCKED * (i/TWISTLOCK_STEPS));
+            usleep(30000);
+        }
+        twistlocks_locked = false;
+        usleep(100000);
+    }
 }
 
 void disableHeadBlockServos(){
@@ -334,17 +359,16 @@ int main(){
         else if (key == 'z') { //Exit loop
             breakLoop = true;
             moveOperation(ongoingOperation, 0);
+            unlockHeadBlockServos();
             ongoingOperation = 0;
         }
         else if (key == 'm') {        //Unlock mg90s servos
             wprintw(buffer, "Unlocking twistlocks\n");
             unlockHeadBlockServos();
-            usleep(100000);
         }
         else if (key == 'n') {
             wprintw(buffer, "Locking twistlocks\n");
             lockHeadBlockServos();
-            usleep(100000);
         }
         print_operation(ongoingOperation, buffer);
 
@@ -368,7 +392,7 @@ int main(){
 		CPS_ERR_CHECK(cps_accel_read_accel(&acc, ACC_DIR_Z, &acc_result));
 		wprintw(buffer, " | acc z: % 2.3f\n", acc_result);
 
-        mvwprintw(buffer, 10, 0, "->  : Move crane right \n <- : Move crane left\n\n v  : Move trolley towards you \n ^  : Move trolley away from you \n\n q  : Move headblock up \n a  : Move headblock down \n\n w  : Skew headblock counter-clockwise \n s  : Skew headblock clockwise \n\n n  : Unlock twistlocks \n m  : Lock twistlocks\n\n1-9 : Change speed\n\nz   : Exit program\n");
+        mvwprintw(buffer, 10, 0, "->  : Move crane right \n <- : Move crane left\n\n v  : Move trolley towards you \n ^  : Move trolley away from you \n\n q  : Move headblock up \n a  : Move headblock down \n\n w  : Skew headblock counter-clockwise \n s  : Skew headblock clockwise \n\n n  : Lock twistlocks \n m  : Unlock twistlocks\n\n1-9 : Change speed\n\nz   : Exit program\n");
 
         // Some delay to see the screen
         wrefresh(buffer);

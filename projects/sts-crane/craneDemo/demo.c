@@ -25,9 +25,9 @@
 
 #define WHEELS_MIN -6500 // Right limit. Recalibrate after crane is put on rail.
 #define WHEELS_MAX 9300 // Left limit. Recalibrate after crane is put on rail.
-#define BACK_SERVO_MIN -11000 // Front limit.
-#define BACK_SERVO_MAX 6500 // Back limit.
-#define DRIVER_MIN 4000 // Lower limit.
+#define BACK_SERVO_MIN -4200 // Front limit.
+#define BACK_SERVO_MAX 15500 // Back limit.
+#define DRIVER_MIN -4000 // Lower limit.
 #define DRIVER_MAX 20000 // Upper limit.
 #define SKEWER_MIN 2000 // Clockwise limit.
 #define SKEWER_MAX 2400 // Counter-clockwise limit.
@@ -172,22 +172,22 @@ void initNcurses(){
 
 void moveOperation(int32_t operation, int speed, WINDOW *buffer) {
     switch(operation){
-        case('a'): { //Driver up
+        case('a'): { // Driver up
             wprintw(buffer, "Moving driver servo downwards\n");
             moveDriverSafe(-speed);
             break;
         }
-        case('q'): { //Driver down
+        case('q'): { // Driver down
             wprintw(buffer, "Moving driver servo upwards\n");
             moveDriverSafe(speed);
             break;
         }
-        case('w'): {
+        case('w'): { // Skew counter-clockwise
             wprintw(buffer, "Moving skewer counter-clockwise\n");
             moveSkewerSafe(speed);
             break;
         }
-        case('s') : {
+        case('s') : { // Skew clockwise
             wprintw(buffer, "Moving skewer clockwise\n");
             moveSkewerSafe(-speed);
             break;
@@ -219,11 +219,11 @@ bool withinLimits(int32_t operation) {
     cps_err_t ret;
     uint32_t position;
     switch(operation) {
-        case('a'): {                //Driver up
+        case('q'): { //Driver up
             CPS_ERR_CHECK(dxl_get_current_position(DRIVER_ID, &position));
             return ((int)(position) <= DRIVER_MAX);
         }
-        case('q'): {                //Driver down
+        case('a'): { //Driver down
             CPS_ERR_CHECK(dxl_get_current_position(DRIVER_ID, &position));
             return ((int)(position) >= DRIVER_MIN);
         }

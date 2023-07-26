@@ -23,13 +23,13 @@
 #define DRIVER_ID 4
 #define SKEWER_ID 5
 
-#define WHEELS_MIN -6500 // Right limit. Recalibrate after crane is put on rail.
-#define WHEELS_MAX 9300 // Left limit. Recalibrate after crane is put on rail.
-#define BACK_SERVO_MIN -4200 // Front limit.
-#define BACK_SERVO_MAX 15500 // Back limit.
-#define DRIVER_MIN -7000 // Lower limit.
-#define DRIVER_MAX 20000 // Upper limit.
-#define SKEWER_MIN 2000 // Clockwise limit.
+#define WHEELS_MIN -18000 // Right limit. Recalibrate after crane is put on rail.
+#define WHEELS_MAX 1000 // Left limit. Recalibrate after crane is put on rail.
+#define BACK_SERVO_MIN -5500 // Front limit.
+#define BACK_SERVO_MAX 13000 // Back limit.
+#define DRIVER_MIN -7700 // Lower limit.
+#define DRIVER_MAX 23429 // Upper limit.
+#define SKEWER_MIN 1700 // Clockwise limit.
 #define SKEWER_MAX 2400 // Counter-clockwise limit.
 
 #define TWISTLOCK1_LOCKED 85
@@ -177,6 +177,32 @@ void initServos(){
     }
 }
 
+void terminateServos() {
+    cps_err_t ret;
+    uint32_t position;
+
+    for (int id = 1; id <= 5; id++) {
+        CPS_ERR_CHECK(dxl_disable_torque(id));
+
+        CPS_ERR_CHECK(dxl_get_current_position(id, &position));
+        int32_t position_int = (int32_t)position;
+
+        // The Present Position register will be set to something between 0-4095 while powered off.
+        // The Homing Offset is added to the Present Position the next time it powers on.
+        if (position_int < 0) {position_int -= 4096;}
+        uint32_t homing_offset = (position_int/4096)*4096; // round down (or up if negative) to closest 4096-multiple
+        CPS_ERR_CHECK(dxl_set_homing_offset(id, homing_offset));
+
+        CPS_ERR_CHECK(dxl_reboot(id)); //Reboot to be sure that Present Position is reseted
+    }
+
+    sleep(1); // Wait for reboot
+
+    for (int id = 1; id <= 5; id++) {
+        CPS_ERR_CHECK(dxl_enable_torque(id));
+    }
+}
+
 void initNcurses(){
     // Initialize ncurses
     initscr();
@@ -193,6 +219,26 @@ void initNcurses(){
 
     //Reduce delay for escape keys
     set_escdelay(25);
+}
+
+void savePositions() {
+    cps_err_t ret;
+    FILE *fp;
+    uint32_t pos;
+
+    fp = fopen("./log.txt", "a");
+    fprintf(fp, "Positions:\n");
+    CPS_ERR_CHECK(dxl_get_current_position(FRONT_WHEELS_ID, &pos));
+    fprintf(fp, "Front wheels: %d\n", pos);
+    CPS_ERR_CHECK(dxl_get_current_position(BACK_WHEELS_ID, &pos));
+    fprintf(fp, "Back wheels: %d\n", pos);
+    CPS_ERR_CHECK(dxl_get_current_position(BACK_SERVO_ID, &pos));
+    fprintf(fp, "Back servo: %d\n", pos);
+    CPS_ERR_CHECK(dxl_get_current_position(DRIVER_ID, &pos));
+    fprintf(fp, "Driver: %d\n", pos);
+    CPS_ERR_CHECK(dxl_get_current_position(SKEWER_ID, &pos));
+    fprintf(fp, "Skewer: %d\n\n", pos);
+    fclose(fp);
 }
 
 void moveOperation(int32_t operation, int speed) {
@@ -361,6 +407,8 @@ int main(){
             moveOperation(ongoingOperation, 0);
             unlockHeadBlockServos();
             ongoingOperation = 0;
+            sleep(1); //Wait until retardation is completed.
+            terminateServos();
         }
         else if (key == 'm') {        //Unlock mg90s servos
             wprintw(buffer, "Unlocking twistlocks\n");
@@ -369,6 +417,9 @@ int main(){
         else if (key == 'n') {
             wprintw(buffer, "Locking twistlocks\n");
             lockHeadBlockServos();
+        }
+        else if (key == 'p') {
+            savePositions();
         }
         print_operation(ongoingOperation, buffer);
 
@@ -392,12 +443,12 @@ int main(){
 		CPS_ERR_CHECK(cps_accel_read_accel(&acc, ACC_DIR_Z, &acc_result));
 		wprintw(buffer, " | acc z: % 2.3f\n", acc_result);
 
-        mvwprintw(buffer, 10, 0, "->  : Move crane right \n <- : Move crane left\n\n v  : Move trolley towards you \n ^  : Move trolley away from you \n\n q  : Move headblock up \n a  : Move headblock down \n\n w  : Skew headblock counter-clockwise \n s  : Skew headblock clockwise \n\n n  : Lock twistlocks \n m  : Unlock twistlocks\n\n1-9 : Change speed\n\nz   : Exit program\n");
+        mvwprintw(buffer, 10, 0, "->  : Move crane right \n <- : Move crane left\n\n v  : Move trolley towards you \n ^  : Move trolley away from you \n\n q  : Move headblock up \n a  : Move headblock down \n\n w  : Skew headblock counter-clockwise \n s  : Skew headblock clockwise \n\n n  : Lock twistlocks \n m  : Unlock twistlocks\n\n1-9 : Change speed\n\n p  : Log positions\n\nz   : Exit program\n");
 
         // Some delay to see the screen
         wrefresh(buffer);
 
-        usleep(10000); // sleep for 0.0001s
+        usleep(10000); // sleep for 0.01s
         if(breakLoop) break;
     }
 

@@ -203,6 +203,20 @@ void terminateServos() {
     }
 }
 
+void enableTorque() {
+    cps_err_t ret;
+    for (int id = 1; id <= 5; id++) {
+        CPS_ERR_CHECK(dxl_enable_torque(id));
+    }
+}
+
+void disableTorque() {
+    cps_err_t ret;
+    for (int id = 1; id <= 5; id++) {
+        CPS_ERR_CHECK(dxl_disable_torque(id));
+    }
+}
+
 void initNcurses(){
     // Initialize ncurses
     initscr();
@@ -402,6 +416,12 @@ int main(){
                 ongoingOperation = 0;
             }
         }
+        else if (key == 'e') {
+            enableTorque();
+        }
+        else if (key == 'd') {
+            disableTorque();
+        }
         else if (key == 'z') { //Exit loop
             breakLoop = true;
             moveOperation(ongoingOperation, 0);
@@ -443,7 +463,7 @@ int main(){
 		CPS_ERR_CHECK(cps_accel_read_accel(&acc, ACC_DIR_Z, &acc_result));
 		wprintw(buffer, " | acc z: % 2.3f\n", acc_result);
 
-        mvwprintw(buffer, 10, 0, "->  : Move crane right \n <- : Move crane left\n\n v  : Move trolley towards you \n ^  : Move trolley away from you \n\n q  : Move headblock up \n a  : Move headblock down \n\n w  : Skew headblock counter-clockwise \n s  : Skew headblock clockwise \n\n n  : Lock twistlocks \n m  : Unlock twistlocks\n\n1-9 : Change speed\n\n p  : Log positions\n\nz   : Exit program\n");
+        mvwprintw(buffer, 10, 0, "->  : Move crane right \n <- : Move crane left\n\n v  : Move trolley towards you \n ^  : Move trolley away from you \n\n q  : Move headblock up \n a  : Move headblock down \n\n w  : Skew headblock counter-clockwise \n s  : Skew headblock clockwise \n\n e  : Enable torque \n d  : Disable torque \n\n n  : Lock twistlocks \n m  : Unlock twistlocks\n\n1-9 : Change speed\n\n p  : Log positions\n\nz   : Exit program\n");
 
         // Some delay to see the screen
         wrefresh(buffer);

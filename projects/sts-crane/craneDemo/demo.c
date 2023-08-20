@@ -25,8 +25,8 @@
 
 #define WHEELS_MIN -18000 // Right limit. Recalibrate after crane is put on rail.
 #define WHEELS_MAX 1000 // Left limit. Recalibrate after crane is put on rail.
-#define BACK_SERVO_MIN -5500 // Front limit.
-#define BACK_SERVO_MAX 13000 // Back limit.
+#define BACK_SERVO_MIN -5000 // Front limit.
+#define BACK_SERVO_MAX 53000 // Back limit.
 #define DRIVER_MIN -7700 // Lower limit.
 #define DRIVER_MAX 23429 // Upper limit.
 #define SKEWER_MIN 1700 // Clockwise limit.
@@ -43,7 +43,7 @@
 #define TWISTLOCK_STEPS 30
 
 #define WHEELS_SPEED_SCALE 20
-#define BACK_SERVO_SPEED_SCALE 10
+#define BACK_SERVO_SPEED_SCALE 35
 #define DRIVER_SPEED_SCALE 12
 #define SKEWER_SPEED_SCALE 1
 

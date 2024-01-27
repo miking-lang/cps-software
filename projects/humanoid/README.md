@@ -27,7 +27,7 @@ The three batteries need to be charged using the SKYRC S65 charger in the lab. W
 ![](./images/IMG_2786.png)
 
 </br>
-1. Connect the battery's XT60 connector and balancer to the SKYRC charger:
+3. Connect the battery's XT60 connector and balancer to the SKYRC charger:
    
 ![](./images/IMG_2787.png)
 ![](./images/IMG_2788.png)
@@ -60,7 +60,7 @@ The three batteries need to be charged using the SKYRC S65 charger in the lab. W
 ![](./images/IMG_2757.png)
 
 </br>
-1. Place the two batteries in the back:
+3. Place the two batteries in the back:
 
 ![](./images/IMG_2744.png)
 ![](./images/IMG_2745.png)
@@ -71,7 +71,7 @@ The three batteries need to be charged using the SKYRC S65 charger in the lab. W
 
 </br>
 
-1. Seal the back battery holder, with the same M3x8mm screws:
+4. Seal the back battery holder, with the same M3x8mm screws:
 
 ![](./images/IMG_2749.png)
 ![](./images/IMG_2750.png)
@@ -80,7 +80,7 @@ The three batteries need to be charged using the SKYRC S65 charger in the lab. W
 
 </br>
 
-1. Connect the battery cables to the XT60 parallel adapters. The front battery cable should go to the lower XT60 connector, as shown here:
+5. Connect the battery cables to the XT60 parallel adapters. The front battery cable should go to the lower XT60 connector, as shown here:
 
 ![](./images/IMG_2758.png)
 ![](./images/IMG_2759.png)

@@ -11,7 +11,7 @@ Where the post-fixes _x, _y, and _z denote the axis around which the motor rotat
 
 The three batteries need to be charged using the SKYRC S65 charger in the lab. With the Conrad 3S, 2400mAh, 20C LiPo batteries, it should be done as follows:
 
-> ⚠️ **Warning**: Make sure that you use the correct battery settings when charging the LiPo battery. Don't leave a charging LiPo battery unattended.
+> ⚠️ **Warning**: Make sure that you use the correct battery settings when charging the LiPo battery. Wrong battery settings may result in the battery catching fire. Don't leave a charging LiPo battery unattended.
 </br>
 1. Gather the LiPo battery, the SKYRC charger, and the LiPo safety bag: 
 

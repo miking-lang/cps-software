@@ -20,13 +20,15 @@ The three batteries need to be charged using the SKYRC S65 charger in the lab. W
 </br>
 2. Put the LiPo battery in the safety bag:
 
-<img src="./images/IMG_2782.png" alt="Alt text" width="285" height="200">
-<img src="./images/IMG_2784.png" alt="Alt text" width="285" height="200">
-<img src="./images/IMG_2785.png" alt="Alt text" width="285" height="200">
-<img src="./images/IMG_2786.png" alt="Alt text" width="285" height="200">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+    <img src="./images/IMG_2782.png" alt="Alt text" style="max-width: 285px; height: auto; margin: 1px;">
+    <img src="./images/IMG_2784.png" alt="Alt text" style="max-width: 285px; height: auto; margin: 1px;">
+    <img src="./images/IMG_2785.png" alt="Alt text" style="max-width: 285px; height: auto; margin: 1px;">
+    <img src="./images/IMG_2786.png" alt="Alt text" style="max-width: 285px; height: auto; margin: 1px;">
+</div>
 
 </br>
-3. Connect the battery's XT60 connector and balancer to the SKYRC charger:
+1. Connect the battery's XT60 connector and balancer to the SKYRC charger:
    
 <img src="./images/IMG_2787.png" alt="Alt text" width="285" height="200">
 <img src="./images/IMG_2788.png" alt="Alt text" width="285" height="200">

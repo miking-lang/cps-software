@@ -42,7 +42,7 @@ The three batteries need to be charged using the SKYRC S65 charger in the lab. W
 
 ![](./images/IMG_2790.png)
 
-#### 2. Place batteries in the humanoid
+### 2. Place batteries in the humanoid
 
 </br>
 1. Place the battery in the front:
@@ -87,11 +87,11 @@ The three batteries need to be charged using the SKYRC S65 charger in the lab. W
 ![](./images/IMG_2760.png)
 ![](./images/IMG_2761.png)
 
-#### 3. Connect your computer to the U2D2
+### 3. Connect your computer to the U2D2
 
 ![](./images/IMG_2780.png)
 ![](./images/IMG_2781.png)
 
-#### 4. Run the python scripts.
+### 4. Run the python scripts.
 
-Make sure that you have dynamixel_sdk installed on your computer. Instructions for installing on linux can be found ![here](https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_sdk/library_setup/python_linux/#python-linux) Then, run the `main.py` file, replacing `humanoid.go_to_base_position()` with a call to any of the other position functions in `humanoid.py`. It is good to hold the humanoid above the ground before starting a script, as this ensures that the motors will be able to go to their starting positions properly. 
+Make sure that you have dynamixel_sdk installed on your computer. Instructions for installing on linux can be found [here](https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_sdk/library_setup/python_linux/#python-linux) Then, run the `main.py` file, replacing `humanoid.go_to_base_position()` with a call to any of the other position functions in `humanoid.py`. It is good to hold the humanoid above the ground before starting a script, as this ensures that the motors will be able to go to their starting positions properly. 

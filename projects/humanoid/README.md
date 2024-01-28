@@ -97,3 +97,5 @@ The three batteries need to be charged using the SKYRC S65 charger in the lab. W
 Make sure that you have dynamixel_sdk installed on your computer. Instructions for installing on linux can be found [here](https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_sdk/library_setup/python_linux/#python-linux). Then, run the `main.py` file, replacing `humanoid.go_to_base_position()` with a call to any of the other position functions in `humanoid.py`. It is good to hold the humanoid above the ground before starting a script, as this ensures that the motors will be able to go to their starting positions properly. 
 
 > ⚠️ **Warning**: When disabling torques for the robot, make sure that it is supported, for example by you holding the robot with your hands. If you disable torques without supporting the robot, it will fall to the ground and may get damaged.
+
+> ⚠️ **Warning**: For the squat movement, the robot may fall at any point. Therefore, be ready to catch the robot during the entire movement.

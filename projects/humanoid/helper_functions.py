@@ -67,7 +67,7 @@ class DynamixelHandler:
         return res
 
     def read_servo_positions(self, ids):
-        return self.read_servos(ids, 132, 4)
+        return self.read_servos(ids, ADDR_PRESENT_POSITION, 4)
 
     def read_servo_voltages(self, ids):
         return self.read_servos(ids, ADDR_PRESENT_VOLTAGE, 2)

@@ -14,6 +14,11 @@ Quadruped robot. The folder for this project contains:
 ### [Ship-To-Shore Crane](projects/sts-crane) 
 Prototype of a [Ship-To-Shore Crane](https://en.wikipedia.org/wiki/Container_crane). This work is in progress, and neither the software nor the documentation is thus completed.  
 
+### [Humanoid](projects/humanoid) 
+Humanoid robot. The folder for this project contains:
+* Instructions for setting up a demo
+* Source code to control the robot
+
 ## Library
 [lib](lib) contains library code for motors and sensors used by the projects. In specific, library code for these motors and sensors are included: 
 * Accelerometer/gyroscope (mpu6050)

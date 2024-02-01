@@ -109,3 +109,24 @@ cdef class Accelerometer:
         if ret != CPS_ERR_OK:
             raise RuntimeError(cps_err_t_str[int(ret)].decode("utf-8"))
         return result
+
+    def read_gyro_x(self):
+        cdef float result
+        ret = cps_accel_read_gyro(&self.acc, ACC_DIR_X, &result)
+        if ret != CPS_ERR_OK:
+            raise RuntimeError(cps_err_t_str[int(ret)].decode("utf-8"))
+        return result
+
+    def read_gyro_y(self):
+        cdef float result
+        ret = cps_accel_read_gyro(&self.acc, ACC_DIR_Y, &result)
+        if ret != CPS_ERR_OK:
+            raise RuntimeError(cps_err_t_str[int(ret)].decode("utf-8"))
+        return result
+
+    def read_gyro_z(self):
+        cdef float result
+        ret = cps_accel_read_gyro(&self.acc, ACC_DIR_Z, &result)
+        if ret != CPS_ERR_OK:
+            raise RuntimeError(cps_err_t_str[int(ret)].decode("utf-8"))
+        return result

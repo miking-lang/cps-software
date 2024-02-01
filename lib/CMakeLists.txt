@@ -60,25 +60,45 @@ set_target_properties(cps_dist PROPERTIES
 	EXCLUDE_FROM_ALL TRUE
 )
 
-# CPS RPC server library
-add_library(cps_rpcserver STATIC EXCLUDE_FROM_ALL
-    "rpc/rpc.c"
-    "rpc/server/base.c"
-    "rpc/server/generated.c"
+# Temporary: A common shared library with most of the features.
+# (not the dist or cam yet...)
+add_library(mi_cps SHARED
+	"accel/accel.c"
+	"cps/cps.c"
+	"dxl/dxl.c"
 )
-target_include_directories(cps_rpcserver PUBLIC
-    "rpc/" "dxl/" "accel/" "dist/")
-target_link_libraries(cps_rpcserver PUBLIC common cps_com)
+target_include_directories(mi_cps PUBLIC
+	"cps/"
+)
+target_link_libraries(mi_cps PUBLIC
+	common
+	m
+	i2c
+	dxl_sbc_c
+)
+set_target_properties(mi_cps PROPERTIES
+	EXCLUDE_FROM_ALL TRUE
+)
+
+# CPS RPC server library
+#add_library(cps_rpcserver STATIC EXCLUDE_FROM_ALL
+#    "rpc/rpc.c"
+#    "rpc/server/base.c"
+#    "rpc/server/generated.c"
+#)
+#target_include_directories(cps_rpcserver PUBLIC
+#    "rpc/" "dxl/" "accel/" "dist/")
+#target_link_libraries(cps_rpcserver PUBLIC common cps_com)
 
 # CPS RPC client library
-add_library(cps_rpcclient STATIC EXCLUDE_FROM_ALL
-    "rpc/rpc.c"
-    "rpc/client/base.c"
-    "rpc/client/generated.c"
-)
-target_include_directories(cps_rpcclient PUBLIC
-    "rpc/" "dxl/" "accel/" "dist/")
-target_link_libraries(cps_rpcclient PUBLIC common cps_com)
+#add_library(cps_rpcclient STATIC EXCLUDE_FROM_ALL
+#    "rpc/rpc.c"
+#    "rpc/client/base.c"
+#    "rpc/client/generated.c"
+#)
+#target_include_directories(cps_rpcclient PUBLIC
+#    "rpc/" "dxl/" "accel/" "dist/")
+#target_link_libraries(cps_rpcclient PUBLIC common cps_com)
 
 ## EXAMPLES ##
 
@@ -128,20 +148,20 @@ target_link_libraries(dist-example PUBLIC
 )
 
 # CPS RPC server example
-add_executable(rpc-server-example EXCLUDE_FROM_ALL
-    "examples/rpc_server.c"
-)
-target_include_directories(rpc-server-example PUBLIC
-    "cps/" "dxl/" "rpc/"
-)
-target_link_libraries(rpc-server-example PUBLIC common cps_rpcserver)
+#add_executable(rpc-server-example EXCLUDE_FROM_ALL
+#    "examples/rpc_server.c"
+#)
+#target_include_directories(rpc-server-example PUBLIC
+#    "cps/" "dxl/" "rpc/"
+#)
+#target_link_libraries(rpc-server-example PUBLIC common cps_rpcserver)
 
 # CPS RPC mock server example
-add_executable(rpc-mock-server-example EXCLUDE_FROM_ALL
-    "examples/rpc_server.c"
-)
-target_compile_definitions(rpc-mock-server-example PUBLIC MOCK_DXL)
-target_include_directories(rpc-mock-server-example PUBLIC
-    "cps/" "dxl/" "rpc/"
-)
-target_link_libraries(rpc-mock-server-example PUBLIC common cps_rpcserver)
+#add_executable(rpc-mock-server-example EXCLUDE_FROM_ALL
+#    "examples/rpc_server.c"
+#)
+#target_compile_definitions(rpc-mock-server-example PUBLIC MOCK_DXL)
+#target_include_directories(rpc-mock-server-example PUBLIC
+#    "cps/" "dxl/" "rpc/"
+#)
+#target_link_libraries(rpc-mock-server-example PUBLIC common cps_rpcserver)

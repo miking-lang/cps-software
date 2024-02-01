@@ -1,0 +1,10 @@
+--- c/src/dynamixel_sdk/packet_handler.c 2023-01-01 12:00:00.000000 +0000
++++ c/src/dynamixel_sdk/packet_handler.c 2023-01-01 12:00:00.000000 +0000
+@@ -33,5 +33,7 @@
+ #include "protocol2_packet_handler.h"
+ #endif
+
++PacketData *packetData;
++
+ void packetHandler()
+ {

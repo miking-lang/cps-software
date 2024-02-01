@@ -8,7 +8,7 @@ test-docker:
 	$(eval DOCKERNAME := cps-software-test)
 	$(eval RUNCMD := $(shell echo \
 		"apt update; " \
-		"apt install -y make cmake gcc g++ bash-completion libi2c-dev zip wget patch; " \
+		"apt install -y make cmake gcc g++ bash-completion libi2c-dev zip wget patch cython3 python3; " \
 		"cp /mnt/server/bashrc.sh /root/.bashrc; " \
 		"source /root/.bashrc; " \
 		"cd /root; " \

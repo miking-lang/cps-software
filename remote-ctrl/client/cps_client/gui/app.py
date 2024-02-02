@@ -65,18 +65,20 @@ class MainWindow(Gtk.ApplicationWindow):
         self.quit_button.set_size_request(-1, 60)
         self.quit_button.set_hexpand(True)
         self.quit_button.add_css_class("red-button")
-
-        # Set the background color programmatically
-        #color = Gdk.RGBA()
-        #color.parse("blue")  # You can specify a color name or use hexadecimal values
-        #self.quit_button.override_background_color(Gtk.StateFlags.NORMAL, color)
-
         self.topbox.append(self.quit_button)
+
+
+        self.notebook = Gtk.Notebook()
+        self.mainbox.append(self.notebook)
+
+        self.logbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.logbox_label = Gtk.Label(label="Logs")
+        self.notebook.append_page(self.logbox, self.logbox_label)
 
         self.entry = Gtk.Entry()
         self.entry.set_placeholder_text("Enter command")
         self.entry.connect("activate", self.on_entered_command)
-        self.mainbox.append(self.entry)
+        self.logbox.append(self.entry)
 
         # Create a text view widget
         self.textview = Gtk.TextView()
@@ -93,7 +95,7 @@ class MainWindow(Gtk.ApplicationWindow):
         textbuffer = self.textview.get_buffer()
         textbuffer.set_text("")
 
-        self.mainbox.append(scrolled_window)
+        self.logbox.append(scrolled_window)
 
         self.text_entries = []
 

@@ -73,6 +73,11 @@ extern int g_dxl_port_num;
 cps_err_t dxl_init(const char *tty);
 
 /**
+ * @brief Close the DynamixelSDK port opened with init.
+ */
+void dxl_close();
+
+/**
  * @brief Return the last DynamixelSDK error.
  * 
  * @return See source of #dxl_get_error

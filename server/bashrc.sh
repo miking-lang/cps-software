@@ -2,6 +2,8 @@
 
 export SHELL=bash
 
+export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+
 # Some bash completion (for debugging purposes)
 if [ -f /etc/bash_completion ]; then
  . /etc/bash_completion

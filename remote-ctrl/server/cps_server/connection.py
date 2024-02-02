@@ -58,6 +58,8 @@ class SpiderTCPHandler(socketserver.BaseRequestHandler):
                     active = False
                 elif inpkt.op == "PING":
                     outpkt = slipp.Packet("PONG", seq=inpkt.seq)
+                elif inpkt.op == "LSCONN":
+                    outpkt = slipp.Packet("CONNS", seq=inpkt.seq, contents={"hosts": list(CONNECTED_HOSTS["hosts"])})
                 else:
                     outpkt = controller.handle_incoming_packet(inpkt)
 

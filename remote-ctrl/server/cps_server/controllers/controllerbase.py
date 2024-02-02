@@ -51,7 +51,7 @@ class ControllerBase:
             return errpkt(f"unrecognized command \"{packet.op}\"")
 
         n_args = len(fn_info["argtypes"])
-        recv_args = packet.content.get("args", [])
+        recv_args = packet.contents.get("args", [])
         if len(recv_args) != n_args:
             return errpkt(f"Expected {n_args} args, got {len(recv_args)}")
         if not isinstance(recv_args, list):
@@ -62,7 +62,7 @@ class ControllerBase:
                 return errpkt(f"Arg at index {i} is of type {type(v_arg).__name__}, expected {t_arg.__name__}")
 
         try:
-            ret = fn_info["fn"](*recv_args)
+            ret = fn_info["fn"](self, *recv_args)
             outpkg = slipp.Packet(
                 op="ACK", seq=packet.seq,
                 contents=ret,

@@ -1,0 +1,11 @@
+name: cps-client-gui
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.11
+  - numpy
+  - scipy
+  - pip
+  - tqdm
+  - gtk4
+  - pygobject

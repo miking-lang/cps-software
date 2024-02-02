@@ -4,7 +4,7 @@ import socket
 import sys
 import time
 
-from cps_server import slipp
+from cps_client import slipp
 
 HOST, PORT = "localhost", 8372
 

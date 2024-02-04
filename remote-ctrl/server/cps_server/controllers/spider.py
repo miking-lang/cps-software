@@ -16,18 +16,18 @@ SERVO_INDEX_LOOKUP = {
 }
 
 SERVO_ORDER = [
-    "FR_INNER_SHOULDER",
-    "FR_OUTER_SHOULDER",
-    "FR_ELBOW",
     "FL_INNER_SHOULDER",
     "FL_OUTER_SHOULDER",
     "FL_ELBOW",
-    "BR_INNER_SHOULDER",
-    "BR_OUTER_SHOULDER",
-    "BR_ELBOW",
+    "FR_INNER_SHOULDER",
+    "FR_OUTER_SHOULDER",
+    "FR_ELBOW",
     "BL_INNER_SHOULDER",
     "BL_OUTER_SHOULDER",
     "BL_ELBOW",
+    "BR_INNER_SHOULDER",
+    "BR_OUTER_SHOULDER",
+    "BR_ELBOW",
 ]
 
 ALL_SERVO_IDS = [SERVO_INDEX_LOOKUP[name] for name in SERVO_ORDER]
@@ -70,13 +70,9 @@ class SpiderController(ControllerBase):
         self.dxl_handler.move_many_servos([SERVO_INDEX_LOOKUP[name]], [position], self.duration)
         return dict()
 
-    @register_read(argtypes=[list])
-    def move_all_servos(self, positions):
-        if len(positions) != len(ALL_SERVO_IDS):
-            raise ValueError(f"Expected a list of length {len(ALL_SERVO_IDS)}, got {len(positions)}")
+    @register_read(argtypes=[int]*len(ALL_SERVO_IDS))
+    def move_all_servos(self, *positions):
         for v in positions:
-            if not isinstance(v, int):
-                raise ValueError(f"All entries in list must be an integer, found {type(v)}")
             if v not in range(0, 4096):
                 raise ValueError(f"Servo values must be in range 0 to 4095")
 
@@ -135,3 +131,7 @@ class SpiderController(ControllerBase):
     @register_write()
     def disable_torque(self):
         return self.dxl_handler.disable_torques(ALL_SERVO_IDS)
+
+    @register_read()
+    def get_torque_enabled(self):
+        return self.dxl_handler.get_torque_enabled(ALL_SERVO_IDS)

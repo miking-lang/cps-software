@@ -7,7 +7,7 @@ from ..connection import ThreadedClientConnection
 
 from ._gtk4 import GLib, Gtk, Gdk
 
-from .boxes import ConnectionBox, LoggingBox, TelemetryBox
+from .boxes import CommandBox, ConnectionBox, LoggingBox, TelemetryBox
 
 NAME = "Remote Ctrl GUI Client"
 CURDIR = pathlib.Path(os.path.dirname(os.path.abspath(__file__)))
@@ -87,8 +87,17 @@ class MainWindow(Gtk.ApplicationWindow):
         self.telemetry_label = Gtk.Label(label="Telemetry")
         self.telemetry_label.set_size_request(100, 30)
 
+        # COMMAND
+        self.command = CommandBox(
+            logfn=self.logbox.add_log_entry,
+            client_send=self.connbox.client_send,
+        )
+        self.command_label = Gtk.Label(label="Command")
+        self.command_label.set_size_request(100, 30)
+
         self.notebook.append_page(self.connbox, self.connbox_label)
         self.notebook.append_page(self.telemetry, self.telemetry_label)
+        self.notebook.append_page(self.command, self.command_label)
         self.notebook.append_page(self.logbox, self.logbox_label)
 
         self.ongoing_timeouts = 0
@@ -131,6 +140,15 @@ class MainWindow(Gtk.ApplicationWindow):
         # Every second, refresh the connbox
         if total_ms % 1000 == 0:
             self.connbox.refresh()
+
+        # Every 2000 ms, refresh the telemetry
+        if total_ms % 2000 == 0:
+            self.telemetry.refresh()
+
+        # Every 1000 ms, run commands
+        # TODO: this should be an internal timer!
+        if total_ms % 1000 == 0:
+            self.command.refresh()
 
         # Start the timeout again
         self.start_timeout()

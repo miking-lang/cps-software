@@ -1,14 +1,29 @@
 #!/usr/bin/env python3
 
+import signal
 import socket
 import socketserver
 
 from . import slipp
 from .controllers.spider import SpiderController
 
+
+PREV_HANDLERS = dict()
+
+def sighandler(sig, frame):
+    print(f"Received signal \"{signal.strsignal(sig)}\" ({sig})", flush=True)
+    return PREV_HANDLERS[sig](sig, frame)
+
+def track_signal(sig):
+    if sig not in PREV_HANDLERS:
+        prev_handle = signal.signal(sig, sighandler)
+        PREV_HANDLERS[sig] = prev_handle
+
+
 CONNECTED_HOSTS = {
     "hosts": set()
 }
+
 
 class SpiderTCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
@@ -19,7 +34,7 @@ class SpiderTCPHandler(socketserver.BaseRequestHandler):
         controller = SpiderController()
 
         def logprint(*msgs, **kwargs):
-            print(this_host, *msgs, **kwargs)
+            print(this_host, *msgs, flush=True, **kwargs)
 
         # set a timeout value of 1 second, allow for at most 30 seconds without
         # any communication
@@ -76,6 +91,9 @@ class SpiderTCPHandler(socketserver.BaseRequestHandler):
 
 
 def run_spider(host="0.0.0.0", port=8372):
-    print(f"Running server at {host}:{port}")
+    track_signal(signal.SIGINT)
+    track_signal(signal.SIGHUP)
+    track_signal(signal.SIGTERM)
+    print(f"Running server at {host}:{port}", flush=True)
     with socketserver.TCPServer((host, port), SpiderTCPHandler) as server:
         server.serve_forever()

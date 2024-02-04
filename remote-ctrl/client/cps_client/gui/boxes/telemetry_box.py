@@ -16,17 +16,25 @@ class TelemetryBox(Gtk.Box):
         self.logfn = logfn
         self.client_send = client_send
 
-        self.leg_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10, homogeneous=True)
+        self.leg_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+
+        self.LEG_ORDER = ["front_left", "front_right", "back_left", "back_right"]
+        self.JOINT_ORDER = ["inner_shoulder", "outer_shoulder", "elbow"]
 
         self.leg_objects = dict()
-        for leg in ["front_left", "front_right", "back_left", "back_right"]:
+        for leg in self.LEG_ORDER:
+            if len(self.leg_objects) > 0:
+                sep = Gtk.Separator(orientation=Gtk.Orientation.VERTICAL)
+                self.leg_box.append(sep)
+
             self.leg_objects[leg] = dict()
 
             b = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+            b.set_hexpand(True)
             self.leg_box.append(b)
             self.leg_objects[leg]["box"] = b
 
-            for jnt in ["inner_shoulder", "outer_shoulder", "ankle"]:
+            for jnt in self.JOINT_ORDER:
                 ident = f"{leg}_{jnt}"
                 s = " ".join([p.capitalize() for p in ident.split("_")])
                 label = Gtk.Label(label=s)
@@ -59,7 +67,17 @@ class TelemetryBox(Gtk.Box):
         self.button_box.append(self.btn_disable_torque)
 
     def refresh(self):
-        pass
+        def update_servos(pkt):
+            if pkt.op != "ACK":
+                return None
+
+            i = -1
+            for leg in self.LEG_ORDER:
+                for jnt in self.JOINT_ORDER:
+                    i += 1
+                    self.leg_objects[leg][jnt]["entry"].set_text(f"{pkt.contents[i]}")
+
+        self.client_send(slipp.Packet("read_all_servo_positions"), on_recv_callback=update_servos)
 
     def on_enable_torque(self, btn):
         self.logfn("Telemetry", "enabling torque")

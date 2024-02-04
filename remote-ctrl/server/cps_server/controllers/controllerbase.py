@@ -51,7 +51,10 @@ class ControllerBase:
             return errpkt(f"unrecognized command \"{packet.op}\"")
 
         n_args = len(fn_info["argtypes"])
-        recv_args = packet.contents.get("args", [])
+        recv_args = []
+        if isinstance(packet.contents, dict):
+            recv_args = packet.contents.get("args", [])
+
         if len(recv_args) != n_args:
             return errpkt(f"Expected {n_args} args, got {len(recv_args)}")
         if not isinstance(recv_args, list):

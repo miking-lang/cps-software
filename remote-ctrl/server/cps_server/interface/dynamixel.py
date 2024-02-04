@@ -109,3 +109,10 @@ class DynamixelHandler:
     def disable_torques(self, ids):
         for id in ids:
             self.packetHandler.write1ByteTxRx(self.portHandler, id, ADDR_TORQUE_ENABLE, 0)
+
+    def get_torque_enabled(self, ids):
+        values = []
+        for id in ids:
+            ret = self.packetHandler.read1ByteTxRx(self.portHandler, id, ADDR_TORQUE_ENABLE)
+            values.append(ret)
+        return values

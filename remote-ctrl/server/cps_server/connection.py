@@ -44,27 +44,32 @@ class SpiderTCPHandler(socketserver.BaseRequestHandler):
             if timeout_count != 0:
                 continue
 
-            (inpkt, msg, data) = slipp.Packet.decode(data)
-            outpkt = None
+            can_read_packet = True
 
-            if inpkt is None:
-                if msg is not None:
-                    logprint("Invalid packet:", msg)
-                    outpkt = slipp.Packet("NAK")
-            else:
-                logprint("Received packet:", inpkt)
-                # Special cases
-                if inpkt.op == "BYE":
-                    active = False
-                elif inpkt.op == "PING":
-                    outpkt = slipp.Packet("PONG", seq=inpkt.seq)
-                elif inpkt.op == "LSCONN":
-                    outpkt = slipp.Packet("CONNS", seq=inpkt.seq, contents={"hosts": list(CONNECTED_HOSTS["hosts"])})
+            while can_read_packet and active:
+                prevlen = len(data)
+                (inpkt, msg, data) = slipp.Packet.decode(data)
+                outpkt = None
+                can_read_packet = bool(prevlen != len(data))
+
+                if inpkt is None:
+                    if msg is not None:
+                        logprint("Invalid packet:", msg)
+                        outpkt = slipp.Packet("NAK")
                 else:
-                    outpkt = controller.handle_incoming_packet(inpkt)
+                    logprint("Received packet:", inpkt)
+                    # Special cases
+                    if inpkt.op == "BYE":
+                        active = False
+                    elif inpkt.op == "PING":
+                        outpkt = slipp.Packet("PONG", seq=inpkt.seq)
+                    elif inpkt.op == "LSCONN":
+                        outpkt = slipp.Packet("CONNS", seq=inpkt.seq, contents={"hosts": list(CONNECTED_HOSTS["hosts"])})
+                    else:
+                        outpkt = controller.handle_incoming_packet(inpkt)
 
-            if outpkt is not None:
-                self.request.sendall(bytes(outpkt))
+                if outpkt is not None:
+                    self.request.sendall(bytes(outpkt))
 
         CONNECTED_HOSTS["hosts"].remove(this_host)
         logprint("Done, terminating connection")
@@ -72,5 +77,5 @@ class SpiderTCPHandler(socketserver.BaseRequestHandler):
 
 def run_spider(host="0.0.0.0", port=8372):
     print(f"Running server at {host}:{port}")
-    with socketserver.ThreadingTCPServer((host, port), SpiderTCPHandler) as server:
+    with socketserver.TCPServer((host, port), SpiderTCPHandler) as server:
         server.serve_forever()

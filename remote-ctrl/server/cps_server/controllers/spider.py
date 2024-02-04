@@ -48,17 +48,69 @@ class SpiderController(ControllerBase):
         #self.dxl_handler = DynamixelHandler(dev_dxl)
         #self.accel_handler = Accelerometer(dev_accel)
 
+        self.duration = 1500
+
+    @register_read()
+    def get_duration(self):
+        return self.duration
+
+    @register_write(argtypes=[int])
+    def set_duration(self, duration):
+        if duration < 100:
+            raise ValueError("Expected a duration of at least 100")
+        self.duration = duration
+        return {"new_duration": self.duration}
+
     @register_read()
     def get_servos(self):
         return SERVO_ORDER
+
+    @register_read(argtypes=[str, int])
+    def move_single_servo(self, name, position):
+        self.dxl_handler.move_many_servos([SERVO_INDEX_LOOKUP[name]], [position], self.duration)
+        return dict()
+
+    @register_read(argtypes=[list])
+    def move_all_servos(self, positions):
+        if len(positions) != len(ALL_SERVO_IDS):
+            raise ValueError(f"Expected a list of length {len(ALL_SERVO_IDS)}, got {len(positions)}")
+        for v in positions:
+            if not isinstance(v, int):
+                raise ValueError(f"All entries in list must be an integer, found {type(v)}")
+            if v not in range(0, 4096):
+                raise ValueError(f"Servo values must be in range 0 to 4095")
+
+        self.dxl_handler.move_many_servos(ALL_SERVO_IDS, positions, self.duration)
+        return dict()
+
+    @register_read(argtypes=[str])
+    def read_single_servo_position(self, name):
+        ret = self.dxl_handler.read_servo_positions([SERVO_INDEX_LOOKUP[name]])
+        return ret[0]
 
     @register_read()
     def read_all_servo_positions(self):
         return self.dxl_handler.read_servo_positions(ALL_SERVO_IDS)
 
-    @register_read(argtypes=[str])
-    def read_single_servo_position(self, name):
-        return self.dxl_handler.read_servo_positions(SERVO_INDEX_LOOKUP[name])
+    @register_read()
+    def read_all_servo_position_trajectories(self):
+        return self.dxl_handler.read_servo_position_trajectories(ALL_SERVO_IDS)
+
+    @register_read()
+    def read_all_servo_velocities(self):
+        return self.dxl_handler.read_servo_velocities(ALL_SERVO_IDS)
+
+    @register_read()
+    def read_all_servo_velocity_trajectories(self):
+        return self.dxl_handler.read_servo_velocity_trajectories(ALL_SERVO_IDS)
+
+    @register_read()
+    def read_all_servo_PWM(self):
+        return self.dxl_handler.read_servo_PWM(ALL_SERVO_IDS)
+
+    @register_read()
+    def read_all_servo_currents(self):
+        return self.dxl_handler.read_servo_currents(ALL_SERVO_IDS)
 
     @register_read()
     def read_accel(self):
@@ -75,3 +127,11 @@ class SpiderController(ControllerBase):
             self.accel_handler.read_gyro_y(),
             self.accel_handler.read_gyro_z()
         ]
+
+    @register_write()
+    def enable_torque(self):
+        return self.dxl_handler.enable_torques(ALL_SERVO_IDS)
+
+    @register_write()
+    def disable_torque(self):
+        return self.dxl_handler.disable_torques(ALL_SERVO_IDS)

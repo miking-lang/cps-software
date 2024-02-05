@@ -25,6 +25,9 @@ class TelemetryBox(Gtk.Box):
         entry_attrs = Pango.AttrList()
         entry_attrs.insert(Pango.AttrFontDesc.new(Pango.FontDescription("Monospace")))
 
+        title_attrs = Pango.AttrList()
+        title_attrs.insert(Pango.attr_weight_new(Pango.Weight.BOLD))
+
         self.leg_objects = dict()
         for leg in self.LEG_ORDER:
             if len(self.leg_objects) > 0:
@@ -33,16 +36,23 @@ class TelemetryBox(Gtk.Box):
 
             self.leg_objects[leg] = dict()
 
-            b = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+            b = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
             b.set_hexpand(True)
             self.leg_box.append(b)
             self.leg_objects[leg]["box"] = b
 
+            s = " ".join([p.capitalize() for p in leg.split("_")])
+            leg_label = Gtk.Label(label=s)
+            leg_label.set_margin_top(5)
+            leg_label.set_margin_bottom(10)
+            leg_label.set_attributes(title_attrs)
+            b.append(leg_label)
+
             for jnt in self.JOINT_ORDER:
-                ident = f"{leg}_{jnt}"
-                s = " ".join([p.capitalize() for p in ident.split("_")])
+                s = " ".join([p.capitalize() for p in jnt.split("_")])
+                servo_id = "".join([w[0] for w in leg.split("_")]) + "_" + jnt
+                servo_id = servo_id.upper()
                 label = Gtk.Label(label=s)
-                label.set_margin_bottom(5)
                 entry = Gtk.Entry()
                 entry.set_editable(False)
                 entry.set_attributes(entry_attrs)
@@ -50,8 +60,6 @@ class TelemetryBox(Gtk.Box):
                 entry.set_margin_bottom(10)
                 b.append(label)
                 b.append(entry)
-                servo_id = "".join([w[0] for w in leg.split("_")]) + "_" + jnt
-                servo_id = servo_id.upper()
                 self.leg_objects[leg][jnt] = {
                     "label": label,
                     "entry": entry,

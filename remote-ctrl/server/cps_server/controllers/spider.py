@@ -76,7 +76,8 @@ class SpiderController(ControllerBase):
             if v not in range(0, 4096):
                 raise ValueError(f"Servo values must be in range 0 to 4095")
 
-        self.dxl_handler.move_many_servos(ALL_SERVO_IDS, positions, self.duration)
+        durations = [self.duration]*len(ALL_SERVO_IDS)
+        self.dxl_handler.move_many_servos(ALL_SERVO_IDS, positions, durations)
         return dict()
 
     @register_read(argtypes=[str])

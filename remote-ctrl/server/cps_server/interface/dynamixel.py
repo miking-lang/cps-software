@@ -1,6 +1,8 @@
 import dynamixel_sdk as dxl
 from dynamixel_sdk import DXL_LOBYTE, DXL_LOWORD, DXL_HIBYTE, DXL_HIWORD
 
+#https://emanual.robotis.com/docs/en/dxl/x/xm430-w350/#control-table-data-address
+
 import time
 
 ADDR_TORQUE_ENABLE          = 64

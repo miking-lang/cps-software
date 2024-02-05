@@ -34,7 +34,7 @@ class DynamixelHandler:
     def __del__(self):
         self.close()
 
-    def close():
+    def close(self):
         if self.opened_port:
             print("Closing port", flush=True)
             self.portHandler.closePort()

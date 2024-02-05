@@ -1,6 +1,8 @@
 import dynamixel_sdk as dxl
 from dynamixel_sdk import DXL_LOBYTE, DXL_LOWORD, DXL_HIBYTE, DXL_HIWORD
 
+import time
+
 ADDR_TORQUE_ENABLE          = 64
 ADDR_GOAL_POSITION          = 116
 ADDR_PROFILE_VELOCITY       = 112
@@ -71,7 +73,7 @@ class DynamixelHandler:
         start_time = time.time()
         dxl_comm_result = groupSyncRead.txRxPacket()
         end_time = time.time()
-        if dxl_comm_result != COMM_SUCCESS:
+        if dxl_comm_result != dxl.COMM_SUCCESS:
             raise RuntimeError(f"{self.packetHandler.getTxRxResult(dxl_comm_result)}")
 
         res = []
@@ -109,7 +111,7 @@ class DynamixelHandler:
 
     def disable_torques(self, ids):
         for id in ids:
-            self.packetHandler.write1ByteTxRx(self.portHandler, id, ADDR_TORQUE_ENABLE, 0)
+            self.packetHandler.write1ByteTxRx(self.portHandler, id, ADDR_TORQUE_ENABLE, 1)
 
     def get_torque_enabled(self, ids):
         values = []

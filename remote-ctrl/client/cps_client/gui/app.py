@@ -142,8 +142,8 @@ class MainWindow(Gtk.ApplicationWindow):
             self.connbox.refresh()
 
         # Every 2000 ms, refresh the telemetry
-        if total_ms % 2000 == 0:
-            self.telemetry.refresh()
+        #if total_ms % 2000 == 0:
+        #    self.telemetry.refresh()
 
         # Every 1000 ms, run commands
         # TODO: this should be an internal timer!

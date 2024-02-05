@@ -46,7 +46,7 @@ class SpiderController(ControllerBase):
         self.dev_dxl = dev_dxl
         self.dev_accel = dev_accel
         self.dxl_handler = DynamixelHandler(dev_dxl)
-        self.accel_handler = Accelerometer(dev_accel)
+        self.accel_handler = Accelerometer(dev_accel, 0x68)
 
         self.duration = 1500
 

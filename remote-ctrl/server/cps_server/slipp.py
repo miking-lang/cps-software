@@ -19,6 +19,11 @@ import json
 import time
 from datetime import datetime, timezone
 
+# TODO: Add HMAC to messages.
+#import hashlib, hmac
+#HMAC_KEY = b"super-secret"
+#mac = hmac.HMAC(HMAC_KEY, msg=b"some data", digestmod=hashlib.sha256)
+
 from typing import Optional, Tuple
 
 # The end of a packet is specified by two "Windows new line's".

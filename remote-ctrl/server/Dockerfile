@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 ADD lib /opt/cps-software/lib
 ADD remote-ctrl/server /opt/cps-software/remote-ctrl/server
@@ -24,6 +24,10 @@ RUN apt update \
  && cd /root \
  && rm -rf DynamixelSDK-3.7.31 \
  && make -C /opt/cps-software/lib clean build-so install-so install-py \
+ && echo "Removing build packages" \
+ && apt remove -y make cmake gcc g++ patch \
+ && apt autoremove -y \
+ && apt clean -y \
  && echo "Done"
 
 CMD ["/opt/cps-software/remote-ctrl/server/server_spider.py"]

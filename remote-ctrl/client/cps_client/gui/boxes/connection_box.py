@@ -11,13 +11,13 @@ class ConnectionBox(Gtk.Box):
         """
         logfn : Callback logging
         """
-        super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
+        super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
 
         self.client = None
         self.logfn = logfn
 
-        self.left_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        self.right_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.left_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        self.right_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
 
         self.append(self.left_col)
         self.append(self.right_col)
@@ -55,25 +55,29 @@ class ConnectionBox(Gtk.Box):
         self.connectbox_disconnect_button.add_css_class("red-button")
         self.right_col.append(self.connectbox_disconnect_button)
 
-        def on_lsconn(btn):
-            self.client_send(slipp.Packet("LSCONN"),
-                on_recv_callback=lambda pkt: self.set_status_text(str(pkt.contents))
-            )
-        self.btn_lsconn = Gtk.Button(label="LSCONN")
-        self.btn_lsconn.connect("clicked", on_lsconn)
-        self.btn_lsconn.set_size_request(-1, 40)
-        self.btn_lsconn.set_margin_top(5)
-        self.right_col.append(self.btn_lsconn)
 
-        def on_lscmd(btn):
-            self.client_send(slipp.Packet("LSCMD"),
+        def send_cmd(cmd):
+            self.client_send(slipp.Packet(cmd),
                 on_recv_callback=lambda pkt: self.set_status_text(str(pkt.contents))
             )
-        self.btn_lscmd = Gtk.Button(label="LSCMD")
-        self.btn_lscmd.connect("clicked", on_lscmd)
-        self.btn_lscmd.set_size_request(-1, 40)
-        self.btn_lscmd.set_margin_top(5)
-        self.right_col.append(self.btn_lscmd)
+        def send_lsconn(btn): return send_cmd("LSCONN")
+        def send_lscmd(btn): return send_cmd("LSCMD")
+        def send_readpwm(btn): return send_cmd("read_all_servo_PWM")
+        def send_readpostraj(btn): return send_cmd("read_all_servo_position_trajectories")
+        def send_readveltraj(btn): return send_cmd("read_all_servo_velocity_trajectories")
+        CMDS = [
+            ("LSCONN", send_lsconn),
+            ("LSCMD", send_lscmd),
+            ("readpwm", send_readpwm),
+            ("readpostraj", send_readpostraj),
+            ("readveltraj", send_readveltraj),
+        ]
+
+        for (cmd, cmdfn) in CMDS:
+            btn = Gtk.Button(label=cmd)
+            btn.connect("clicked", cmdfn)
+            btn.set_size_request(-1, 40)
+            self.right_col.append(btn)
 
     def set_status_text(self, msg):
         textbuffer = self.text_status.get_buffer()

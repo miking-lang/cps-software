@@ -1,16 +1,46 @@
 import copy
+import numpy as np
 
 from collections import deque
 
 from .._gtk4 import GLib, Gtk, Gdk
 
-from ...import slipp
+from ...import slipp, utils
+
+SERVO_ORDER = [
+    "FL_INNER_SHOULDER",
+    "FL_OUTER_SHOULDER",
+    "FL_ELBOW",
+    "FR_INNER_SHOULDER",
+    "FR_OUTER_SHOULDER",
+    "FR_ELBOW",
+    "BL_INNER_SHOULDER",
+    "BL_OUTER_SHOULDER",
+    "BL_ELBOW",
+    "BR_INNER_SHOULDER",
+    "BR_OUTER_SHOULDER",
+    "BR_ELBOW",
+]
+
+def rawpos_to_degrees(pos):
+    return [utils.dynamixel.raw_to_degrees(p,k) for p,k in zip(pos, SERVO_ORDER)]
+
+def rawpos_to_radians(pos):
+    return [utils.dynamixel.raw_to_radians(p,k) for p,k in zip(pos, SERVO_ORDER)]
+
+def degrees_to_rawpos(pos):
+    return [utils.dynamixel.degrees_to_raw(p,k) for p,k in zip(pos, SERVO_ORDER)]
+
+def radians_to_rawpos(pos):
+    return [utils.dynamixel.radians_to_raw(p,k) for p,k in zip(pos, SERVO_ORDER)]
+
+
 
 class CommandBox(Gtk.Box):
     """
     A Command box for sending motion commands to the spider.
     """
-    def __init__(self, logfn, client_send):
+    def __init__(self, logfn, client_send, refresh_rate_ms=250):
         """
         logfn : Callback logging
         client_send : Sending packets from connectionbox
@@ -19,6 +49,7 @@ class CommandBox(Gtk.Box):
 
         self.logfn = logfn
         self.client_send = client_send
+        self.refresh_rate_ms = refresh_rate_ms
 
         # Top status text...
         self.status_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
@@ -39,14 +70,23 @@ class CommandBox(Gtk.Box):
         self.append(self.command_colbox)
 
         self.long_commandbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
-        self.command_colbox.append(self.long_commandbox)
         self.long_commandbox_title = Gtk.Label(label="Long Commands")
         self.long_commandbox.append(self.long_commandbox_title)
-        self.long_command_btn_stand = Gtk.Button(label="Lying Down -> Stand")
-        self.long_command_btn_stand.connect("clicked", self.on_command_stand)
-        self.long_command_btn_stand.set_size_request(-1, 60)
-        self.long_command_btn_stand.set_hexpand(True)
-        self.long_commandbox.append(self.long_command_btn_stand)
+        self.command_colbox.append(self.long_commandbox)
+
+        COMMANDS = [
+            ("Stand", self.on_command_stand),
+            ("Lie Down", self.on_command_liedown),
+            ("Trot", self.on_command_trot),
+        ]
+
+        for cmd, cmdfn in COMMANDS:
+            btn = Gtk.Button(label=cmd)
+            btn.connect("clicked", cmdfn)
+            btn.set_size_request(-1, 60)
+            btn.set_hexpand(True)
+            self.long_commandbox.append(btn)
+
 
         self.command_queue = deque()
         self.command_sent = 0
@@ -54,15 +94,66 @@ class CommandBox(Gtk.Box):
         self.command_received = False
         self.command_name = "<NO COMMAND>"
 
+        self.start_refresh()
+
     def on_command_stand(self, btn):
         # From lying down, stand up
         positions = [
             [2270, 1333, 795, 1729, 1159, 3797, 1746, 1132, 3635, 2329, 1052, 516],
             [2205, 1964, 1007, 1782, 1867, 3320, 1855, 1909, 3278, 2367, 1763, 905],
             [2313, 1357, 821, 1711, 1462, 3360, 1723, 1343, 3348, 2362, 1315, 831],
-            [2314, 1357, 821, 1711, 1462, 3360, 1723, 1344, 3348, 2362, 1316, 831],
         ]
+        #for i, pos in enumerate(positions):
+        #    print(f"i={i} = {rawpos_to_degrees(pos)}")
         self._send_position_command("Stand", positions)
+
+    def on_command_liedown(self, btn):
+        # Go to lying down position
+        positions = [
+            degrees_to_rawpos([0.0]*12),
+        ]
+        #for i, pos in enumerate(positions):
+        #    print(f"i={i} = {rawpos_to_degrees(pos)}")
+        self._send_position_command("Lie Down", positions)
+
+    def on_command_trot(self, btn):
+        # Walk for a bit
+        positions = []
+
+        #for i, pos in enumerate(positions):
+        #    print(f"i={i} = {rawpos_to_degrees(pos)}")
+
+        gait_fn = utils.martin_control.trot_gait
+        env_dt = self.refresh_rate_ms / 1000.0
+        dt=1 / utils.martin_control.TROT_HZ * 2
+
+        (
+            back_right_joints,
+            back_left_joints,
+            front_right_joints,
+            front_left_joints,
+        ) = gait_fn()
+        for i in range(100):
+            action_idx = int(i * env_dt / dt) % len(back_right_joints)
+            pos = np.array([
+                back_right_joints[action_idx][0],
+                back_right_joints[action_idx][1],
+                back_right_joints[action_idx][2],
+                front_right_joints[action_idx][0],
+                front_right_joints[action_idx][1],
+                front_right_joints[action_idx][2],
+                back_left_joints[action_idx][0],
+                back_left_joints[action_idx][1],
+                back_left_joints[action_idx][2],
+                front_left_joints[action_idx][0],
+                front_left_joints[action_idx][1],
+                front_left_joints[action_idx][2],
+            ])
+            positions.append(radians_to_rawpos(list(pos)))
+
+        #for i, pos in enumerate(positions):
+        #    print(f"i={i} = {rawpos_to_degrees(pos)}")
+        self._send_position_command("Trot", positions)
 
     def _send_position_command(self, name, positions):
         """
@@ -105,3 +196,8 @@ class CommandBox(Gtk.Box):
                 self.status_bar.set_fraction(self.command_sent / self.command_length)
                 if self.command_sent == self.command_length:
                     self.status_text.set_text(f"Command {self.command_name} done")
+
+        self.start_refresh()
+
+    def start_refresh(self):
+        GLib.timeout_add(self.refresh_rate_ms, self.refresh)

@@ -54,7 +54,7 @@ class LoggingBox(Gtk.Box):
         self.scroll.set_child(self.textview)
 
         self.total_entries = 0
-        self.max_len = 2**14
+        self.max_len = 2**16
         self.bold_tag = self.textbuffer.create_tag("bold", weight=Pango.Weight.BOLD)
 
         self.grey_tag = self.textbuffer.create_tag("grey_background")

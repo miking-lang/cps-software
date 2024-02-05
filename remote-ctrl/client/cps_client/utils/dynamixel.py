@@ -22,16 +22,16 @@ zero_shift_dics = {
 def dnx_to_mujoco(angle, motor_key):
     if motor_key == "FR_ELBOW" or motor_key == "BL_ELBOW":
         # front_right_elbow and back_left_elbow are the only motors that don't have flipped sign
-        return (angle-2048)*pi*0.087891/180 + zero_shift_dics[motor_key]
+        return float((angle-2048)*pi*0.087891/180 + zero_shift_dics[motor_key])
     else:
-        return (2048-angle)*pi*0.087891/180 + zero_shift_dics[motor_key]
+        return float((2048-angle)*pi*0.087891/180 + zero_shift_dics[motor_key])
     
 def mujoco_to_dnx(angle, motor_key):
     if motor_key == "FR_ELBOW" or motor_key == "BL_ELBOW":
         # front_right_elbow and back_left_elbow are the only motors that don't have flipped sign
-        return 2048 + round(180*(angle-zero_shift_dics[motor_key])/(pi*0.087891))
+        return int(2048 + round(180*(angle-zero_shift_dics[motor_key])/(pi*0.087891)))
     else:
-        return 2048 - round(180*(angle-zero_shift_dics[motor_key])/(pi*0.087891))
+        return int(2048 - round(180*(angle-zero_shift_dics[motor_key])/(pi*0.087891)))
 
 
 
@@ -40,9 +40,22 @@ def raw_to_radians(raw : int, key : Optional[str] = None) -> float:
     if key is None:
         key = "NO_KEY"
     return dnx_to_mujoco(raw, key)
-    #return (float(raw) / 4096.0) * (2.0 * pi)
+
 
 def raw_to_degrees(raw : int, key : Optional[str] = None) -> float:
     """Converts a raw value into a float in degrees"""
     rad = raw_to_radians(raw, key)
     return rad * (180/pi)
+
+
+def radians_to_raw(rad : float, key : Optional[str] = None) -> int:
+    """Converts a float in radians to a raw int value"""
+    if key is None:
+        key = "NO_KEY"
+    return mujoco_to_dnx(rad, key)
+
+
+def degrees_to_raw(deg : float, key : Optional[str] = None) -> int:
+    """Converts a float in degrees to a raw int value"""
+    rad = deg * (pi/180)
+    return radians_to_raw(rad, key)

@@ -6,7 +6,7 @@ class TelemetryBox(Gtk.Box):
     """
     A Telemetry box for reading telemetry from the spider.
     """
-    def __init__(self, logfn, client_send, refresh_rate_ms=250):
+    def __init__(self, logfn, client_send, refresh_rate_ms=1000):
         """
         logfn : Callback logging
         client_send : Sending packets from connectionbox
@@ -18,7 +18,9 @@ class TelemetryBox(Gtk.Box):
         self.refresh_rate_ms = refresh_rate_ms
 
         self.leg_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        self.append(self.leg_box)
 
+        # Create all text readings
         self.LEG_ORDER = ["front_left", "front_right", "back_left", "back_right"]
         self.JOINT_ORDER = ["inner_shoulder", "outer_shoulder", "elbow"]
 
@@ -68,8 +70,26 @@ class TelemetryBox(Gtk.Box):
                 }
         self.update_leg_texts()
 
-        self.append(self.leg_box)
+        # Add toggle for which metric to display it as
+        sep = Gtk.Separator(orientation=Gtk.Orientation.VERTICAL)
+        self.leg_box.append(sep)
+        self.metric_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        self.leg_box.append(self.metric_box)
+        self.metric_check_degrees = Gtk.CheckButton.new_with_label("Degrees")
+        self.metric_check_degrees.set_active(True)
+        self.metric_check_degrees.set_margin_top(5)
+        self.metric_check_degrees.connect("toggled", self.on_metric_toggle)
+        self.metric_check_radians = Gtk.CheckButton.new_with_label("Radians")
+        self.metric_check_radians.set_group(self.metric_check_degrees)
+        self.metric_check_radians.connect("toggled", self.on_metric_toggle)
+        self.metric_check_raw = Gtk.CheckButton.new_with_label("Raw Values")
+        self.metric_check_raw.set_group(self.metric_check_degrees)
+        self.metric_check_raw.connect("toggled", self.on_metric_toggle)
+        self.metric_box.append(self.metric_check_degrees)
+        self.metric_box.append(self.metric_check_radians)
+        self.metric_box.append(self.metric_check_raw)
 
+        # Buttons for random things
         self.button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         self.append(self.button_box)
 
@@ -83,6 +103,13 @@ class TelemetryBox(Gtk.Box):
         self.btn_disable_torque.set_size_request(100, 30)
         self.button_box.append(self.btn_disable_torque)
 
+        self.entry_torque_status = Gtk.Entry()
+        self.entry_torque_status.set_text("<NO STATUS YET>")
+        self.entry_torque_status.set_editable(False)
+        self.entry_torque_status.set_attributes(entry_attrs)
+        self.entry_torque_status.set_size_request(100, 30)
+        self.button_box.append(self.entry_torque_status)
+
         self.start_refresh()
 
     def update_leg_texts(self):
@@ -91,11 +118,19 @@ class TelemetryBox(Gtk.Box):
                 raw_v = self.leg_objects[leg][jnt]["raw_value"]
                 servo_id = self.leg_objects[leg][jnt]["servo_id"]
                 if raw_v is not None:
-                    # By default: Show degrees
-                    v = utils.dynamixel.raw_to_degrees(int(raw_v), key=servo_id)
-                    self.leg_objects[leg][jnt]["entry"].set_text(f"{float(v):.04f}")
+                    if self.metric_check_degrees.get_active():
+                        v = utils.dynamixel.raw_to_degrees(int(raw_v), key=servo_id)
+                        self.leg_objects[leg][jnt]["entry"].set_text(f"{float(v):.04f}")
+                    elif self.metric_check_radians.get_active():
+                        v = utils.dynamixel.raw_to_radians(int(raw_v), key=servo_id)
+                        self.leg_objects[leg][jnt]["entry"].set_text(f"{float(v):.04f}")
+                    else:
+                        self.leg_objects[leg][jnt]["entry"].set_text(f"{int(raw_v)}")
                 else:
                     self.leg_objects[leg][jnt]["entry"].set_text(f"{servo_id}")
+
+    def on_metric_toggle(self, chk):
+        self.update_leg_texts()
 
     def refresh(self):
         def update_servos(pkt):
@@ -109,7 +144,11 @@ class TelemetryBox(Gtk.Box):
                     self.leg_objects[leg][jnt]["raw_value"] = pkt.contents[i]
             self.update_leg_texts()
 
+        def update_torque(pkt):
+            self.entry_torque_status.set_text(str(pkt.contents[0]))
+
         self.client_send(slipp.Packet("read_all_servo_positions"), on_recv_callback=update_servos)
+        self.client_send(slipp.Packet("get_torque_enabled"), on_recv_callback=update_torque)
         self.start_refresh()
 
     def start_refresh(self):

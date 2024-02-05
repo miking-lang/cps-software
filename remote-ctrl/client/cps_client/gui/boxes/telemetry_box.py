@@ -145,7 +145,10 @@ class TelemetryBox(Gtk.Box):
             self.update_leg_texts()
 
         def update_torque(pkt):
-            self.entry_torque_status.set_text(str(pkt.contents[0]))
+            if pkt.op == "ACK":
+                self.entry_torque_status.set_text(str(pkt.contents[0]))
+            else:
+                self.entry_torque_status.set_text(str(pkt.contents))
 
         self.client_send(slipp.Packet("read_all_servo_positions"), on_recv_callback=update_servos)
         self.client_send(slipp.Packet("get_torque_enabled"), on_recv_callback=update_torque)

@@ -40,7 +40,7 @@ class CommandBox(Gtk.Box):
     """
     A Command box for sending motion commands to the spider.
     """
-    def __init__(self, logfn, client_send, refresh_rate_ms=250):
+    def __init__(self, logfn, client_send, refresh_rate_ms=100):
         """
         logfn : Callback logging
         client_send : Sending packets from connectionbox
@@ -96,13 +96,17 @@ class CommandBox(Gtk.Box):
 
         self.start_refresh()
 
+    @property
+    def dt(self):
+        return self.refresh_rate_ms / 1000.0
+
     def on_command_stand(self, btn):
         # From lying down, stand up
-        positions = [
-            [2270, 1333, 795, 1729, 1159, 3797, 1746, 1132, 3635, 2329, 1052, 516],
-            [2205, 1964, 1007, 1782, 1867, 3320, 1855, 1909, 3278, 2367, 1763, 905],
-            [2313, 1357, 821, 1711, 1462, 3360, 1723, 1343, 3348, 2362, 1315, 831],
-        ]
+        pos1 = [2270, 1333, 795, 1729, 1159, 3797, 1746, 1132, 3635, 2329, 1052, 516]
+        pos2 = [2205, 1964, 1007, 1782, 1867, 3320, 1855, 1909, 3278, 2367, 1763, 905]
+        pos3 = [2313, 1357, 821, 1711, 1462, 3360, 1723, 1343, 3348, 2362, 1315, 831]
+        positions = ([pos1]*int(max(1, 1/self.dt))) + ([pos2]*int(max(1, 1/self.dt))) #+ ([pos3]*int(max(1, 1/self.dt)))
+
         #for i, pos in enumerate(positions):
         #    print(f"i={i} = {rawpos_to_degrees(pos)}")
         self._send_position_command("Stand", positions)
@@ -124,8 +128,7 @@ class CommandBox(Gtk.Box):
         #    print(f"i={i} = {rawpos_to_degrees(pos)}")
 
         gait_fn = utils.martin_control.trot_gait
-        env_dt = self.refresh_rate_ms / 1000.0
-        dt=1 / utils.martin_control.TROT_HZ * 2
+        dt=(1 / utils.martin_control.TROT_HZ)
 
         (
             back_right_joints,
@@ -134,20 +137,20 @@ class CommandBox(Gtk.Box):
             front_left_joints,
         ) = gait_fn()
         for i in range(100):
-            action_idx = int(i * env_dt / dt) % len(back_right_joints)
+            action_idx = int(i * self.dt / dt) % len(back_right_joints)
             pos = np.array([
                 back_right_joints[action_idx][0],
-                back_right_joints[action_idx][1],
-                back_right_joints[action_idx][2],
+                back_right_joints[action_idx][1] - 0.25,
+                back_right_joints[action_idx][2] - 0.35,
                 front_right_joints[action_idx][0],
-                front_right_joints[action_idx][1],
-                front_right_joints[action_idx][2],
+                front_right_joints[action_idx][1] - 0.25,
+                front_right_joints[action_idx][2] - 0.35,
                 back_left_joints[action_idx][0],
-                back_left_joints[action_idx][1],
-                back_left_joints[action_idx][2],
+                back_left_joints[action_idx][1] - 0.25,
+                back_left_joints[action_idx][2] - 0.35,
                 front_left_joints[action_idx][0],
-                front_left_joints[action_idx][1],
-                front_left_joints[action_idx][2],
+                front_left_joints[action_idx][1] - 0.25,
+                front_left_joints[action_idx][2] - 0.35,
             ])
             positions.append(radians_to_rawpos(list(pos)))
 
@@ -175,7 +178,7 @@ class CommandBox(Gtk.Box):
                 contents={"args": copy.copy(pos)},
             ))
 
-        self.status_text.set_text(f"Running {self.command_name} command")
+        self.status_text.set_text(f"Running {self.command_name} command ({self.command_sent}/{self.command_length})")
         self.status_bar.set_fraction(0.0)
 
     def _ack_command(self, pkt):
@@ -188,14 +191,17 @@ class CommandBox(Gtk.Box):
 
     def refresh(self):
         if len(self.command_queue) > 0:
-            pkt = self.command_queue.popleft()
+            print(".", flush=True, end="")
             if self.command_received:
+                pkt = self.command_queue.popleft()
                 self.client_send(pkt, on_recv_callback=self._ack_command)
                 self.command_sent += 1
                 self.command_received = False
                 self.status_bar.set_fraction(self.command_sent / self.command_length)
                 if self.command_sent == self.command_length:
                     self.status_text.set_text(f"Command {self.command_name} done")
+                else:
+                    self.status_text.set_text(f"Running {self.command_name} command ({self.command_sent}/{self.command_length})")
 
         self.start_refresh()
 

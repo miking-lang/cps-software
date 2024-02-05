@@ -103,12 +103,12 @@ class ThreadedClientConnection:
             self.__failed = False
             self.__socket = sock
 
-            sock.settimeout(0.1)
+            sock.settimeout(0.05)
 
             recvdata = b""
             while self.__active and not self.__failed:
                 try:
-                    d = sock.recv(4096)
+                    d = sock.recv(2**16)
                     recvdata += d
                 except (TimeoutError, socket.timeout):
                     continue
@@ -116,12 +116,17 @@ class ThreadedClientConnection:
                     self.__failed = True
                     continue
 
-                (inpkt, msg, recvdata) = slipp.Packet.decode(recvdata)
-                if inpkt is None and msg is not None:
-                    print(msg)
-                    break
-                elif inpkt is not None:
-                    self._internal_recv(inpkt)
+                has_more_data = True
+                while has_more_data:
+                    prev_len = len(recvdata)
+                    (inpkt, msg, recvdata) = slipp.Packet.decode(recvdata)
+                    has_more_data = bool(prev_len == len(recvdata))
+                    if inpkt is None and msg is not None:
+                        print(msg)
+                        self.__failed = True
+                        break
+                    elif inpkt is not None:
+                        self._internal_recv(inpkt)
 
             with self.__send_lock:
                 if not self.__failed:

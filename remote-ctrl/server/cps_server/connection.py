@@ -38,8 +38,11 @@ class SpiderTCPHandler(socketserver.BaseRequestHandler):
 
         # set a timeout value of 1 second, allow for at most 30 seconds without
         # any communication
-        self.request.settimeout(1.0)
-        N_MAX_TIMEOUTS = 30
+        timeout_s = 0.05
+        max_timeout_s = 30.0
+
+        self.request.settimeout(timeout_s)
+        N_MAX_TIMEOUTS = int(max_timeout_s/timeout_s)
 
         timeout_count = 0
 
@@ -47,7 +50,7 @@ class SpiderTCPHandler(socketserver.BaseRequestHandler):
         data = b""
         while active:
             try:
-                recv_data = self.request.recv(1024)
+                recv_data = self.request.recv(2**16)
                 data += recv_data
             except (TimeoutError, socket.timeout):
                 timeout_count += 1

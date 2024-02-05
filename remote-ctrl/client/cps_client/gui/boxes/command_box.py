@@ -51,35 +51,57 @@ class CommandBox(Gtk.Box):
         self.command_queue = deque()
         self.command_sent = 0
         self.command_length = 0
+        self.command_received = False
+        self.command_name = "<NO COMMAND>"
 
     def on_command_stand(self, btn):
-        if len(self.command_queue) > 0:
-            # cannot run command yet...
-            return
-
-        # Run the following sequence of positions
+        # From lying down, stand up
         positions = [
             [2270, 1333, 795, 1729, 1159, 3797, 1746, 1132, 3635, 2329, 1052, 516],
             [2205, 1964, 1007, 1782, 1867, 3320, 1855, 1909, 3278, 2367, 1763, 905],
             [2313, 1357, 821, 1711, 1462, 3360, 1723, 1343, 3348, 2362, 1315, 831],
             [2314, 1357, 821, 1711, 1462, 3360, 1723, 1344, 3348, 2362, 1316, 831],
         ]
+        self._send_position_command("Stand", positions)
+
+    def _send_position_command(self, name, positions):
+        """
+        Runs a command which is a sequence of positions.
+        """
+        if len(self.command_queue) > 0:
+            # cannot run command yet...
+            return
+        if len(positions) == 0:
+            raise ValueError("Expected some positions")
+
         self.command_sent = 0
-        self.command_length = 0
+        self.command_length = len(positions)
+        self.command_received = True
+        self.command_name = name
         for pos in positions:
             self.command_queue.append(slipp.Packet(
                 op="move_all_servos",
                 contents={"args": copy.copy(pos)},
             ))
-            self.command_length += 1
 
-        self.status_text.set_text("Running Stand Command")
+        self.status_text.set_text(f"Running {self.command_name} command")
         self.status_bar.set_fraction(0.0)
+
+    def _ack_command(self, pkt):
+        if pkt.op == "ACK":
+            self.command_received = True
+        else:
+            self.command_received = False
+            self.status_text.set_text(f"Command {self.command_name} failed")
+            self.command_queue.clear()
 
     def refresh(self):
         if len(self.command_queue) > 0:
             pkt = self.command_queue.popleft()
-            # TODO, only run next command if we actually got an ACK on this command...
-            self.client_send(pkt)
-            self.command_sent += 1
-            self.status_bar.set_fraction(self.command_sent / self.command_length)
+            if self.command_received:
+                self.client_send(pkt, on_recv_callback=self._ack_command)
+                self.command_sent += 1
+                self.command_received = False
+                self.status_bar.set_fraction(self.command_sent / self.command_length)
+                if self.command_sent == self.command_length:
+                    self.status_text.set_text(f"Command {self.command_name} done")

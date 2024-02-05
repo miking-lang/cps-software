@@ -27,8 +27,10 @@ class LoggingBox(Gtk.Box):
         )
         self.textsize_scale.connect("value-changed", self.on_textsize_changed)
         self.textsize_scale.set_hexpand(True)
+        self.textsize_scale.set_margin_end(5) # right margin
         self.textsize_box.append(self.textsize_label)
         self.textsize_box.append(self.textsize_scale)
+        self.textsize_box.set_margin_top(5)
         self.append(self.textsize_box)
         # Initialize the text size
         self.on_textsize_changed(self.textsize_scale)

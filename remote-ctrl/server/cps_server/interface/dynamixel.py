@@ -36,6 +36,7 @@ class DynamixelHandler:
 
     def close():
         if self.opened_port:
+            print("Closing port", flush=True)
             self.portHandler.closePort()
 
     def move_many_servos(self, ids, positions, durations):

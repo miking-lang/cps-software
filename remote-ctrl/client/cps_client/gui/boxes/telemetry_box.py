@@ -1,6 +1,6 @@
 from .._gtk4 import GLib, Gtk, Gdk
 
-from ...import slipp
+from ... import slipp, utils
 
 class TelemetryBox(Gtk.Box):
     """
@@ -41,7 +41,6 @@ class TelemetryBox(Gtk.Box):
                 label.set_margin_bottom(5)
                 entry = Gtk.Entry()
                 entry.set_editable(False)
-                entry.set_text("42")
                 entry.set_alignment(0.5) # center
                 entry.set_margin_bottom(10)
                 b.append(label)
@@ -49,7 +48,9 @@ class TelemetryBox(Gtk.Box):
                 self.leg_objects[leg][jnt] = {
                     "label": label,
                     "entry": entry,
+                    "raw_value": None
                 }
+        self.update_leg_texts()
 
         self.append(self.leg_box)
 
@@ -66,6 +67,18 @@ class TelemetryBox(Gtk.Box):
         self.btn_disable_torque.set_size_request(100, 30)
         self.button_box.append(self.btn_disable_torque)
 
+    def update_leg_texts(self):
+        for leg in self.LEG_ORDER:
+            for jnt in self.JOINT_ORDER:
+                raw_v = self.leg_objects[leg][jnt]["raw_value"]
+                if raw_v is not None:
+                    # By default: Show degrees
+                    v = utils.dynamixel.raw_to_degrees(int(raw_v))
+                    self.leg_objects[leg][jnt]["entry"].set_text(f"{v}")
+                else:
+                    self.leg_objects[leg][jnt]["entry"].set_text(f"NO VALUE")
+
+
     def refresh(self):
         def update_servos(pkt):
             if pkt.op != "ACK":
@@ -75,7 +88,8 @@ class TelemetryBox(Gtk.Box):
             for leg in self.LEG_ORDER:
                 for jnt in self.JOINT_ORDER:
                     i += 1
-                    self.leg_objects[leg][jnt]["entry"].set_text(f"{pkt.contents[i]}")
+                    self.leg_objects[leg][jnt]["raw_value"] = pkt.contents[i]
+            self.update_leg_texts()
 
         self.client_send(slipp.Packet("read_all_servo_positions"), on_recv_callback=update_servos)
 

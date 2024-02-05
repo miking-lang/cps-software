@@ -54,7 +54,7 @@ class DynamixelHandler:
                 DXL_LOBYTE(DXL_LOWORD(v)),
                 DXL_HIBYTE(DXL_LOWORD(v)),
                 DXL_LOBYTE(DXL_HIWORD(v)),
-                DXL_HIBYTE(DXL_HIWORD(v))
+                DXL_HIBYTE(DXL_HIWORD(v)),
             ]
             groupSyncWrite.addParam(id, data[:bytelen])
 
@@ -65,34 +65,11 @@ class DynamixelHandler:
         groupSyncWrite.clearParam()
 
     def move_many_servos(self, ids, positions, durations):
-        self.group_write_all_servos(ids, [1]*len(ids), ADDR_TORQUE_ENABLE, bytelen=1)
-        self.group_write_all_servos(ids, [4]*len(ids), ADDR_DRIVE_MODE, bytelen=1)
-        self.group_write_all_servos(ids, durations, ADDR_PROFILE_VELOCITY, bytelen=4)
-        self.group_write_all_servos(ids, [600]*len(ids), ADDR_PROFILE_ACCELERATION, bytelen=4)
-        self.group_write_all_servos(ids, positions, ADDR_PROFILE_ACCELERATION, bytelen=4)
-        return None # ignore below
-
-        groupSyncWrite = dxl.GroupSyncWrite(self.portHandler, self.packetHandler, ADDR_GOAL_POSITION, 4)
-
-        for index, id in enumerate(ids):
-            self.packetHandler.write1ByteTxRx(self.portHandler, id, ADDR_TORQUE_ENABLE, 1)
-            self.packetHandler.write1ByteTxRx(self.portHandler, id, ADDR_DRIVE_MODE, 4)         # 4 = Time-based profile
-            self.packetHandler.write4ByteTxRx(self.portHandler, id, ADDR_PROFILE_VELOCITY, durations[index])
-            self.packetHandler.write4ByteTxRx(self.portHandler, id, ADDR_PROFILE_ACCELERATION, 600)         #0.6s acceleration duration
-
-            param_goal_position = [
-                DXL_LOBYTE(DXL_LOWORD(positions[index])),
-                DXL_HIBYTE(DXL_LOWORD(positions[index])),
-                DXL_LOBYTE(DXL_HIWORD(positions[index])),
-                DXL_HIBYTE(DXL_HIWORD(positions[index]))
-            ]
-            groupSyncWrite.addParam(id, param_goal_position)
-
-        dxl_comm_result = groupSyncWrite.txPacket()
-        if dxl_comm_result != dxl.COMM_SUCCESS:
-            raise RuntimeError(f"{self.packetHandler.getTxRxResult(dxl_comm_result)}")
-
-        groupSyncWrite.clearParam()
+        self.group_write_all_servos(ids, ADDR_TORQUE_ENABLE,        [1]*len(ids), bytelen=1)
+        self.group_write_all_servos(ids, ADDR_DRIVE_MODE,           [4]*len(ids), bytelen=1)
+        self.group_write_all_servos(ids, ADDR_PROFILE_VELOCITY,     durations, bytelen=4)
+        self.group_write_all_servos(ids, ADDR_PROFILE_ACCELERATION, [600]*len(ids), bytelen=4)
+        self.group_write_all_servos(ids, ADDR_GOAL_POSITION,        positions, bytelen=4)
 
     def read_servo(self, ids, address, bytelen=4):
         groupSyncRead = dxl.GroupSyncRead(self.portHandler, self.packetHandler, address, bytelen)
@@ -136,8 +113,7 @@ class DynamixelHandler:
         return self.read_servo(ids, ADDR_PRESENT_CURRENT, 2)
 
     def enable_torques(self, ids):
-        for id in ids:
-            self.packetHandler.write1ByteTxRx(self.portHandler, id, ADDR_TORQUE_ENABLE, 1)
+        self.group_write_all_servos(ids, ADDR_TORQUE_ENABLE, [1]*len(ids), bytelen=1)
 
     def disable_torques(self, ids):
         for id in ids:

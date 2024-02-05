@@ -40,7 +40,7 @@ class CommandBox(Gtk.Box):
     """
     A Command box for sending motion commands to the spider.
     """
-    def __init__(self, logfn, client_send, refresh_rate_ms=100):
+    def __init__(self, logfn, client_send, refresh_rate_ms=250):
         """
         logfn : Callback logging
         client_send : Sending packets from connectionbox
@@ -191,7 +191,6 @@ class CommandBox(Gtk.Box):
 
     def refresh(self):
         if len(self.command_queue) > 0:
-            print(".", flush=True, end="")
             if self.command_received:
                 pkt = self.command_queue.popleft()
                 self.client_send(pkt, on_recv_callback=self._ack_command)

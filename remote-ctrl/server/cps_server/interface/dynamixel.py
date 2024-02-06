@@ -216,7 +216,8 @@ class DynamixelHandler:
         Reads all control RAM parameters from all servos.
         """
         reg_start = REGISTER.TORQUE_ENABLE
-        reg_end = REGISTER.HARDWARE_ERROR_STATUS #REGISTER.BACKUP_READY
+        reg_end = REGISTER.BACKUP_READY
+        #reg_end = REGISTER.HARDWARE_ERROR_STATUS
         addr = reg_start.addr
         length = (reg_end.addr + reg_end.bytelen) - addr
         assert length > 0, f"length = {length}"
@@ -236,7 +237,7 @@ class DynamixelHandler:
         readregs = dict()
 
         reg_idx = 0
-        end_addr = addr + end_addr
+        end_addr = addr + length
 
         while addr < end_addr and reg_idx < len(registers):
             reg = registers[reg_idx]

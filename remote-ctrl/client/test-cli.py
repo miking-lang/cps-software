@@ -10,6 +10,7 @@ HOST, PORT = "localhost", 8372
 
 PACKETS = [
     slipp.Packet("LSCMD", contents={"args": []}),
+    slipp.Packet("read_all"),
     slipp.Packet("PING"),
 ]
 for i, p in enumerate(PACKETS):

@@ -132,10 +132,11 @@ POSITION_CONTROL_INDIRECTIONS = [
 #ADDR_PRESENT_PWM            = 124
 #ADDR_PRESENT_CURRENT        = 126
 #BAUDRATE                    = 57600
+#HIGH_BAUDRATE               = 1152000
 PROTOCOL_VERSION            = 2.0
 
 class DynamixelHandler:
-    def __init__(self, dev="/dev/ttyUSB0", baudrate=1152000):
+    def __init__(self, dev="/dev/ttyUSB0", baudrate=57600):
         self.opened_port = False
         self.portHandler = dxl.PortHandler(dev)
 
@@ -229,7 +230,7 @@ class DynamixelHandler:
 
         dxl_comm_result = groupSyncRead.txRxPacket()
         if dxl_comm_result != dxl.COMM_SUCCESS:
-            raise RuntimeError(f"{self.packetHandler.getTxRxResult(dxl_comm_result)}")
+            raise RuntimeError(f"Comm result: {self.packetHandler.getTxRxResult(dxl_comm_result)}")
 
         readregs = dict()
 
@@ -279,7 +280,7 @@ class DynamixelHandler:
 
         dxl_comm_result = groupSyncRead.txRxPacket()
         if dxl_comm_result != dxl.COMM_SUCCESS:
-            raise RuntimeError(f"{self.packetHandler.getTxRxResult(dxl_comm_result)}")
+            raise RuntimeError(f"Comm result: {self.packetHandler.getTxRxResult(dxl_comm_result)}")
 
         res = []
 

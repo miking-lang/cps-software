@@ -99,7 +99,7 @@ INDIRECT_ADDRESS_REGISTERS = [
     Register(168 + i*2, bytelen=2, name=f"INDIRECT_ADDRESS_{i+1}")
     for i in range(28)
 ]
-INDIRECT_DATA_REGISTERS += [
+INDIRECT_DATA_REGISTERS = [
     Register(224 + i*1, bytelen=1, name=f"INDIRECT_DATA_{i+1}")
     for i in range(28)
 ]

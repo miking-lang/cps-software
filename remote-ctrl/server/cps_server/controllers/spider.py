@@ -68,49 +68,11 @@ class SpiderController(ControllerBase):
     def get_servos(self):
         return SERVO_ORDER
 
-    @register_write(argtypes=[str, int])
-    def move_single_servo(self, name, position):
-        self.dxl_handler.move_many_servos([SERVO_INDEX_LOOKUP[name]], [position], self.duration)
-        return dict()
-
-    @register_write(argtypes=[int]*len(ALL_SERVO_IDS))
-    def move_all_servos(self, *positions):
-        for v in positions:
-            if v not in range(0, 4096):
-                raise ValueError(f"Servo values must be in range 0 to 4095")
-
-        durations = [self.duration]*len(ALL_SERVO_IDS)
-        self.dxl_handler.move_many_servos(ALL_SERVO_IDS, positions, durations)
-        return dict()
-
     @register_read(argtypes=[str])
     def read_single_servo_position(self, name):
         ret = self.dxl_handler.read_servo_positions([SERVO_INDEX_LOOKUP[name]])
         return ret[0]
 
-    @register_read()
-    def read_all_servo_positions(self):
-        return self.dxl_handler.read_servo_positions(ALL_SERVO_IDS)
-
-    @register_read()
-    def read_all_servo_position_trajectories(self):
-        return self.dxl_handler.read_servo_position_trajectories(ALL_SERVO_IDS)
-
-    @register_read()
-    def read_all_servo_velocities(self):
-        return self.dxl_handler.read_servo_velocities(ALL_SERVO_IDS)
-
-    @register_read()
-    def read_all_servo_velocity_trajectories(self):
-        return self.dxl_handler.read_servo_velocity_trajectories(ALL_SERVO_IDS)
-
-    @register_read()
-    def read_all_servo_PWM(self):
-        return self.dxl_handler.read_servo_PWM(ALL_SERVO_IDS)
-
-    @register_read()
-    def read_all_servo_currents(self):
-        return self.dxl_handler.read_servo_currents(ALL_SERVO_IDS)
 
     @register_read()
     def read_accel(self):
@@ -141,18 +103,23 @@ class SpiderController(ControllerBase):
         return self.dxl_handler.get_torque_enabled(ALL_SERVO_IDS)
 
     @register_write()
-    def setup_all(self):
+    def setup_all_servos(self):
         return self.dxl_handler.setup_position_control(ALL_SERVO_IDS)
 
     @register_read()
-    def read_all(self):
+    def read_all_servos(self):
         return self.dxl_handler.sync_read_all(ALL_SERVO_IDS)
 
     @register_write(argtypes=[int]*len(ALL_SERVO_IDS))
-    def move_all(self, *positions):
+    def move_all_servos(self, *positions):
         for v in positions:
             if v not in range(0, 4096):
                 raise ValueError(f"Servo values must be in range 0 to 4095")
 
         self.dxl_handler.position_control(ALL_SERVO_IDS, positions, duration=self.duration, acceleration=600)
+        return dict()
+
+    @register_write(argtypes=[str, int])
+    def move_single_servo(self, name, position):
+        self.dxl_handler.position_control([SERVO_INDEX_LOOKUP[name]], [position], duration=self.duration, acceleration=600)
         return dict()

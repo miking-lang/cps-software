@@ -41,14 +41,18 @@ class MainWindow(Gtk.ApplicationWindow):
         self.mainbox.append(self.topbox)
 
         # TODO: For showing notifications
-        #self.notifier = Gtk.Revealer()
-        #self.notify_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        #self.notify_label = Gtk.Label(label="Test Overlay")
-        #self.notify_box.append(self.notify_label)
-        #self.notify_label.set_size_request(100, 40)
-        #self.notifier.set_child(self.notify_box)
-        #self.notifier.set_reveal_child(True)
-        #self.overlay.add_overlay(self.notifier)
+        self.notifier = Gtk.Revealer()
+        self.notify_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.notify_label = Gtk.Label(label="Test Overlay")
+        self.notify_label.set_size_request(100, 40)
+        self.notify_label.add_css_class("red-button")
+        self.notify_box.append(self.notify_label)
+        self.notify_box.set_size_request(100, 40)
+        self.notifier.set_child(self.notify_box)
+        self.notifier.set_reveal_child(False)
+        self.notifier.set_can_target(False) # Make this click-through
+        self.notifier.set_size_request(100, 40)
+        self.overlay.add_overlay(self.notifier)
 
         self.send_button = Gtk.Button(label="Send (does nothing atm.)")
         self.send_button.connect("clicked", self.on_clicked_send)
@@ -140,6 +144,10 @@ class MainWindow(Gtk.ApplicationWindow):
         # Every second, refresh the connbox
         if total_ms % 1000 == 0:
             self.connbox.refresh()
+
+        # Testing for reveal of child.
+        #if total_ms % 2000 == 0:
+        #    self.notifier.set_reveal_child(bool(total_ms % 6000 == 0))
 
         # Start the timeout again
         self.start_timeout()

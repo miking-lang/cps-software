@@ -87,7 +87,6 @@ class CommandBox(Gtk.Box):
             btn.set_hexpand(True)
             self.long_commandbox.append(btn)
 
-
         self.command_queue = deque()
         self.command_sent = 0
         self.command_length = 0

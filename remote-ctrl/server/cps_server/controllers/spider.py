@@ -50,6 +50,9 @@ class SpiderController(ControllerBase):
 
         self.duration = 1500
 
+        # Sets up the position control registers
+        self.dxl_handler.setup_position_control(ALL_SERVO_IDS)
+
     @register_read()
     def get_duration(self):
         return self.duration
@@ -65,12 +68,12 @@ class SpiderController(ControllerBase):
     def get_servos(self):
         return SERVO_ORDER
 
-    @register_read(argtypes=[str, int])
+    @register_write(argtypes=[str, int])
     def move_single_servo(self, name, position):
         self.dxl_handler.move_many_servos([SERVO_INDEX_LOOKUP[name]], [position], self.duration)
         return dict()
 
-    @register_read(argtypes=[int]*len(ALL_SERVO_IDS))
+    @register_write(argtypes=[int]*len(ALL_SERVO_IDS))
     def move_all_servos(self, *positions):
         for v in positions:
             if v not in range(0, 4096):
@@ -136,3 +139,20 @@ class SpiderController(ControllerBase):
     @register_read()
     def get_torque_enabled(self):
         return self.dxl_handler.get_torque_enabled(ALL_SERVO_IDS)
+
+    @register_write()
+    def setup_all(self):
+        return self.dxl_handler.setup_position_control(ALL_SERVO_IDS)
+
+    @register_read()
+    def read_all(self):
+        return self.dxl_handler.sync_read_all(ALL_SERVO_IDS)
+
+    @register_write(argtypes=[int]*len(ALL_SERVO_IDS))
+    def move_all(self, *positions):
+        for v in positions:
+            if v not in range(0, 4096):
+                raise ValueError(f"Servo values must be in range 0 to 4095")
+
+        self.dxl_handler.position_control(ALL_SERVO_IDS, positions, duration=self.duration, acceleration=600)
+        return dict()

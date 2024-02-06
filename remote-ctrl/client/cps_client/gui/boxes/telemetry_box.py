@@ -1,6 +1,23 @@
+import itertools
+
 from .._gtk4 import GLib, Gtk, Gdk, Pango
 
 from ... import slipp, utils
+
+DEFAULT_SERVO_ORDER = [
+    "FL_INNER_SHOULDER",
+    "FL_OUTER_SHOULDER",
+    "FL_ELBOW",
+    "FR_INNER_SHOULDER",
+    "FR_OUTER_SHOULDER",
+    "FR_ELBOW",
+    "BL_INNER_SHOULDER",
+    "BL_OUTER_SHOULDER",
+    "BL_ELBOW",
+    "BR_INNER_SHOULDER",
+    "BR_OUTER_SHOULDER",
+    "BR_ELBOW",
+]
 
 class TelemetryBox(Gtk.Box):
     """
@@ -24,6 +41,10 @@ class TelemetryBox(Gtk.Box):
         self.LEG_ORDER = ["front_left", "front_right", "back_left", "back_right"]
         self.JOINT_ORDER = ["inner_shoulder", "outer_shoulder", "elbow"]
 
+        # Start with initial order, then do one read-back from the server.
+        self.servo_order = DEFAULT_SERVO_ORDER
+        self.synced_servo_order = False
+
         entry_attrs = Pango.AttrList()
         entry_attrs.insert(Pango.AttrFontDesc.new(Pango.FontDescription("Monospace")))
 
@@ -31,6 +52,7 @@ class TelemetryBox(Gtk.Box):
         title_attrs.insert(Pango.attr_weight_new(Pango.Weight.BOLD))
 
         self.leg_objects = dict()
+        self.servo_id_lookup = dict()
         for leg in self.LEG_ORDER:
             if len(self.leg_objects) > 0:
                 sep = Gtk.Separator(orientation=Gtk.Orientation.VERTICAL)
@@ -54,6 +76,7 @@ class TelemetryBox(Gtk.Box):
                 s = " ".join([p.capitalize() for p in jnt.split("_")])
                 servo_id = "".join([w[0] for w in leg.split("_")]) + "_" + jnt
                 servo_id = servo_id.upper()
+                assert servo_id in self.servo_order
                 label = Gtk.Label(label=s)
                 entry = Gtk.Entry()
                 entry.set_editable(False)
@@ -65,9 +88,10 @@ class TelemetryBox(Gtk.Box):
                 self.leg_objects[leg][jnt] = {
                     "label": label,
                     "entry": entry,
-                    "raw_value": None,
+                    "raw_values": {},
                     "servo_id": servo_id,
                 }
+                self.servo_id_lookup[servo_id] = (leg, jnt)
         self.update_leg_texts()
 
         # Add toggle for which metric to display it as
@@ -113,45 +137,48 @@ class TelemetryBox(Gtk.Box):
         self.start_refresh()
 
     def update_leg_texts(self):
-        for leg in self.LEG_ORDER:
-            for jnt in self.JOINT_ORDER:
-                raw_v = self.leg_objects[leg][jnt]["raw_value"]
-                servo_id = self.leg_objects[leg][jnt]["servo_id"]
-                if raw_v is not None:
-                    if self.metric_check_degrees.get_active():
-                        v = utils.dynamixel.raw_to_degrees(int(raw_v), key=servo_id)
-                        self.leg_objects[leg][jnt]["entry"].set_text(f"{float(v):.04f}")
-                    elif self.metric_check_radians.get_active():
-                        v = utils.dynamixel.raw_to_radians(int(raw_v), key=servo_id)
-                        self.leg_objects[leg][jnt]["entry"].set_text(f"{float(v):.04f}")
-                    else:
-                        self.leg_objects[leg][jnt]["entry"].set_text(f"{int(raw_v)}")
+        for leg, jnt in itertools.product(self.LEG_ORDER, self.JOINT_ORDER):
+            raw_v = self.leg_objects[leg][jnt]["raw_values"].get("PRESENT_POSITION")
+            servo_id = self.leg_objects[leg][jnt]["servo_id"]
+            if raw_v is not None:
+                if self.metric_check_degrees.get_active():
+                    v = utils.dynamixel.raw_to_degrees(int(raw_v), key=servo_id)
+                    self.leg_objects[leg][jnt]["entry"].set_text(f"{float(v):.04f}")
+                elif self.metric_check_radians.get_active():
+                    v = utils.dynamixel.raw_to_radians(int(raw_v), key=servo_id)
+                    self.leg_objects[leg][jnt]["entry"].set_text(f"{float(v):.04f}")
                 else:
-                    self.leg_objects[leg][jnt]["entry"].set_text(f"{servo_id}")
+                    self.leg_objects[leg][jnt]["entry"].set_text(f"{int(raw_v)}")
+            else:
+                self.leg_objects[leg][jnt]["entry"].set_text(f"{servo_id}")
 
     def on_metric_toggle(self, chk):
         self.update_leg_texts()
 
     def refresh(self):
-        def update_servos(pkt):
+        """Periodic refresh function."""
+        def update_servo_order(pkt):
+            self.servo_order = pkt["contents"]
+            self.synced_servo_order = True
+
+        if not self.synced_servo_order:
+            self.client_send(slipp.Packet("get_servos"), on_recv_callback=update_servo_order)
+
+        def update_values(pkt):
             if pkt.op != "ACK":
                 return None
 
-            i = -1
-            for leg in self.LEG_ORDER:
-                for jnt in self.JOINT_ORDER:
-                    i += 1
-                    self.leg_objects[leg][jnt]["raw_value"] = pkt.contents[i]
+            for i, servo_id in enumerate(self.servo_order):
+                leg, jnt = self.servo_id_lookup[servo_id]
+                self.leg_objects[leg][jnt]["raw_values"] = {
+                    k: v[i]
+                    for k, v in pkt.contents.items()
+                }
+
             self.update_leg_texts()
+            self.entry_torque_status.set_text(str(min(pkt.contents["TORQUE_ENABLE"])))
 
-        def update_torque(pkt):
-            if pkt.op == "ACK":
-                self.entry_torque_status.set_text(str(pkt.contents[0]))
-            else:
-                self.entry_torque_status.set_text(str(pkt.contents))
-
-        self.client_send(slipp.Packet("read_all_servo_positions"), on_recv_callback=update_servos)
-        self.client_send(slipp.Packet("get_torque_enabled"), on_recv_callback=update_torque)
+        self.client_send(slipp.Packet("read_all"), on_recv_callback=update_values)
         self.start_refresh()
 
     def start_refresh(self):

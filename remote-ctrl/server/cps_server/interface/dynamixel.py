@@ -184,10 +184,10 @@ class DynamixelHandler:
         Performs position control in a single write.
         """
         writes = [
-            (TORQUE_ENABLE,        1),
-            (PROFILE_VELOCITY,     duration),
-            (PROFILE_ACCELERATION, acceleration),
-            (GOAL_POSITION,        positions),
+            (REGISTER.TORQUE_ENABLE,        1),
+            (REGISTER.PROFILE_VELOCITY,     duration),
+            (REGISTER.PROFILE_ACCELERATION, acceleration),
+            (REGISTER.GOAL_POSITION,        positions),
         ]
         addr = REGISTER.INDIRECT_DATA_1.addr
         datalen = sum(reg.bytelen for (reg, _) in writes)

@@ -173,7 +173,7 @@ class CommandBox(Gtk.Box):
         self.command_name = name
         for pos in positions:
             self.command_queue.append(slipp.Packet(
-                op="move_all_servos",
+                op="move_all",
                 contents={"args": copy.copy(pos)},
             ))
 

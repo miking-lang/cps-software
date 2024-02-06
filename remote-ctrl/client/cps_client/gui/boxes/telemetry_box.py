@@ -54,11 +54,15 @@ class TelemetryBox(Gtk.Box):
         self.servo_order = DEFAULT_SERVO_ORDER
         self.synced_servo_order = False
 
-        entry_attrs = Pango.AttrList()
-        entry_attrs.insert(Pango.AttrFontDesc.new(Pango.FontDescription("Monospace")))
+        self.entry_attrs = Pango.AttrList()
+        self.entry_attrs.insert(Pango.AttrFontDesc.new(Pango.FontDescription("Monospace")))
 
-        title_attrs = Pango.AttrList()
-        title_attrs.insert(Pango.attr_weight_new(Pango.Weight.BOLD))
+        self.small_mono_attrs = Pango.AttrList()
+        self.small_mono_attrs.insert(Pango.AttrFontDesc.new(Pango.FontDescription("Monospace")))
+        self.small_mono_attrs.insert(Pango.attr_size_new(10 * Pango.SCALE))
+
+        self.title_attrs = Pango.AttrList()
+        self.title_attrs.insert(Pango.attr_weight_new(Pango.Weight.BOLD))
 
         self.leg_objects = dict()
         self.servo_id_lookup = dict()
@@ -78,7 +82,7 @@ class TelemetryBox(Gtk.Box):
             leg_label = Gtk.Label(label=s)
             leg_label.set_margin_top(5)
             leg_label.set_margin_bottom(10)
-            leg_label.set_attributes(title_attrs)
+            leg_label.set_attributes(self.title_attrs)
             b.append(leg_label)
 
             for jnt in self.JOINT_ORDER:
@@ -90,7 +94,7 @@ class TelemetryBox(Gtk.Box):
                 button.connect("clicked", lambda btn, id: self.change_joint_focus(id), servo_id)
                 entry = Gtk.Entry()
                 entry.set_editable(False)
-                entry.set_attributes(entry_attrs)
+                entry.set_attributes(self.entry_attrs)
                 entry.set_alignment(0.5) # center
                 entry.set_margin_bottom(10)
                 b.append(button)
@@ -103,25 +107,34 @@ class TelemetryBox(Gtk.Box):
                 }
                 self.servo_id_lookup[servo_id] = (leg, jnt)
 
+        # Detailed status shown for individual legs
         self.left_col.append(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
         self.joint_status_scroll = Gtk.ScrolledWindow()
         self.joint_status_scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.joint_status_scroll.set_vexpand(True)
         self.left_col.append(self.joint_status_scroll)
 
-        self.joint_status_text = Gtk.TextBuffer()
-        self.joint_status_text.set_text("DATA TO BE SHOWN HERE")
+        self.joint_status_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        self.joint_status_scroll.set_child(self.joint_status_box)
+        self.joint_status_header = Gtk.Label(label="NO DATA SHOWN HERE YET")
+        self.joint_status_header.set_attributes(self.title_attrs)
+        self.joint_status_box.append(self.joint_status_header)
 
-        self.joint_status_textview = Gtk.TextView(buffer=self.joint_status_text)
-        self.joint_status_textview.set_editable(False)
-        self.joint_status_textview.set_cursor_visible(False)
-        self.joint_status_textview.set_monospace(True)
-        self.joint_status_scroll.set_child(self.joint_status_textview)
+        self.joint_status_colbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+        self.joint_status_box.append(self.joint_status_colbox)
+
+        self.joint_status_cols = []
+        for i in range(5):
+            if i > 0:
+                self.joint_status_colbox.append(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL))
+            colbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+            self.joint_status_colbox.append(colbox)
+            self.joint_status_cols.append(colbox)
+
         self.joint_status_active_joint = self.servo_order[0]
+        self.joint_status_fields = dict()
 
-        self.update_leg_texts()
-
-        # Add toggle for which metric to display it as
+        # Add toggle for which metric to display positions as
         self.metric_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
         self.right_col.append(self.metric_box)
         self.metric_check_degrees = Gtk.CheckButton.new_with_label("Degrees")
@@ -153,7 +166,7 @@ class TelemetryBox(Gtk.Box):
         self.entry_torque_status = Gtk.Entry()
         self.entry_torque_status.set_text("<NO STATUS YET>")
         self.entry_torque_status.set_editable(False)
-        self.entry_torque_status.set_attributes(entry_attrs)
+        self.entry_torque_status.set_attributes(self.entry_attrs)
         self.entry_torque_status.set_size_request(100, 30)
         self.right_col.append(self.entry_torque_status)
 
@@ -165,28 +178,29 @@ class TelemetryBox(Gtk.Box):
 
         self.status_duration_label = Gtk.Label(label="Duration")
         self.status_duration_label.set_margin_top(10)
-        #self.status_duration_label.set_attributes(title_attrs)
+        #self.status_duration_label.set_attributes(self.title_attrs)
         self.right_col.append(self.status_duration_label)
 
         self.status_duration_entry = Gtk.Entry()
         self.status_duration_entry.set_text("<NO STATUS YET>")
         self.status_duration_entry.set_editable(False)
-        self.status_duration_entry.set_attributes(entry_attrs)
+        self.status_duration_entry.set_attributes(self.entry_attrs)
         self.status_duration_entry.set_size_request(100, 30)
         self.right_col.append(self.status_duration_entry)
 
         self.status_acceleration_label = Gtk.Label(label="Acceleration")
         self.status_acceleration_label.set_margin_top(10)
-        #self.status_acceleration_label.set_attributes(title_attrs)
+        #self.status_acceleration_label.set_attributes(self.title_attrs)
         self.right_col.append(self.status_acceleration_label)
 
         self.status_acceleration_entry = Gtk.Entry()
         self.status_acceleration_entry.set_text("<NO STATUS YET>")
         self.status_acceleration_entry.set_editable(False)
-        self.status_acceleration_entry.set_attributes(entry_attrs)
+        self.status_acceleration_entry.set_attributes(self.entry_attrs)
         self.status_acceleration_entry.set_size_request(100, 30)
         self.right_col.append(self.status_acceleration_entry)
 
+        self.update_leg_texts()
         self.start_refresh()
 
     def update_leg_texts(self):
@@ -208,10 +222,28 @@ class TelemetryBox(Gtk.Box):
             self.leg_objects[leg][jnt]["button"].remove_css_class("lightblue-button")
 
         (leg, jnt) = self.servo_id_lookup[self.joint_status_active_joint]
-        status_lines = [f"[{self.joint_status_active_joint}]"]
-        for k, v in self.leg_objects[leg][jnt]["raw_values"].items():
-            status_lines.append(f"{k}: {v}")
-        self.joint_status_text.set_text("\n".join(status_lines))
+        self.joint_status_header.set_text(str(self.joint_status_active_joint))
+        for k, (label, entry) in self.joint_status_fields.items():
+            entry.set_text("NO DATA")
+        for k, v in sorted(self.leg_objects[leg][jnt]["raw_values"].items(), key=lambda e: e[0]):
+            if k not in self.joint_status_fields:
+                label = Gtk.Label(label=k)
+                label.set_attributes(self.small_mono_attrs)
+                label.set_margin_top(10)
+                entry = Gtk.Entry()
+                entry.set_editable(False)
+                entry.set_alignment(0.5) # center
+                entry.set_attributes(self.entry_attrs)
+                colidx = len(self.joint_status_fields) % len(self.joint_status_cols)
+                self.joint_status_cols[colidx].append(label)
+                self.joint_status_cols[colidx].append(entry)
+                self.joint_status_fields[k] = (label, entry)
+
+            (label, entry) = self.joint_status_fields[k]
+            entry.set_text(str(v))
+        #status_lines = [f"[{self.joint_status_active_joint}]"]
+        #    status_lines.append(f"{k}: {v}")
+        #self.joint_status_text.set_text("\n".join(status_lines))
         self.leg_objects[leg][jnt]["button"].add_css_class("lightblue-button")
         self.leg_objects[leg][jnt]["button"].remove_css_class("white-button")
 

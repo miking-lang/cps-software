@@ -135,6 +135,11 @@ class TelemetryBox(Gtk.Box):
         self.entry_torque_status.set_size_request(100, 30)
         self.button_box.append(self.entry_torque_status)
 
+        self.btn_reboot = Gtk.Button(label="Reboot")
+        self.btn_reboot.connect("clicked", self.on_reboot)
+        self.btn_reboot.set_size_request(100, 30)
+        self.button_box.append(self.btn_reboot)
+
         self.start_refresh()
 
     def update_leg_texts(self):
@@ -183,7 +188,7 @@ class TelemetryBox(Gtk.Box):
 
         if not self.waiting_for_tm:
             ok = self.client_send(
-                slipp.Packet("read_all"),
+                slipp.Packet("read_all_servos"),
                 on_recv_callback=update_values,
                 on_timeout_callback=tm_timeout,
                 ttl=2.0)
@@ -201,3 +206,7 @@ class TelemetryBox(Gtk.Box):
     def on_disable_torque(self, btn):
         self.logfn("Telemetry", "disabling torque")
         self.client_send(slipp.Packet("disable_torque"))
+
+    def on_reboot(self, btn):
+        self.logfn("Telemetry", "rebooting")
+        self.client_send(slipp.Packet("reboot_all_servos"))

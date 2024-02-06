@@ -330,3 +330,10 @@ class DynamixelHandler:
 
     def disable_torques(self, ids):
         return self.group_sync_write(REGISTER.TORQUE_ENABLE, ids, 0)
+
+    def reboot_servos(self, ids):
+        self.disable_torques(ids)
+        for id in ids:
+            dxl_comm_result, _ = self.packetHandler.reboot(self.portHandler, id)
+            if dxl_comm_result != dxl.COMM_SUCCESS:
+                raise RuntimeError(f"Error rebooting servos: {self.packetHandler.getTxRxResult(dxl_comm_result)}")

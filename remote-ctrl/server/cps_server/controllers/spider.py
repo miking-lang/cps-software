@@ -68,12 +68,6 @@ class SpiderController(ControllerBase):
     def get_servos(self):
         return SERVO_ORDER
 
-    @register_read(argtypes=[str])
-    def read_single_servo_position(self, name):
-        ret = self.dxl_handler.read_servo_positions([SERVO_INDEX_LOOKUP[name]])
-        return ret[0]
-
-
     @register_read()
     def read_accel(self):
         return [
@@ -110,6 +104,11 @@ class SpiderController(ControllerBase):
     def read_all_servos(self):
         return self.dxl_handler.sync_read_all(ALL_SERVO_IDS)
 
+    @register_read(argtypes=[str])
+    def read_single_servo_position(self, name):
+        ret = self.dxl_handler.read_servo_positions([SERVO_INDEX_LOOKUP[name]])
+        return ret[0]
+
     @register_write(argtypes=[int]*len(ALL_SERVO_IDS))
     def move_all_servos(self, *positions):
         for v in positions:
@@ -122,4 +121,14 @@ class SpiderController(ControllerBase):
     @register_write(argtypes=[str, int])
     def move_single_servo(self, name, position):
         self.dxl_handler.position_control([SERVO_INDEX_LOOKUP[name]], [position], duration=self.duration, acceleration=600)
+        return dict()
+
+    @register_write()
+    def reboot_all_servos(self):
+        self.dxl_handler.reboot_servos(ALL_SERVO_IDS)
+        return dict()
+
+    @register_write(argtypes=[str])
+    def reboot_single_servo(self, name):
+        self.dxl_handler.reboot_servos([SERVO_INDEX_LOOKUP[name]])
         return dict()

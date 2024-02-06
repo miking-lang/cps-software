@@ -16,18 +16,18 @@ SERVO_INDEX_LOOKUP = {
 }
 
 SERVO_ORDER = [
-    "FL_INNER_SHOULDER",
-    "FL_OUTER_SHOULDER",
-    "FL_ELBOW",
+    "BR_INNER_SHOULDER",
+    "BR_OUTER_SHOULDER",
+    "BR_ELBOW",
     "FR_INNER_SHOULDER",
     "FR_OUTER_SHOULDER",
     "FR_ELBOW",
     "BL_INNER_SHOULDER",
     "BL_OUTER_SHOULDER",
     "BL_ELBOW",
-    "BR_INNER_SHOULDER",
-    "BR_OUTER_SHOULDER",
-    "BR_ELBOW",
+    "FL_INNER_SHOULDER",
+    "FL_OUTER_SHOULDER",
+    "FL_ELBOW",
 ]
 
 ALL_SERVO_IDS = [SERVO_INDEX_LOOKUP[name] for name in SERVO_ORDER]
@@ -49,6 +49,9 @@ class SpiderController(ControllerBase):
         self.accel_handler = Accelerometer(dev_accel, 0x68)
 
         self.duration = 1500
+        self.acceleration = 600
+        self.MIN_DURATION = 100
+        self.MIN_ACCELERATION = self.MIN_DURATION // 2
 
         # Sets up the position control registers
         self.dxl_handler.setup_position_control(ALL_SERVO_IDS)
@@ -59,10 +62,21 @@ class SpiderController(ControllerBase):
 
     @register_write(argtypes=[int])
     def set_duration(self, duration):
-        if duration < 100:
-            raise ValueError("Expected a duration of at least 100")
+        if duration < self.MIN_DURATION:
+            raise ValueError(f"Expected a duration of at least {self.MIN_DURATION}")
         self.duration = duration
         return {"new_duration": self.duration}
+
+    @register_read()
+    def get_acceleration(self):
+        return self.acceleration
+
+    @register_write(argtypes=[int])
+    def set_acceleration(self, acceleration):
+        if acceleration < self.MIN_ACCELERATION:
+            raise ValueError(f"Expected an acceleration of at least {self.MIN_ACCELERATION}")
+        self.acceleration = acceleration
+        return {"new_acceleration": self.acceleration}
 
     @register_read()
     def get_servos(self):
@@ -115,12 +129,22 @@ class SpiderController(ControllerBase):
             if v not in range(0, 4096):
                 raise ValueError(f"Servo values must be in range 0 to 4095")
 
-        self.dxl_handler.position_control(ALL_SERVO_IDS, positions, duration=self.duration, acceleration=600)
+        self.dxl_handler.position_control(
+            ALL_SERVO_IDS,
+            positions,
+            duration=self.duration,
+            acceleration=self.acceleration,
+        )
         return dict()
 
     @register_write(argtypes=[str, int])
     def move_single_servo(self, name, position):
-        self.dxl_handler.position_control([SERVO_INDEX_LOOKUP[name]], [position], duration=self.duration, acceleration=600)
+        self.dxl_handler.position_control(
+            [SERVO_INDEX_LOOKUP[name]],
+            [position],
+            duration=self.duration,
+            acceleration=self.acceleration,
+        )
         return dict()
 
     @register_write()

@@ -8,18 +8,18 @@ from .._gtk4 import GLib, Gtk, Gdk
 from ...import slipp, utils
 
 SERVO_ORDER = [
-    "FL_INNER_SHOULDER",
-    "FL_OUTER_SHOULDER",
-    "FL_ELBOW",
+    "BR_INNER_SHOULDER",
+    "BR_OUTER_SHOULDER",
+    "BR_ELBOW",
     "FR_INNER_SHOULDER",
     "FR_OUTER_SHOULDER",
     "FR_ELBOW",
     "BL_INNER_SHOULDER",
     "BL_OUTER_SHOULDER",
     "BL_ELBOW",
-    "BR_INNER_SHOULDER",
-    "BR_OUTER_SHOULDER",
-    "BR_ELBOW",
+    "FL_INNER_SHOULDER",
+    "FL_OUTER_SHOULDER",
+    "FL_ELBOW",
 ]
 
 def rawpos_to_degrees(pos):
@@ -34,6 +34,24 @@ def degrees_to_rawpos(pos):
 def radians_to_rawpos(pos):
     return [utils.dynamixel.radians_to_raw(p,k) for p,k in zip(pos, SERVO_ORDER)]
 
+
+# Testing a standup position
+STANDUP_COARSE_POS = [
+    degrees_to_rawpos([-20.0, 80.0, 0.0,
+                        20.0, 80.0, 0.0,
+                        20.0, 80.0, 0.0,
+                       -20.0, 80.0, 0.0]),
+    degrees_to_rawpos([-20.0, 80.0, 135.0,
+                        20.0, 80.0, 135.0,
+                        20.0, 80.0, 135.0,
+                       -20.0, 80.0, 135.0]),
+    degrees_to_rawpos([-20.0, 45.0, 135.0,
+                        20.0, 45.0, 135.0,
+                        20.0, 45.0, 135.0,
+                       -20.0, 45.0, 135.0]),
+]
+#for pos in STANDUP_COARSE_POS:
+#    print(f"{rawpos_to_radians(pos)}")
 
 
 class CommandBox(Gtk.Box):
@@ -84,7 +102,9 @@ class CommandBox(Gtk.Box):
         COMMANDS = [
             ("Stand", self.on_command_stand),
             ("Lie Down", self.on_command_liedown),
+            ("Lie Down From Stand", self.on_command_liedown_from_stand),
             ("Trot", self.on_command_trot),
+            ("Creep", self.on_command_creep),
         ]
 
         for cmd, cmdfn in COMMANDS:
@@ -113,13 +133,12 @@ class CommandBox(Gtk.Box):
 
     def on_command_stand(self, btn):
         # From lying down, stand up
-        pos1 = [2270, 1333, 795, 1729, 1159, 3797, 1746, 1132, 3635, 2329, 1052, 516]
-        pos2 = [2205, 1964, 1007, 1782, 1867, 3320, 1855, 1909, 3278, 2367, 1763, 905]
-        pos3 = [2313, 1357, 821, 1711, 1462, 3360, 1723, 1343, 3348, 2362, 1315, 831]
-        positions = ([pos1]*int(max(1, 1/self.dt))) + ([pos2]*int(max(1, 1/self.dt))) #+ ([pos3]*int(max(1, 1/self.dt)))
+        coarse_positions = STANDUP_COARSE_POS
+        positions = []
+        for pos in coarse_positions:
+            print(pos)
+            positions += [pos]*int(max(1, 1/self.dt))
 
-        #for i, pos in enumerate(positions):
-        #    print(f"i={i} = {rawpos_to_degrees(pos)}")
         self._send_position_command("Stand", positions)
 
     def on_command_liedown(self, btn):
@@ -127,19 +146,32 @@ class CommandBox(Gtk.Box):
         positions = [
             degrees_to_rawpos([0.0]*12),
         ]
-        #for i, pos in enumerate(positions):
-        #    print(f"i={i} = {rawpos_to_degrees(pos)}")
         self._send_position_command("Lie Down", positions)
 
+    def on_command_liedown_from_stand(self, btn):
+        # From lying down, stand up
+        coarse_positions = reversed(STANDUP_COARSE_POS)
+        positions = []
+        for pos in coarse_positions:
+            positions += [pos]*int(max(1, 1/self.dt))
+
+        self._send_position_command("Lie Down from Standing", positions)
+
     def on_command_trot(self, btn):
+        self._on_martin_gait(
+            gait_fn=utils.martin_control.trot_gait,
+            dt=(1 / utils.martin_control.TROT_HZ) * 4,
+        )
+
+    def on_command_creep(self, btn):
+        self._on_martin_gait(
+            gait_fn=utils.martin_control.creep_gait,
+            dt=(1 / utils.martin_control.CREEP_HZ),
+        )
+
+    def _on_martin_gait(self, gait_fn, dt):
         # Walk for a bit
         positions = []
-
-        #for i, pos in enumerate(positions):
-        #    print(f"i={i} = {rawpos_to_degrees(pos)}")
-
-        gait_fn = utils.martin_control.trot_gait
-        dt=(1 / utils.martin_control.TROT_HZ)
 
         (
             back_right_joints,
@@ -148,20 +180,21 @@ class CommandBox(Gtk.Box):
             front_left_joints,
         ) = gait_fn()
         for i in range(100):
+            #action_idx = i % len(back_right_joints)
             action_idx = int(i * self.dt / dt) % len(back_right_joints)
             pos = np.array([
                 back_right_joints[action_idx][0],
-                back_right_joints[action_idx][1] - 0.25,
-                back_right_joints[action_idx][2] - 0.35,
+                back_right_joints[action_idx][1],
+                back_right_joints[action_idx][2],
                 front_right_joints[action_idx][0],
-                front_right_joints[action_idx][1] - 0.25,
-                front_right_joints[action_idx][2] - 0.35,
+                front_right_joints[action_idx][1],
+                front_right_joints[action_idx][2],
                 back_left_joints[action_idx][0],
-                back_left_joints[action_idx][1] - 0.25,
-                back_left_joints[action_idx][2] - 0.35,
+                back_left_joints[action_idx][1],
+                back_left_joints[action_idx][2],
                 front_left_joints[action_idx][0],
-                front_left_joints[action_idx][1] - 0.25,
-                front_left_joints[action_idx][2] - 0.35,
+                front_left_joints[action_idx][1],
+                front_left_joints[action_idx][2],
             ])
             positions.append(radians_to_rawpos(list(pos)))
 

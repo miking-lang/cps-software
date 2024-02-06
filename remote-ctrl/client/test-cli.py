@@ -9,10 +9,18 @@ from cps_client import slipp
 HOST, PORT = "localhost", 8372
 
 PACKETS = [
-    slipp.Packet("LSCMD", contents={"args": []}),
+    #slipp.Packet("LSCMD", contents={"args": []}),
     #slipp.Packet("read_all_servo_positions"),
-    slipp.Packet("read_all"),
-    slipp.Packet("read_accel"),
+    #slipp.Packet("read_all"),
+    #slipp.Packet("read_accel"),
+    slipp.Packet("enable_torque"),
+    slipp.Packet("move_single_servo", contents={"args": ["FL_OUTER_SHOULDER", 1900]}),
+    slipp.Packet("move_single_servo", contents={"args": ["FR_OUTER_SHOULDER", 1900]}),
+    #slipp.Packet("move_single_servo", contents={"args": ["BL_OUTER_SHOULDER", 1900]}),
+    #slipp.Packet("move_single_servo", contents={"args": ["BR_OUTER_SHOULDER", 1900]}),
+    slipp.Packet("move_single_servo", contents={"args": ["FL_OUTER_SHOULDER", 930]}),
+    slipp.Packet("move_single_servo", contents={"args": ["FR_OUTER_SHOULDER", 930]}),
+    slipp.Packet("disable_torque"),
 ]
 for i, p in enumerate(PACKETS):
     p.seq = str(i)
@@ -37,7 +45,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
 
         if inpkt is not None:
             print("Received packet:", str(inpkt))
-        time.sleep(3.0)
+        time.sleep(2.0)
 
     sock.sendall(bytes(slipp.Packet("BYE")))
 

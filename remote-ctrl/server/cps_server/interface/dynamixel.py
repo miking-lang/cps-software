@@ -250,6 +250,7 @@ class DynamixelHandler:
                 readregs[reg.name].append(reg.decode_signed(value))
 
             addr += reg.bytelen
+            reg_idx += 1
 
         return readregs
 

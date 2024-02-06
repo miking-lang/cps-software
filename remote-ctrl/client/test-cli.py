@@ -10,7 +10,7 @@ HOST, PORT = "localhost", 8372
 
 PACKETS = [
     slipp.Packet("LSCMD", contents={"args": []}),
-    slipp.Packet("read_all_servo_positions"),
+    #slipp.Packet("read_all_servo_positions"),
     slipp.Packet("read_all"),
     slipp.Packet("read_accel"),
 ]

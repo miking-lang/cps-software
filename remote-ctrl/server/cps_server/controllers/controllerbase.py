@@ -56,10 +56,10 @@ class ControllerBase:
         if isinstance(packet.contents, dict):
             recv_args = packet.contents.get("args", [])
 
-        if len(recv_args) != n_args:
-            return errpkt(f"Expected {n_args} args, got {len(recv_args)}")
         if not isinstance(recv_args, list):
             return errpkt(f"Args should be a list, got {type(recv_args)}")
+        if len(recv_args) != n_args:
+            return errpkt(f"Expected {n_args} args, got {len(recv_args)}")
 
         for i, (t_arg, v_arg) in enumerate(zip(fn_info["argtypes"], recv_args)):
             if not isinstance(v_arg, t_arg):

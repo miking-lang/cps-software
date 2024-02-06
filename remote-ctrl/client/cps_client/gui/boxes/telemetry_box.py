@@ -4,7 +4,7 @@ from .._gtk4 import GLib, Gtk, Gdk, Pango
 
 from ... import slipp, utils
 
-SERVO_ORDER = [
+DEFAULT_SERVO_ORDER = [
     "BR_INNER_SHOULDER",
     "BR_OUTER_SHOULDER",
     "BR_ELBOW",
@@ -159,7 +159,7 @@ class TelemetryBox(Gtk.Box):
 
         self.btn_reboot = Gtk.Button(label="Reboot")
         self.btn_reboot.connect("clicked", self.on_reboot)
-        self.set_margin_top(10)
+        self.btn_reboot.set_margin_top(10)
         self.btn_reboot.set_size_request(100, 30)
         self.right_col.append(self.btn_reboot)
 
@@ -231,17 +231,14 @@ class TelemetryBox(Gtk.Box):
         if not self.synced_servo_order:
             self.client_send(slipp.Packet("get_servos"), on_recv_callback=update_servo_order)
 
+        self.client_send(
+            slipp.Packet("get_duration"),
+            on_recv_callback=lambda pkt: self.status_duration_entry.set_text(str(pkt.contents)))
 
-        def update_duration(pkt):
-            self.status_duration_entry.set_text(str(pkt.contents))
-
-        self.client_send(slipp.Packet("get_duration"), on_recv_callback=update_duration)
-
-        def update_acceleration(pkt):
-            self.status_acceleration_entry.set_text(str(pkt.contents))
-
-        self.client_send(slipp.Packet("get_acceleration"), on_recv_callback=update_acceleration)
-
+        self.client_send(
+            slipp.Packet("get_acceleration"),
+            on_recv_callback=lambda pkt: self.status_acceleration_entry.set_text(str(pkt.contents)),
+        )
 
         def update_values(pkt):
             self.waiting_for_tm = False

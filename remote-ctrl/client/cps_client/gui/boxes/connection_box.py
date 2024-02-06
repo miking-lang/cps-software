@@ -62,15 +62,9 @@ class ConnectionBox(Gtk.Box):
             )
         def send_lsconn(btn): return send_cmd("LSCONN")
         def send_lscmd(btn): return send_cmd("LSCMD")
-        def send_readpwm(btn): return send_cmd("read_all_servo_PWM")
-        def send_readpostraj(btn): return send_cmd("read_all_servo_position_trajectories")
-        def send_readveltraj(btn): return send_cmd("read_all_servo_velocity_trajectories")
         CMDS = [
             ("LSCONN", send_lsconn),
             ("LSCMD", send_lscmd),
-            ("readpwm", send_readpwm),
-            ("readpostraj", send_readpostraj),
-            ("readveltraj", send_readveltraj),
         ]
 
         for (cmd, cmdfn) in CMDS:

@@ -197,7 +197,7 @@ class DynamixelHandler:
         for i, id in enumerate(ids):
             data = []
             for reg, value in writes:
-                if isinstance(value, list):
+                if isinstance(value, (list, tuple)):
                     data += reg.encode(value[i])
                 else:
                     data += reg.encode(value)

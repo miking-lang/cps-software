@@ -158,7 +158,7 @@ class TelemetryBox(Gtk.Box):
     def refresh(self):
         """Periodic refresh function."""
         def update_servo_order(pkt):
-            self.servo_order = pkt["contents"]
+            self.servo_order = pkt.contents
             self.synced_servo_order = True
 
         if not self.synced_servo_order:

@@ -1,4 +1,5 @@
 import json
+import traceback
 
 from .. import slipp
 
@@ -71,6 +72,7 @@ class ControllerBase:
                 contents=ret,
             )
         except Exception as e:
+            traceback.print_exception(e)
             outpkg = errpkt(f"Error executing the command: {str(e)}")
 
         return outpkg

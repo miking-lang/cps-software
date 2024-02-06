@@ -74,6 +74,13 @@ class CommandBox(Gtk.Box):
         self.long_commandbox.append(self.long_commandbox_title)
         self.command_colbox.append(self.long_commandbox)
 
+        stopbtn = Gtk.Button(label="Stop Command")
+        stopbtn.connect("clicked", self.on_stop_command)
+        stopbtn.set_size_request(-1, 60)
+        stopbtn.add_css_class("red-button")
+        stopbtn.set_hexpand(True)
+        self.long_commandbox.append(stopbtn)
+
         COMMANDS = [
             ("Stand", self.on_command_stand),
             ("Lie Down", self.on_command_liedown),
@@ -98,6 +105,11 @@ class CommandBox(Gtk.Box):
     @property
     def dt(self):
         return self.refresh_rate_ms / 1000.0
+
+    def on_stop_command(self, btn):
+        if len(self.command_queue) > 0:
+            self.command_queue.clear()
+            self.status_text.set_text(f"Command interrupted")
 
     def on_command_stand(self, btn):
         # From lying down, stand up

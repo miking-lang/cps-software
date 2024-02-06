@@ -33,6 +33,7 @@ class TelemetryBox(Gtk.Box):
         self.logfn = logfn
         self.client_send = client_send
         self.refresh_rate_ms = refresh_rate_ms
+        self.waiting_for_tm = False
 
         self.leg_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         self.append(self.leg_box)
@@ -165,20 +166,29 @@ class TelemetryBox(Gtk.Box):
             self.client_send(slipp.Packet("get_servos"), on_recv_callback=update_servo_order)
 
         def update_values(pkt):
+            self.waiting_for_tm = False
             if pkt.op != "ACK":
                 return None
-
             for i, servo_id in enumerate(self.servo_order):
                 leg, jnt = self.servo_id_lookup[servo_id]
                 self.leg_objects[leg][jnt]["raw_values"] = {
                     k: v[i]
                     for k, v in pkt.contents.items()
                 }
-
             self.update_leg_texts()
             self.entry_torque_status.set_text(str(min(pkt.contents["TORQUE_ENABLE"])))
 
-        self.client_send(slipp.Packet("read_all"), on_recv_callback=update_values)
+        def tm_timeout():
+            self.waiting_for_tm = False
+
+        if not self.waiting_for_tm:
+            ok = self.client_send(
+                slipp.Packet("read_all"),
+                on_recv_callback=update_values,
+                on_timeout_callback=tm_timeout,
+                ttl=2.0)
+            if ok:
+                self.waiting_for_tm = True
         self.start_refresh()
 
     def start_refresh(self):

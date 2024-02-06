@@ -85,7 +85,9 @@ class ConnectionBox(Gtk.Box):
 
     @property
     def is_connected(self):
-        return bool(self.client is not None)
+        if self.client is None:
+            return False
+        return self.client.is_active
 
     def refresh(self):
         """Refreshes the GUI for this box."""
@@ -93,6 +95,8 @@ class ConnectionBox(Gtk.Box):
             self.btn_connect.set_label("Connect")
             self.btn_connect.remove_css_class("lightgreen-button")
             self.btn_connect.add_css_class("white-button")
+        if self.client is not None:
+            self.client.check_timeouts()
 
     def set_as_connected(self, pkt):
         self.logfn("Status", "connected")
@@ -116,6 +120,7 @@ class ConnectionBox(Gtk.Box):
             self.client = None
 
     def disconnect(self):
+        if self.client is not None:
             self.set_status_text("Disonnecting...")
             self.client.stop()
             self.client = None
@@ -134,8 +139,9 @@ class ConnectionBox(Gtk.Box):
 
     def client_send(self, packet,
                     on_recv_callback = None,
-                    on_timeout_callback = None):
-        if self.is_connected:
+                    on_timeout_callback = None,
+                    ttl : float = 5.0):
+        if self.client is not None:
             try:
                 # Make sure that callbacks are async wrapped
                 on_recv = None
@@ -146,6 +152,12 @@ class ConnectionBox(Gtk.Box):
                     on_timeout = lambda: GLib.idle_add(on_timeout_callback)
                 self.client.send(packet,
                                  on_recv_callback=on_recv,
-                                 on_timeout_callback=on_timeout)
+                                 on_timeout_callback=on_timeout,
+                                 ttl=ttl)
             except Exception as e:
                 self.set_status_text(str(e))
+                return False
+            else:
+                return True
+        else:
+            return False

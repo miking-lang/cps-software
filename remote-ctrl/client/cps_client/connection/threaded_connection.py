@@ -1,5 +1,6 @@
 import socket
 import threading
+import time
 
 from collections import deque
 from typing import Optional, Callable
@@ -40,7 +41,7 @@ class ThreadedClientConnection:
              packet : slipp.Packet,
              on_recv_callback : Optional[Callable[[slipp.Packet], None]] = None,
              on_timeout_callback : Optional[Callable[[], None]] = None,
-             ttl=5.0):
+             ttl : float = 5.0):
         """
         Sends a packet, queues it up if socket is not open yet.
 
@@ -55,7 +56,11 @@ class ThreadedClientConnection:
             self.__seq_counter += 1
 
             with self.__dict_lock:
-                self.__recv_callbacks[packet.seq] = (on_recv_callback, on_timeout_callback, ttl)
+                self.__recv_callbacks[packet.seq] = (
+                    on_recv_callback,
+                    on_timeout_callback,
+                    time.time() + ttl
+                )
 
             self.__send_queue.append(packet)
             if self.__active:
@@ -65,6 +70,24 @@ class ThreadedClientConnection:
                         self._internal_send(self.__socket, outpkt)
                     except Exception as e:
                         self.__active = False
+
+    def check_timeouts(self):
+        now = time.time()
+        timeout_keys = []
+        timeouts_callbacks = []
+        with self.__dict_lock:
+            for k, entry in self.__recv_callbacks.items():
+                timeout_time = entry[2]
+                if now >= timeout_time:
+                    timeout_keys.append(k)
+                    timeouts_callbacks.append(entry[1])
+            for k in timeout_keys:
+                del self.__recv_callbacks[k]
+
+        for k, cb in zip(timeout_keys, timeouts_callbacks):
+            self.logfn("Packet timed out", str(k))
+            if cb is not None:
+                cb()
 
     def stop(self):
         self.__active = False
@@ -120,7 +143,7 @@ class ThreadedClientConnection:
                 while has_more_data:
                     prev_len = len(recvdata)
                     (inpkt, msg, recvdata) = slipp.Packet.decode(recvdata)
-                    has_more_data = bool(prev_len == len(recvdata))
+                    has_more_data = bool(prev_len != len(recvdata))
                     if inpkt is None and msg is not None:
                         print(msg)
                         self.__failed = True

@@ -8,17 +8,3 @@ services:
     privileged: true
     ports:
       - 127.0.0.1:8372:8372
-
-  spider-bash:
-    image: mikinglang/remote-ctrl-server:0.0.1
-    build:
-      context: ../..
-      dockerfile: remote-ctrl/server/Dockerfile
-    volumes:
-      - .:/remote-ctrl-mnt
-    command: bash
-    stdin_open: true
-    tty: true
-    privileged: true
-    ports:
-      - 127.0.0.1:8372:8372

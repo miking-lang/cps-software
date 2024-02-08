@@ -1,8 +1,12 @@
 import copy
 import json
 import numpy as np
+import os
+import pathlib
+import time
 
 from collections import deque
+from datetime import datetime, timezone
 
 from .._gtk4 import GLib, Gtk, Gdk, pango_attrlist
 
@@ -220,7 +224,11 @@ class ControlBox(Gtk.Box):
         self.command_sent = 0
         self.command_length = 0
         self.command_received = False
+        self.telemetry_received = False
         self.command_name = "<NO COMMAND>"
+        # For saving incoming data
+        self.command_sent_positions = []
+        self.command_recv_telemetry = []
 
         self.start_refresh()
 
@@ -235,7 +243,9 @@ class ControlBox(Gtk.Box):
 
     def on_command_liedown_from_stand(self, btn):
         # From lying down, stand up
-        self._set_command_in_degrees(list(reversed(STANDUP_DEGREE_POS)))
+        self._set_command_in_degrees(
+            list(reversed(STANDUP_DEGREE_POS)) + [[0.0]*12]
+        )
 
     def on_command_liedown(self, btn):
         # Go to lying down position
@@ -279,6 +289,10 @@ class ControlBox(Gtk.Box):
             self.command_edit_buffer.get_end_iter(),
             False,
         )
+        raw_text = raw_text.strip()
+        if raw_text.endswith(","):
+            raw_text = raw_text[:-1]
+
         raw_values = json.loads(f"[{raw_text}]")
         if self.command_editopt_metric_last_active == "degrees":
             raw_values = [self._degrees_to_rawpos(rw) for rw in raw_values]
@@ -347,8 +361,8 @@ class ControlBox(Gtk.Box):
 
     def on_command_trot(self, btn):
         self._on_martin_gait(
-            gait_fn=utils.martin_control.creep_gait,
-            dt=(1 / utils.martin_control.TROT_HZ) * 4,
+            gait_fn=utils.martin_control.trot_gait,
+            dt=(1 / utils.martin_control.TROT_HZ) * 2,
         )
 
     def on_command_creep(self, btn):
@@ -425,11 +439,11 @@ class ControlBox(Gtk.Box):
         self.command_sent = 0
         self.command_length = len(positions)
         self.command_received = True
+        self.telemetry_received = True
+        self.command_sent_positions = []
+        self.command_recv_telemetry = []
         for pos in positions:
-            self.command_queue.append(slipp.Packet(
-                op="move_all_servos",
-                contents={"args": copy.copy(pos)},
-            ))
+            self.command_queue.append(copy.copy(pos))
 
         self.status_text.set_text(f"Running command ({self.command_sent}/{self.command_length})")
         self.status_bar.set_fraction(0.0)
@@ -445,6 +459,7 @@ class ControlBox(Gtk.Box):
     def _ack_command(self, pkt):
         if pkt.op == "ACK":
             self.command_received = True
+            self.command_sent_positions[-1]["robot_ack_timestamp"] = pkt.timestamp_seconds
         else:
             self.command_received = False
             self.status_text.set_text("Command failed")
@@ -452,8 +467,24 @@ class ControlBox(Gtk.Box):
             self.refresh_rate_ms = 250
             self.command_queue.clear()
 
+    def _ack_telemetry(self, pkt):
+        if pkt.op == "ACK":
+            self.telemetry_received = True
+            self.command_recv_telemetry.append({
+                "client_timestamp": time.time(),
+                "robot_timestamp": pkt.timestamp_seconds,
+                "contents": pkt.contents,
+            })
+        else:
+            self.telemetry_received = False
+            self.status_text.set_text("Telemetry read failed")
+            self.main_utils.notify("Telemetry read failed")
+            self.refresh_rate_ms = 250
+            self.command_queue.clear()
+
     def _timeout_command(self):
         self.command_received = False
+        self.telemetry_received = False
         self.status_text.set_text("Command timed out")
         self.main_utils.notify("Command timed out")
         self.refresh_rate_ms = 250
@@ -461,23 +492,57 @@ class ControlBox(Gtk.Box):
 
     def refresh(self):
         if len(self.command_queue) > 0:
-            if self.command_received:
-                pkt = self.command_queue.popleft()
+            if self.command_received and self.telemetry_received:
+                pos = self.command_queue.popleft()
+                cmd_pkt = slipp.Packet("move_all_servos", contents={"args": copy.copy(pos)})
+                tm_pkt = slipp.Packet("read_all_servos")
                 self.main_utils.client_send(
-                    pkt,
+                    cmd_pkt,
                     on_recv_callback=self._ack_command,
                     on_timeout_callback=self._timeout_command,
                     # Maybe set a smaller TTL?
                     ttl=(5.0 * self.refresh_rate_ms / 1000.0),
                 )
+                self.main_utils.client_send(
+                    tm_pkt,
+                    on_recv_callback=self._ack_telemetry,
+                    on_timeout_callback=self._timeout_command,
+                    # Maybe set a smaller TTL?
+                    ttl=(5.0 * self.refresh_rate_ms / 1000.0),
+                )
                 self.command_sent += 1
+                self.command_sent_positions.append({
+                    "client_timestamp": time.time(),
+                    "positions": pos,
+                })
                 self.command_received = False
+                self.telemetry_received = False
                 self.status_bar.set_fraction(self.command_sent / self.command_length)
-                if self.command_sent == self.command_length:
-                    self.status_text.set_text(f"Command done")
-                    self.refresh_rate_ms = 250
-                else:
-                    self.status_text.set_text(f"Running command ({self.command_sent}/{self.command_length})")
+                self.status_text.set_text(f"Running command ({self.command_sent}/{self.command_length})")
+        elif self.command_sent == self.command_length and self.command_received and self.telemetry_received:
+            self.command_received = False
+            self.telemetry_received = False
+            self.status_text.set_text(f"Command done")
+            self.refresh_rate_ms = 250
+
+            dstdir = self.main_utils.cache.cachedir / "runs"
+            os.makedirs(dstdir, exist_ok=True)
+            dstfile = dstdir / datetime.now().strftime("ctrl-%Y-%m-%d_%H%M%S.json")
+            contents = {
+                "servo_order": self.main_utils.cache.get("SERVO_ORDER"),
+                "sent_positions": self.command_sent_positions,
+                "recv_telemetry": self.command_recv_telemetry,
+            }
+            try:
+                with open(dstfile, "w+") as f:
+                    json.dump(contents, f)
+            except Exception as e:
+                self.main_utils.notify(f"Error saving control trajectory: {str(e)}")
+            else:
+                self.main_utils.notify(f"Saved trajectory as {str(dstfile)}", success=True)
+
+            self.command_sent_positions = []
+            self.command_recv_telemetry = []
 
         self.start_refresh()
 

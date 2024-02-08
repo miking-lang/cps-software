@@ -29,7 +29,7 @@ class MainWindow(Gtk.ApplicationWindow):
             log : str -> str -> ()
             client_send : Packet -> Option(Packet -> ()) -> Option(() -> ()) -> Option(float)
             cache : JSONParameterCache
-            notify : str -> ()
+            notify : str -> Option(bool) -> ()
             """
             self.log = None
             self.client_send  = None
@@ -152,10 +152,16 @@ class MainWindow(Gtk.ApplicationWindow):
         #self.notify_label.set_text(f"Total timeouts: {self.total_timeouts}")
         pass
 
-    def on_notify(self, text):
+    def on_notify(self, text, success=False):
         self.notifier.set_reveal_child(False)
         self.notify_label.set_text(text)
-        self.notifier_target_hide_ms = self.total_timeout_ms + 2500
+        self.notifier_target_hide_ms = self.total_timeout_ms + 2000 + 25*len(text)
+        if success:
+            self.notify_label.add_css_class("lightgreen-button")
+            self.notify_label.remove_css_class("red-button")
+        else:
+            self.notify_label.add_css_class("red-button")
+            self.notify_label.remove_css_class("lightgreen-button")
         self.notifier.set_reveal_child(True)
 
     def start_timeout(self):

@@ -211,13 +211,10 @@ class DynamixelHandler:
         groupSyncWrite.clearParam()
 
 
-    def sync_read_all(self, ids : List[int]):
+    def sync_read_registers(self, ids : List[int], reg_start : Register, reg_end : Register):
         """
         Reads all control RAM parameters from all servos.
         """
-        reg_start = REGISTER.TORQUE_ENABLE
-        reg_end = REGISTER.BACKUP_READY
-        #reg_end = REGISTER.HARDWARE_ERROR_STATUS
         addr = reg_start.addr
         length = (reg_end.addr + reg_end.bytelen) - addr
         assert length > 0, f"length = {length}"
@@ -254,6 +251,8 @@ class DynamixelHandler:
 
         return readregs
 
+    def sync_read_all(self, ids : List[int]):
+        return self.sync_read_registers(ids, reg_start=REGISTER.TORQUE_ENABLE, reg_end=REGISTER.BACKUP_READY)
 
     def group_sync_write(self, reg : Register, ids : List[int], values : Union[List[int], int]):
         """

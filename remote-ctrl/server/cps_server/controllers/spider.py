@@ -41,12 +41,14 @@ register_write = lambda *args, **kwargs: register_command(REGISTRY, *args, kind=
 class SpiderController(ControllerBase):
     def __init__(self, dev_dxl="/dev/ttyUSB0", dev_accel="/dev/i2c-1"):
         super().__init__(REGISTRY)
-        from ..interface.dynamixel import DynamixelHandler
+        from ..interface.dynamixel import DynamixelHandler, REGISTER
         from mi_cps import Accelerometer
         self.dev_dxl = dev_dxl
         self.dev_accel = dev_accel
         self.dxl_handler = DynamixelHandler(dev_dxl)
         self.accel_handler = Accelerometer(dev_accel, 0x68)
+
+        self.REGISTER = REGISTER
 
         self.duration = 1500
         self.acceleration = 600
@@ -117,6 +119,13 @@ class SpiderController(ControllerBase):
     @register_read()
     def read_all_servos(self):
         return self.dxl_handler.sync_read_all(ALL_SERVO_IDS)
+
+    @register_read()
+    def read_all_servo_goalplans(self):
+        self.dxl_handler.sync_read_registers(ALL_SERVO_IDS,
+            reg_start=self.REGISTER.GOAL_POSITION,
+            reg_end=self.REGISTER.POSITION_TRAJECTORY,
+        )
 
     @register_read(argtypes=[str])
     def read_single_servo_position(self, name):

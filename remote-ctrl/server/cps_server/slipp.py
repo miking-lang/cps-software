@@ -29,6 +29,8 @@ from typing import Optional, Tuple
 # The end of a packet is specified by two "Windows new line's".
 DELIMITER = b"\n\r\n\r"
 
+SLIPP_TIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f %Z"
+
 
 class Packet:
     def __init__(self, op: str, contents: "json" = {}, seq: str = "", timestamp : Optional[str] = None):
@@ -54,7 +56,7 @@ class Packet:
         """Returns the JSON blob corresponding to this packet."""
         timestamp = self.timestamp
         if timestamp is None:
-            timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f %Z")
+            timestamp = datetime.now(timezone.utc).strftime(SLIPP_TIME_FORMAT)
 
         return {
             "op": self.op,
@@ -66,6 +68,15 @@ class Packet:
     def encode(self) -> bytes:
         """Returns a sequence of bytes with encoded packet"""
         return json.dumps(self.blob).encode("utf-8") + DELIMITER
+
+    @property
+    def timestamp_seconds(self):
+        # Get the value of the timestamp in seconds (as with time.time())
+        try:
+            dt = datetime.strptime(self.timestamp, SLIPP_TIME_FORMAT)
+            return time.mktime(dt.timetuple())
+        except Exception:
+            return None
 
     @classmethod
     def decode(cls, data: bytes) -> Tuple[Optional["Packet"], Optional[str], bytes]:

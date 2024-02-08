@@ -31,9 +31,9 @@ STANDUP_DEGREE_POS = [
 
 
 
-class CommandBox(Gtk.Box):
+class ControlBox(Gtk.Box):
     """
-    A Command box for sending motion commands to the spider.
+    A Control box for sending motion commands to the spider.
     """
     def __init__(self, main_utils):
         """

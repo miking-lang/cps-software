@@ -10,7 +10,7 @@ from ..connection import ThreadedClientConnection
 from ._gtk4 import GLib, Gtk, Gdk
 from .cache import JSONParameterCache
 
-from .boxes import CommandBox, ConnectionBox, LoggingBox, TelemetryBox
+from .boxes import ControlBox, ConnectionBox, LoggingBox, TelemetryBox
 
 NAME = "Remote Ctrl GUI Client"
 CURDIR = pathlib.Path(os.path.dirname(os.path.abspath(__file__)))
@@ -117,14 +117,14 @@ class MainWindow(Gtk.ApplicationWindow):
         self.telemetry_label = Gtk.Label(label="Telemetry")
         self.telemetry_label.set_size_request(100, 30)
 
-        # COMMAND
-        self.command = CommandBox(self.__main_utils)
-        self.command_label = Gtk.Label(label="Command")
-        self.command_label.set_size_request(100, 30)
+        # CONTROL
+        self.control = ControlBox(self.__main_utils)
+        self.control_label = Gtk.Label(label="Control")
+        self.control_label.set_size_request(100, 30)
 
         self.notebook.append_page(self.connbox, self.connbox_label)
         self.notebook.append_page(self.telemetry, self.telemetry_label)
-        self.notebook.append_page(self.command, self.command_label)
+        self.notebook.append_page(self.control, self.control_label)
         self.notebook.append_page(self.logbox, self.logbox_label)
 
         self.ongoing_timeouts = 0

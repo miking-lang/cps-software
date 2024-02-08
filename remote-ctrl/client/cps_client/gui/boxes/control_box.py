@@ -27,10 +27,10 @@ STANDUP_DEGREE_POS = [
       30.0,  45.0, 135.0,
       30.0,  45.0, 135.0,
      -30.0,  45.0, 135.0],
-    [-30.0, -20.0,  75.0,
-      30.0, -20.0,  75.0,
-      30.0, -20.0,  75.0,
-     -30.0, -20.0,  75.0],
+    [-30.0,  10.0, 105.0,
+      30.0,  10.0, 105.0,
+      30.0,  10.0, 105.0,
+     -30.0,  10.0, 105.0],
 ]
 
 
@@ -381,7 +381,7 @@ class ControlBox(Gtk.Box):
             front_right_joints,
             front_left_joints,
         ) = gait_fn()
-        for i in range(100):
+        for i in range(32):
             #action_idx = i % len(back_right_joints)
             action_idx = int(i * 0.25 / dt) % len(back_right_joints)
             pos = [

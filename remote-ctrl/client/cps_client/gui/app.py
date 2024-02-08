@@ -46,9 +46,9 @@ class MainWindow(Gtk.ApplicationWindow):
         self.overlay = Gtk.Overlay()
         self.set_child(self.overlay)
 
-        self.__main_utils = MainWindow.MainUtils()
-        self.__main_utils.cache = self.__cache
-        self.__main_utils.notify = self.on_notify
+        self.main_utils = MainWindow.MainUtils()
+        self.main_utils.cache = self.__cache
+        self.main_utils.notify = self.on_notify
 
         # Set CSS
         style_context = self.get_style_context()
@@ -97,28 +97,28 @@ class MainWindow(Gtk.ApplicationWindow):
         self.mainbox.append(self.notebook)
 
         # LOGGING
-        self.logbox = LoggingBox(self.__main_utils)
+        self.logbox = LoggingBox(self.main_utils)
         self.logbox_label = Gtk.Label(label="Log")
         self.logbox_label.set_size_request(100, 30)
 
         # Add logging functions
-        self.__main_utils.log = self.logbox.add_log_entry
+        self.main_utils.log = self.logbox.add_log_entry
 
         # CONNECTION
-        self.connbox = ConnectionBox(self.__main_utils)
+        self.connbox = ConnectionBox(self.main_utils)
         self.connbox_label = Gtk.Label(label="Connection")
         self.connbox_label.set_size_request(100, 30)
 
         # Add the client_send util
-        self.__main_utils.client_send = self.connbox.client_send
+        self.main_utils.client_send = self.connbox.client_send
 
         # TELEMETRY
-        self.telemetry = TelemetryBox(self.__main_utils)
+        self.telemetry = TelemetryBox(self.main_utils)
         self.telemetry_label = Gtk.Label(label="Telemetry")
         self.telemetry_label.set_size_request(100, 30)
 
         # CONTROL
-        self.control = ControlBox(self.__main_utils)
+        self.control = ControlBox(self.main_utils)
         self.control_label = Gtk.Label(label="Control")
         self.control_label.set_size_request(100, 30)
 

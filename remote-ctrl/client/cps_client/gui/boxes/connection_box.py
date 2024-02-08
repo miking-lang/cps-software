@@ -103,6 +103,7 @@ class ConnectionBox(Gtk.Box):
         self.btn_connect.remove_css_class("white-button")
         self.btn_connect.add_css_class("lightgreen-button")
         self.set_status_text("Connected")
+        self.main_utils.notify("Connected", success=True)
 
     def connect(self):
         host=self.entry_host.get_text()

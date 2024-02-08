@@ -7,14 +7,14 @@ class ConnectionBox(Gtk.Box):
     """
     A Connection box container for handling connection to server.
     """
-    def __init__(self, logfn):
+    def __init__(self, main_utils):
         """
-        logfn : Callback logging
+        main_utils : Class with shared utilities from the MainWindow.
         """
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
 
         self.client = None
-        self.logfn = logfn
+        self.main_utils = main_utils
 
         self.left_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
         self.right_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
@@ -27,12 +27,12 @@ class ConnectionBox(Gtk.Box):
 
         self.entry_host = Gtk.Entry()
         self.entry_host.set_placeholder_text("Hostname")
-        self.entry_host.set_text("localhost")
+        self.entry_host.set_text(str(self.main_utils.cache.get("host")))
         self.left_col.append(self.entry_host)
 
         self.entry_port = Gtk.Entry()
         self.entry_port.set_placeholder_text("Port")
-        self.entry_port.set_text("8372")
+        self.entry_port.set_text(str(self.main_utils.cache.get("port")))
         self.left_col.append(self.entry_port)
 
         self.text_status = Gtk.TextView()
@@ -85,6 +85,11 @@ class ConnectionBox(Gtk.Box):
 
     def refresh(self):
         """Refreshes the GUI for this box."""
+        if self.client is not None and self.client.failed:
+            self.main_utils.notify("Connection failed")
+            self.set_status_text(self.client.fail_msg)
+            self.client = None
+
         if self.client is None:
             self.btn_connect.set_label("Connect")
             self.btn_connect.remove_css_class("lightgreen-button")
@@ -93,23 +98,27 @@ class ConnectionBox(Gtk.Box):
             self.client.check_timeouts()
 
     def set_as_connected(self, pkt):
-        self.logfn("Status", "connected")
+        self.main_utils.log("Status", "connected")
         self.btn_connect.set_label("Connected")
         self.btn_connect.remove_css_class("white-button")
         self.btn_connect.add_css_class("lightgreen-button")
+        self.set_status_text("Connected")
 
     def connect(self):
         host=self.entry_host.get_text()
         port=self.entry_port.get_text()
+        self.main_utils.cache.set("host", str(host))
+        self.main_utils.cache.set("port", str(port))
         self.set_status_text(f"Connecting to {host}:{port}...")
         try:
             self.client = ThreadedClientConnection(
                 host=str(host), port=int(port),
-                logfn=lambda title, msg: GLib.idle_add(self.logfn, title, msg)
+                logfn=lambda title, msg: GLib.idle_add(self.main_utils.log, title, msg)
             )
             self.client.start()
             self.client_send(slipp.Packet("PING"), on_recv_callback=self.set_as_connected)
         except Exception as e:
+            self.main_utils.notify("Connection failed")
             self.set_status_text(str(e))
             self.client = None
 

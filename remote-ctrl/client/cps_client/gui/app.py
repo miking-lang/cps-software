@@ -2,10 +2,13 @@ import os
 import pathlib
 import sys
 
+from typing import Callable, Optional
+
 from .. import slipp
 from ..connection import ThreadedClientConnection
 
 from ._gtk4 import GLib, Gtk, Gdk
+from .cache import JSONParameterCache
 
 from .boxes import CommandBox, ConnectionBox, LoggingBox, TelemetryBox
 
@@ -19,14 +22,33 @@ with open(CURDIR / "style.css", "rb") as f:
 
 
 class MainWindow(Gtk.ApplicationWindow):
+    class MainUtils:
+        """Main utils class with things that everyone should be able to access."""
+        def __init__(self):
+            """
+            log : str -> str -> ()
+            client_send : Packet -> Option(Packet -> ()) -> Option(() -> ()) -> Option(float)
+            cache : JSONParameterCache
+            notify : str -> ()
+            """
+            self.log = None
+            self.client_send  = None
+            self.cache = None
+            self.notify = None
+
     def __init__(self, application, *args, **kwargs):
         super().__init__(*args, application=application, **kwargs)
         self.__application = application
+        self.__cache = JSONParameterCache(cache_name=application.get_application_id())
         self.set_default_size(800, 600)
         self.set_title(NAME)
 
         self.overlay = Gtk.Overlay()
         self.set_child(self.overlay)
+
+        self.__main_utils = MainWindow.MainUtils()
+        self.__main_utils.cache = self.__cache
+        self.__main_utils.notify = self.on_notify
 
         # Set CSS
         style_context = self.get_style_context()
@@ -40,10 +62,10 @@ class MainWindow(Gtk.ApplicationWindow):
         self.topbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         self.mainbox.append(self.topbox)
 
-        # TODO: For showing notifications
+        # For showing notifications with on_notify
         self.notifier = Gtk.Revealer()
         self.notify_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        self.notify_label = Gtk.Label(label="Test Overlay")
+        self.notify_label = Gtk.Label(label="<NOTIFICATION>")
         self.notify_label.set_size_request(100, 40)
         self.notify_label.add_css_class("red-button")
         self.notify_box.append(self.notify_label)
@@ -52,6 +74,9 @@ class MainWindow(Gtk.ApplicationWindow):
         self.notifier.set_reveal_child(False)
         self.notifier.set_can_target(False) # Make this click-through
         self.notifier.set_size_request(100, 40)
+        self.notifier.set_transition_duration(150)
+        self.notifier.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
+        self.notifier_target_hide_ms = -1 # Timeout ms for when to hide the notification
         self.overlay.add_overlay(self.notifier)
 
         self.send_button = Gtk.Button(label="Send (does nothing atm.)")
@@ -72,30 +97,28 @@ class MainWindow(Gtk.ApplicationWindow):
         self.mainbox.append(self.notebook)
 
         # LOGGING
-        self.logbox = LoggingBox()
+        self.logbox = LoggingBox(self.__main_utils)
         self.logbox_label = Gtk.Label(label="Log")
         self.logbox_label.set_size_request(100, 30)
 
+        # Add logging functions
+        self.__main_utils.log = self.logbox.add_log_entry
+
         # CONNECTION
-        self.connbox = ConnectionBox(
-            logfn=self.logbox.add_log_entry,
-        )
+        self.connbox = ConnectionBox(self.__main_utils)
         self.connbox_label = Gtk.Label(label="Connection")
         self.connbox_label.set_size_request(100, 30)
 
+        # Add the client_send util
+        self.__main_utils.client_send = self.connbox.client_send
+
         # TELEMETRY
-        self.telemetry = TelemetryBox(
-            logfn=self.logbox.add_log_entry,
-            client_send=self.connbox.client_send,
-        )
+        self.telemetry = TelemetryBox(self.__main_utils)
         self.telemetry_label = Gtk.Label(label="Telemetry")
         self.telemetry_label.set_size_request(100, 30)
 
         # COMMAND
-        self.command = CommandBox(
-            logfn=self.logbox.add_log_entry,
-            client_send=self.connbox.client_send,
-        )
+        self.command = CommandBox(self.__main_utils)
         self.command_label = Gtk.Label(label="Command")
         self.command_label.set_size_request(100, 30)
 
@@ -106,6 +129,8 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.ongoing_timeouts = 0
         self.total_timeouts = 0
+        self.timeout_period_ms = 10
+        self.total_timeout_ms = 0
         self.start_timeout()
 
         self.__application.connect("shutdown", self.on_destroy)
@@ -117,6 +142,8 @@ class MainWindow(Gtk.ApplicationWindow):
         #print("Destroying main window")
         if self.connbox.is_connected:
             self.connbox.disconnect()
+        
+        self.__cache.writeback()
 
     def on_clicked_quit(self, btn):
         self.__application.quit()
@@ -125,9 +152,15 @@ class MainWindow(Gtk.ApplicationWindow):
         #self.notify_label.set_text(f"Total timeouts: {self.total_timeouts}")
         pass
 
+    def on_notify(self, text):
+        self.notifier.set_reveal_child(False)
+        self.notify_label.set_text(text)
+        self.notifier_target_hide_ms = self.total_timeout_ms + 2500
+        self.notifier.set_reveal_child(True)
+
     def start_timeout(self):
         self.ongoing_timeouts += 1
-        GLib.timeout_add(10, self.do_every_10ms)
+        GLib.timeout_add(self.timeout_period_ms, self.do_every_10ms)
 
     def do_every_10ms(self):
         """
@@ -135,15 +168,22 @@ class MainWindow(Gtk.ApplicationWindow):
         """
         self.ongoing_timeouts -= 1
         self.total_timeouts += 1
-        total_ms = self.total_timeouts * 10
+        self.total_timeout_ms += self.timeout_period_ms
 
         # Ping the server every 10 seconds
-        if total_ms % 10000 == 0:
+        if self.total_timeout_ms % 10000 == 0:
             self.connbox.client_send(slipp.Packet("PING"))
 
         # Every second, refresh the connbox
-        if total_ms % 1000 == 0:
+        if self.total_timeout_ms % 1000 == 0:
             self.connbox.refresh()
+        
+        # Perform cache writeback
+        if self.total_timeout_ms % 5000 == 0:
+            self.__cache.writeback()
+
+        if self.total_timeout_ms >= self.notifier_target_hide_ms:
+            self.notifier.set_reveal_child(False)
 
         # Testing for reveal of child.
         #if total_ms % 2000 == 0:

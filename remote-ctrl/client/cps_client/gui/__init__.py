@@ -1,1 +1,1 @@
-from . import app, boxes
+from . import app, cache, boxes

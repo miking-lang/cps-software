@@ -23,16 +23,14 @@ class TelemetryBox(Gtk.Box):
     """
     A Telemetry box for reading telemetry from the spider.
     """
-    def __init__(self, logfn, client_send, refresh_rate_ms=1000):
+    def __init__(self, main_utils):
         """
-        logfn : Callback logging
-        client_send : Sending packets from connectionbox
+        main_utils : Class with shared utilities from the MainWindow.
         """
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
 
-        self.logfn = logfn
-        self.client_send = client_send
-        self.refresh_rate_ms = refresh_rate_ms
+        self.main_utils = main_utils
+        self.refresh_rate_ms = 1000
         self.waiting_for_tm = False
 
         self.left_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
@@ -51,8 +49,11 @@ class TelemetryBox(Gtk.Box):
         self.JOINT_ORDER = ["inner_shoulder", "outer_shoulder", "elbow"]
 
         # Start with initial order, then do one read-back from the server.
-        self.servo_order = DEFAULT_SERVO_ORDER
+        self.servo_order = self.main_utils.cache.get("SERVO_ORDER")
         self.synced_servo_order = False
+        def set_servo_order(v):
+            self.servo_order = v
+        self.main_utils.cache.register_callback("SERVO_ORDER", set_servo_order)
 
         self.entry_attrs = Pango.AttrList()
         self.entry_attrs.insert(Pango.AttrFontDesc.new(Pango.FontDescription("Monospace")))
@@ -104,6 +105,7 @@ class TelemetryBox(Gtk.Box):
                     "entry": entry,
                     "raw_values": {},
                     "servo_id": servo_id,
+                    "has_error": False,
                 }
                 self.servo_id_lookup[servo_id] = (leg, jnt)
 
@@ -205,21 +207,33 @@ class TelemetryBox(Gtk.Box):
 
     def update_leg_texts(self):
         for leg, jnt in itertools.product(self.LEG_ORDER, self.JOINT_ORDER):
-            raw_v = self.leg_objects[leg][jnt]["raw_values"].get("PRESENT_POSITION")
-            servo_id = self.leg_objects[leg][jnt]["servo_id"]
+            legobj = self.leg_objects[leg][jnt]
+
+            raw_v = legobj["raw_values"].get("PRESENT_POSITION")
+            servo_id = legobj["servo_id"]
             if raw_v is not None:
                 if self.metric_check_degrees.get_active():
                     v = utils.dynamixel.raw_to_degrees(int(raw_v), key=servo_id)
-                    self.leg_objects[leg][jnt]["entry"].set_text(f"{float(v):.04f}")
+                    legobj["entry"].set_text(f"{float(v):.04f}")
                 elif self.metric_check_radians.get_active():
                     v = utils.dynamixel.raw_to_radians(int(raw_v), key=servo_id)
-                    self.leg_objects[leg][jnt]["entry"].set_text(f"{float(v):.04f}")
+                    legobj["entry"].set_text(f"{float(v):.04f}")
                 else:
-                    self.leg_objects[leg][jnt]["entry"].set_text(f"{int(raw_v)}")
+                    legobj["entry"].set_text(f"{int(raw_v)}")
             else:
-                self.leg_objects[leg][jnt]["entry"].set_text(f"{servo_id}")
-            self.leg_objects[leg][jnt]["button"].add_css_class("white-button")
-            self.leg_objects[leg][jnt]["button"].remove_css_class("lightblue-button")
+                legobj["entry"].set_text(f"{servo_id}")
+            # Set button color (red if error, otherwise white)
+            legobj["button"].remove_css_class("lightblue-button")
+            hw_error = legobj["raw_values"].get("HARDWARE_ERROR_STATUS", 0)
+            if hw_error != 0:
+                legobj["button"].add_css_class("red-button")
+                if not legobj["has_error"]:
+                    self.main_utils.notify(f"Hardware error {hw_error} on {servo_id}")
+                    legobj["has_error"] = True
+            else:
+                legobj["button"].remove_css_class("red-button")
+                legobj["button"].add_css_class("white-button")
+                legobj["has_error"] = False
 
         (leg, jnt) = self.servo_id_lookup[self.joint_status_active_joint]
         self.joint_status_header.set_text(str(self.joint_status_active_joint))
@@ -257,17 +271,17 @@ class TelemetryBox(Gtk.Box):
     def refresh(self):
         """Periodic refresh function."""
         def update_servo_order(pkt):
-            self.servo_order = pkt.contents
+            self.main_utils.cache.set("SERVO_ORDER", pkt.contents)
             self.synced_servo_order = True
 
         if not self.synced_servo_order:
-            self.client_send(slipp.Packet("get_servos"), on_recv_callback=update_servo_order)
+            self.main_utils.client_send(slipp.Packet("get_servos"), on_recv_callback=update_servo_order)
 
-        self.client_send(
+        self.main_utils.client_send(
             slipp.Packet("get_duration"),
             on_recv_callback=lambda pkt: self.status_duration_entry.set_text(str(pkt.contents)))
 
-        self.client_send(
+        self.main_utils.client_send(
             slipp.Packet("get_acceleration"),
             on_recv_callback=lambda pkt: self.status_acceleration_entry.set_text(str(pkt.contents)),
         )
@@ -293,7 +307,7 @@ class TelemetryBox(Gtk.Box):
             self.waiting_for_tm = False
 
         if not self.waiting_for_tm:
-            ok = self.client_send(
+            ok = self.main_utils.client_send(
                 slipp.Packet("read_all_servos"),
                 on_recv_callback=update_values,
                 on_timeout_callback=tm_timeout,
@@ -306,13 +320,13 @@ class TelemetryBox(Gtk.Box):
         GLib.timeout_add(self.refresh_rate_ms, self.refresh)
 
     def on_enable_torque(self, btn):
-        self.logfn("Telemetry", "enabling torque")
-        self.client_send(slipp.Packet("enable_torque"))
+        self.main_utils.log("Telemetry", "enabling torque")
+        self.main_utils.client_send(slipp.Packet("enable_torque"))
 
     def on_disable_torque(self, btn):
-        self.logfn("Telemetry", "disabling torque")
-        self.client_send(slipp.Packet("disable_torque"))
+        self.main_utils.log("Telemetry", "disabling torque")
+        self.main_utils.client_send(slipp.Packet("disable_torque"))
 
     def on_reboot(self, btn):
-        self.logfn("Telemetry", "rebooting")
-        self.client_send(slipp.Packet("reboot_all_servos"))
+        self.main_utils.log("Telemetry", "rebooting")
+        self.main_utils.client_send(slipp.Packet("reboot_all_servos"))

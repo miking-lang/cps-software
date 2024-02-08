@@ -6,8 +6,10 @@ class LoggingBox(Gtk.Box):
     """
     A Logging box container for showing log messages.
     """
-    def __init__(self):
+    def __init__(self, main_utils):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+
+        self.main_utils = main_utils
 
         # Create a Gtk.Scale widget
         self.textsize_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
@@ -17,8 +19,8 @@ class LoggingBox(Gtk.Box):
         self.textsize_scale = Gtk.Scale(
             orientation=Gtk.Orientation.HORIZONTAL,
             adjustment=Gtk.Adjustment(
-                value=16,
-                lower=10,
+                value=12,
+                lower=8,
                 upper=28,
                 step_increment=1,
                 page_increment=10,

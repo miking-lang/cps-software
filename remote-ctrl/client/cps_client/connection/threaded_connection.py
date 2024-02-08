@@ -1,6 +1,7 @@
 import socket
 import threading
 import time
+import traceback
 
 from collections import deque
 from typing import Optional, Callable
@@ -20,6 +21,7 @@ class ThreadedClientConnection:
         self.logfn = logfn
         self.__active = False
         self.__failed = False
+        self.__fail_msg = ""
         self.__socket = None
         self.__seq_counter = 0
 
@@ -36,6 +38,15 @@ class ThreadedClientConnection:
     @property
     def is_active(self):
         return self.__active
+
+    @property
+    def failed(self):
+        return self.__failed
+
+    @property
+    def fail_msg(self):
+        """The a descriptive message of the failure."""
+        return self.__fail_msg
 
     def send(self,
              packet : slipp.Packet,
@@ -118,12 +129,20 @@ class ThreadedClientConnection:
                 cb(packet)
 
     def run(self):
+        try:
+            self.run_socket()
+        except Exception as e:
+            self.__fail_msg += traceback.format_exc() + "\n"
+            self.__failed = True
+
+    def run_socket(self):
         # Create a socket (SOCK_STREAM means a TCP socket)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             # Connect to server and send data
             sock.connect((self.host, self.port))
             self.__active = True
             self.__failed = False
+            self.__fail_msg = ""
             self.__socket = sock
 
             sock.settimeout(0.05)
@@ -145,8 +164,8 @@ class ThreadedClientConnection:
                     (inpkt, msg, recvdata) = slipp.Packet.decode(recvdata)
                     has_more_data = bool(prev_len != len(recvdata))
                     if inpkt is None and msg is not None:
-                        print(msg)
                         self.__failed = True
+                        self.__fail_msg += msg + "\n"
                         break
                     elif inpkt is not None:
                         self._internal_recv(inpkt)

@@ -74,7 +74,7 @@ class Packet:
         # Get the value of the timestamp in seconds (as with time.time())
         try:
             dt = datetime.strptime(self.timestamp, SLIPP_TIME_FORMAT)
-            return time.mktime(dt.timetuple())
+            return dt.timestamp()
         except Exception:
             return None
 

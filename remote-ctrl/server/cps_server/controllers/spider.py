@@ -122,7 +122,7 @@ class SpiderController(ControllerBase):
 
     @register_read()
     def read_all_servo_goalplans(self):
-        self.dxl_handler.sync_read_registers(ALL_SERVO_IDS,
+        return self.dxl_handler.sync_read_registers(ALL_SERVO_IDS,
             reg_start=self.REGISTER.GOAL_POSITION,
             reg_end=self.REGISTER.POSITION_TRAJECTORY,
         )

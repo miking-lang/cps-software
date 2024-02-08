@@ -471,7 +471,7 @@ class ControlBox(Gtk.Box):
         if pkt.op == "ACK":
             self.telemetry_received = True
             self.command_recv_telemetry.append({
-                "client_timestamp": time.time(),
+                "client_timestamp": datetime.now(timezone.utc).timestamp(),
                 "robot_timestamp": pkt.timestamp_seconds,
                 "contents": pkt.contents,
             })
@@ -495,7 +495,7 @@ class ControlBox(Gtk.Box):
             if self.command_received and self.telemetry_received:
                 pos = self.command_queue.popleft()
                 cmd_pkt = slipp.Packet("move_all_servos", contents={"args": copy.copy(pos)})
-                tm_pkt = slipp.Packet("read_all_servos")
+                tm_pkt = slipp.Packet("read_all_servo_goalplans")
                 self.main_utils.client_send(
                     cmd_pkt,
                     on_recv_callback=self._ack_command,
@@ -512,7 +512,7 @@ class ControlBox(Gtk.Box):
                 )
                 self.command_sent += 1
                 self.command_sent_positions.append({
-                    "client_timestamp": time.time(),
+                    "client_timestamp": datetime.now(timezone.utc).timestamp(),
                     "positions": pos,
                 })
                 self.command_received = False

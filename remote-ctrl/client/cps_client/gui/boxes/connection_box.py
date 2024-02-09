@@ -65,9 +65,19 @@ class ConnectionBox(Gtk.Box):
             ("LSCONN", lambda btn: send_cmd("LSCONN")),
             ("LSCMD", lambda btn: send_cmd("LSCMD")),
             ("read_all_servo_goalplans", lambda btn: send_cmd("read_all_servo_goalplans")),
-            ("read single INNER_SHOULDER", lambda btn: send_cmd("read_single_servo_position", args=["FR_INNER_SHOULDER"])),
-            ("read single OUTER_SHOULDER", lambda btn: send_cmd("read_single_servo_position", args=["FR_OUTER_SHOULDER"])),
-            ("read single ELBOW", lambda btn: send_cmd("read_single_servo_position", args=["FR_ELBOW"])),
+            ("read_all_servo_registers (PRESENT_POSITION)", lambda btn: send_cmd("read_all_servo_registers", args=["PRESENT_POSITION", "PRESENT_POSITION"])),
+            ("read FR_INNER_SHOULDER", lambda btn: send_cmd("read_single_servo_position", args=["FR_INNER_SHOULDER"])),
+            ("read FR_OUTER_SHOULDER", lambda btn: send_cmd("read_single_servo_position", args=["FR_OUTER_SHOULDER"])),
+            ("read FR_ELBOW", lambda btn: send_cmd("read_single_servo_position", args=["FR_ELBOW"])),
+            ("read FL_INNER_SHOULDER", lambda btn: send_cmd("read_single_servo_position", args=["FL_INNER_SHOULDER"])),
+            ("read FL_OUTER_SHOULDER", lambda btn: send_cmd("read_single_servo_position", args=["FL_OUTER_SHOULDER"])),
+            ("read FL_ELBOW", lambda btn: send_cmd("read_single_servo_position", args=["FL_ELBOW"])),
+            ("read BR_INNER_SHOULDER", lambda btn: send_cmd("read_single_servo_position", args=["BR_INNER_SHOULDER"])),
+            ("read BR_OUTER_SHOULDER", lambda btn: send_cmd("read_single_servo_position", args=["BR_OUTER_SHOULDER"])),
+            ("read BR_ELBOW", lambda btn: send_cmd("read_single_servo_position", args=["BR_ELBOW"])),
+            ("read BL_INNER_SHOULDER", lambda btn: send_cmd("read_single_servo_position", args=["BL_INNER_SHOULDER"])),
+            ("read BL_OUTER_SHOULDER", lambda btn: send_cmd("read_single_servo_position", args=["BL_OUTER_SHOULDER"])),
+            ("read BL_ELBOW", lambda btn: send_cmd("read_single_servo_position", args=["BL_ELBOW"])),
         ]
 
         for (cmd, cmdfn) in CMDS:

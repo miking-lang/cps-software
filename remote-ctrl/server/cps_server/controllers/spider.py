@@ -134,11 +134,11 @@ class SpiderController(ControllerBase):
 
     @register_read(argtypes=[str])
     def read_single_servo_position(self, name):
+        POSREG = "PRESENT_POSITION"
         ret = self.dxl_handler.sync_read_registers([SERVO_INDEX_LOOKUP[name]],
-            reg_start="PRESENT_POSITION",
-            reg_end="PRESENT_POSITION",
+            reg_start=POSREG, reg_end=POSREG,
         )
-        return ret[0]
+        return ret[POSREG][0]
 
     @register_write(argtypes=[int]*len(ALL_SERVO_IDS))
     def move_all_servos(self, *positions):

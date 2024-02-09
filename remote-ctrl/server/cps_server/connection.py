@@ -3,6 +3,7 @@
 import signal
 import socket
 import socketserver
+import traceback
 
 from . import slipp
 from .controllers.spider import SpiderController
@@ -84,7 +85,10 @@ class SpiderTCPHandler(socketserver.BaseRequestHandler):
                     elif inpkt.op == "LSCONN":
                         outpkt = slipp.Packet("CONNS", seq=inpkt.seq, contents={"hosts": list(CONNECTED_HOSTS["hosts"])})
                     else:
-                        outpkt = controller.handle_incoming_packet(inpkt)
+                        try:
+                            outpkt = controller.handle_incoming_packet(inpkt)
+                        except Exception as e:
+                            outpkt = slipp.Packet("NAK", seq=seq.inpkt.seq, contents={"errmsg": "internal error, see server logs"})
 
                 if outpkt is not None:
                     self.request.sendall(bytes(outpkt))

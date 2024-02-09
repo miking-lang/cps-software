@@ -380,7 +380,7 @@ class TelemetryBox(Gtk.Box):
         if not self.waiting_for_tm:
             if self.tm_collect_switch.get_active():
                 ok = self.main_utils.client_send(
-                    slipp.Packet("read_all_servos"),
+                    slipp.Packet("read_all_servos_RAM"),
                     on_recv_callback=update_values,
                     on_timeout_callback=tm_timeout,
                     ttl=2.0)

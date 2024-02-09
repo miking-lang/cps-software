@@ -38,7 +38,13 @@ class ControllerBase:
         if packet.op == "LSCMD":
             return slipp.Packet(
                 op="ACK", seq=packet.seq,
-                contents={"commands": list(self.__registry.keys())},
+                contents={"commands": {
+                    cmd: {
+                        "argtypes": [at.__name__ for at in details["argtypes"]],
+                        "kind": details["kind"]
+                    }
+                    for cmd, details in self.__registry.items()
+                }},
             )
 
         # Convenience function for error packets

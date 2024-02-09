@@ -15,6 +15,9 @@ class Register:
         self.ADDR = addr
         self.NAME = name
 
+    def __repr__(self):
+        return f"Register<{self.name}|addr={self.addr}|bytelen={self.bytelen}>"
+
     def encode(self, value : int) -> List[int]:
         """Encodes a value as a list of bytes."""
         data = [
@@ -120,27 +123,16 @@ POSITION_CONTROL_INDIRECTIONS = [
 ]
 
 # Previous definitions
-#ADDR_DRIVE_MODE             = 10
-#ADDR_TORQUE_ENABLE          = 64
-#ADDR_GOAL_POSITION          = 116
-#ADDR_PROFILE_VELOCITY       = 112
-#ADDR_PRESENT_POSITION       = 132
-#ADDR_POSITION_TRAJECTORY    = 140
-#ADDR_VELOCITY_TRAJECTORY    = 136
-#ADDR_PROFILE_ACCELERATION   = 108
-#ADDR_PRESENT_VELOCITY       = 128
-#ADDR_PRESENT_PWM            = 124
-#ADDR_PRESENT_CURRENT        = 126
 #BAUDRATE                    = 57600
 #HIGH_BAUDRATE               = 1152000
-PROTOCOL_VERSION            = 2.0
+#PROTOCOL_VERSION            = 2.0
 
 class DynamixelHandler:
-    def __init__(self, dev="/dev/ttyUSB0", baudrate=57600):
+    def __init__(self, dev="/dev/ttyUSB0", baudrate=57600, protocol_version=2.0):
         self.opened_port = False
         self.portHandler = dxl.PortHandler(dev)
 
-        self.packetHandler = dxl.PacketHandler(PROTOCOL_VERSION)
+        self.packetHandler = dxl.PacketHandler(protocol_version)
         if not self.portHandler.openPort():
             raise RuntimeError("Failed to open the port")
 
@@ -211,13 +203,20 @@ class DynamixelHandler:
         groupSyncWrite.clearParam()
 
 
-    def sync_read_registers(self, ids : List[int], reg_start : Register, reg_end : Register):
+    def sync_read_registers(self,
+                            ids : List[int],
+                            reg_start : Union[Register, str],
+                            reg_end : Union[Register, str]):
         """
         Reads all control RAM parameters from all servos.
         """
+        if isinstance(reg_start, str):
+            reg_start = REGISTER_LOOKUP[reg_start]
+        if isinstance(reg_end, str):
+            reg_end = REGISTER_LOOKUP[reg_end]
         addr = reg_start.addr
         length = (reg_end.addr + reg_end.bytelen) - addr
-        assert length > 0, f"length = {length}"
+        assert length > 0, f"length = {length} ()"
 
         registers = [reg for reg in REGISTER_LIST if reg.addr >= reg_start.addr and reg.addr <= reg_end.addr]
         registers = sorted(registers, key=lambda r: r.addr)
@@ -270,56 +269,6 @@ class DynamixelHandler:
             raise RuntimeError(f"{self.packetHandler.getTxRxResult(dxl_comm_result)}")
 
         groupSyncWrite.clearParam()
-
-    def group_sync_read(self, reg : Register, ids : List[int]):
-        """
-        Synchronized group read from all ids.
-        """
-        groupSyncRead = dxl.GroupSyncRead(self.portHandler, self.packetHandler, reg.addr, reg.bytelen)
-
-        for id in ids:
-            groupSyncRead.addParam(id)
-
-        dxl_comm_result = groupSyncRead.txRxPacket()
-        if dxl_comm_result != dxl.COMM_SUCCESS:
-            raise RuntimeError(f"Comm result: {self.packetHandler.getTxRxResult(dxl_comm_result)}")
-
-        res = []
-
-        for id in ids:
-            value = groupSyncRead.getData(id, reg.addr, reg.bytelen)
-            #if (1 << (reg.bytelen*8-1)) & (value):
-            #    # The value is a negative number in two's complement, we make sure it's saved as negative also in Python
-            #    value = value - 2**(reg.bytelen*8)
-            #res.append(value)
-            res.append(reg.decode_signed(value))
-
-        return res
-
-    def move_many_servos(self, ids, positions, durations):
-        self.group_sync_write(REGISTER.TORQUE_ENABLE,        ids, 1)
-        self.group_sync_write(REGISTER.DRIVE_MODE,           ids, 4)
-        self.group_sync_write(REGISTER.PROFILE_VELOCITY,     ids, durations)
-        self.group_sync_write(REGISTER.PROFILE_ACCELERATION, ids, 600)
-        self.group_sync_write(REGISTER.GOAL_POSITION,        ids, positions)
-
-    def read_servo_positions(self, ids):
-        return self.group_sync_read(REGISTER.PRESENT_POSITION, ids)
-
-    def read_servo_position_trajectories(self, ids):
-        return self.group_sync_read(REGISTER.POSITION_TRAJECTORY, ids)
-
-    def read_servo_velocity_trajectories(self, ids):
-        return self.group_sync_read(REGISTER.VELOCITY_TRAJECTORY, ids)
-
-    def read_servo_velocities(self, ids):
-        return self.group_sync_read(REGISTER.PRESENT_VELOCITY, ids)
-
-    def read_servo_PWM(self, ids):
-        return self.group_sync_read(REGISTER.PRESENT_PWM, ids)
-
-    def read_servo_currents(self, ids):
-        return self.group_sync_read(REGISTER.PRESENT_CURRENT, ids)
 
     def get_torque_enabled(self, ids):
         return self.group_sync_read(REGISTER.TORQUE_ENABLE, ids)

@@ -57,15 +57,17 @@ class ConnectionBox(Gtk.Box):
         self.right_col.append(self.connectbox_disconnect_button)
 
 
-        def send_cmd(cmd):
-            self.client_send(slipp.Packet(cmd),
+        def send_cmd(cmd, args=[]):
+            self.client_send(slipp.Packet(cmd, contents={"args": args}),
                 on_recv_callback=lambda pkt: self.set_status_text(str(pkt.contents))
             )
-        def send_lsconn(btn): return send_cmd("LSCONN")
-        def send_lscmd(btn): return send_cmd("LSCMD")
         CMDS = [
-            ("LSCONN", send_lsconn),
-            ("LSCMD", send_lscmd),
+            ("LSCONN", lambda btn: send_cmd("LSCONN")),
+            ("LSCMD", lambda btn: send_cmd("LSCMD")),
+            ("read_all_servo_goalplans", lambda btn: send_cmd("read_all_servo_goalplans")),
+            ("read single INNER_SHOULDER", lambda btn: send_cmd("read_single_servo_position", args=["FR_INNER_SHOULDER"])),
+            ("read single OUTER_SHOULDER", lambda btn: send_cmd("read_single_servo_position", args=["FR_OUTER_SHOULDER"])),
+            ("read single ELBOW", lambda btn: send_cmd("read_single_servo_position", args=["FR_ELBOW"])),
         ]
 
         for (cmd, cmdfn) in CMDS:

@@ -137,6 +137,17 @@ class TelemetryBox(Gtk.Box):
         self.joint_status_active_joint = self.servo_order[0]
         self.joint_status_fields = dict()
 
+        # Add toggle for enabling/disabling collection
+        self.tm_collect_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+        self.tm_collect_box.set_margin_start(5)
+        self.tm_collect_box.set_margin_end(5)
+        self.right_col.append(self.tm_collect_box)
+        self.tm_collect_label = Gtk.Label(label="Enable Collection")
+        self.tm_collect_switch = Gtk.Switch()
+        self.tm_collect_switch.set_active(True)
+        self.tm_collect_box.append(self.tm_collect_label)
+        self.tm_collect_box.append(self.tm_collect_switch)
+
         # Add toggle for which metric to display positions as
         self.metric_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
         self.right_col.append(self.metric_box)
@@ -315,32 +326,36 @@ class TelemetryBox(Gtk.Box):
         if not self.synced_servo_order:
             self.main_utils.client_send(slipp.Packet("get_servos"), on_recv_callback=update_servo_order)
 
-        self.main_utils.client_send(
-            slipp.Packet("get_duration"),
-            on_recv_callback=lambda pkt: self.status_duration_entry.set_text(str(pkt.contents["data"])))
+        if self.tm_collect_switch.get_active():
+            self.main_utils.client_send(
+                slipp.Packet("get_duration"),
+                on_recv_callback=lambda pkt: self.status_duration_entry.set_text(str(pkt.contents["data"])))
 
-        self.main_utils.client_send(
-            slipp.Packet("get_acceleration"),
-            on_recv_callback=lambda pkt: self.status_acceleration_entry.set_text(str(pkt.contents["data"])),
-        )
+        if self.tm_collect_switch.get_active():
+            self.main_utils.client_send(
+                slipp.Packet("get_acceleration"),
+                on_recv_callback=lambda pkt: self.status_acceleration_entry.set_text(str(pkt.contents["data"])),
+            )
 
         def update_accelerometer(pkt):
             for i, coord in enumerate(self.coord_order):
                 self.status_accelerometer_coords[coord]["entry"].set_text(str(pkt.contents["data"][i]))
 
-        self.main_utils.client_send(
-            slipp.Packet("read_accel"),
-            on_recv_callback=update_accelerometer,
-        )
+        if self.tm_collect_switch.get_active():
+            self.main_utils.client_send(
+                slipp.Packet("read_accel"),
+                on_recv_callback=update_accelerometer,
+            )
 
         def update_gyro(pkt):
             for i, coord in enumerate(self.coord_order):
                 self.status_gyro_coords[coord]["entry"].set_text(str(pkt.contents["data"][i]))
 
-        self.main_utils.client_send(
-            slipp.Packet("read_gyro"),
-            on_recv_callback=update_gyro,
-        )
+        if self.tm_collect_switch.get_active():
+            self.main_utils.client_send(
+                slipp.Packet("read_gyro"),
+                on_recv_callback=update_gyro,
+            )
 
         def update_values(pkt):
             self.waiting_for_tm = False
@@ -363,13 +378,14 @@ class TelemetryBox(Gtk.Box):
             self.waiting_for_tm = False
 
         if not self.waiting_for_tm:
-            ok = self.main_utils.client_send(
-                slipp.Packet("read_all_servos"),
-                on_recv_callback=update_values,
-                on_timeout_callback=tm_timeout,
-                ttl=2.0)
-            if ok:
-                self.waiting_for_tm = True
+            if self.tm_collect_switch.get_active():
+                ok = self.main_utils.client_send(
+                    slipp.Packet("read_all_servos"),
+                    on_recv_callback=update_values,
+                    on_timeout_callback=tm_timeout,
+                    ttl=2.0)
+                if ok:
+                    self.waiting_for_tm = True
         self.start_refresh()
 
     def start_refresh(self):

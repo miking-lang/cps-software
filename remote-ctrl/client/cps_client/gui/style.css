@@ -39,3 +39,8 @@
 .commandbox-edit-textview {
     background: #e9e9e9;
 }
+
+.progress-bar-red trough progress {
+    background-color: #c02020;
+    color: #f0f0f0;
+}

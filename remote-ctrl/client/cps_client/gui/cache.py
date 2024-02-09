@@ -4,7 +4,7 @@ import os
 import pathlib
 from typing import Union, Tuple, Callable
 
-from ._gtk4 import GLib
+from ._gtk4 import GLib, Gtk
 
 
 DEFAULTS = {
@@ -22,8 +22,6 @@ DEFAULTS = {
         "FL_OUTER_SHOULDER",
         "FL_ELBOW",
     ],
-    "host": "localhost",
-    "port": "8372",
 }
 
 
@@ -59,7 +57,6 @@ class JSONParameterCache:
 
         return ".".join(list(args))
 
-
     def writeback(self):
         """Writeback parameters to file system."""
         with open(self.cachefile, "w+") as f:
@@ -76,11 +73,19 @@ class JSONParameterCache:
 
         self.write_callbacks[args].append(cb)
 
-    def get(self, args : Union[Tuple[str], str]) -> object:
-        """Get a value, or its default value."""
+    def get(self, args : Union[Tuple[str], str], default=None) -> object:
+        """
+        Get a value, or its default value.
+        a) If default is not None, it uses that value,
+        b) Otherwise, check if there is a defined default value for it
+        c) Raise exception
+        """
         args = self._sanitize_args(args)
 
         if args not in self.params:
+            if default is not None:
+                return default
+
             if args not in self.defaults:
                 raise KeyError(f"No set value or default value for {args} found")
             else:
@@ -111,3 +116,17 @@ class JSONParameterCache:
         """Check if something has been set."""
         args = self._sanitize_args(args)
         return bool(args in self.written_params)
+
+    def CacheEntry(self, key, default=None, **kwargs):
+        """
+        Construct a Gtk Entry, whose contents is bound to the values in this cache.
+        """
+        entry = Gtk.Entry(**kwargs)
+        v = self.get(key, default=default)
+        entry.set_text(str(v))
+        entry.connect("changed", self.on_entry_writeback, key)
+        return entry
+
+    def on_entry_writeback(self, entry, key):
+        """Signal handler for a changed entry, to update the text as well."""
+        self.set(key, entry.get_text())

@@ -28,6 +28,7 @@ class TelemetryBox(Gtk.Box):
         main_utils : Class with shared utilities from the MainWindow.
         """
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+        self.set_margin_top(5)
 
         self.main_utils = main_utils
         self.refresh_rate_ms = 1000
@@ -154,7 +155,7 @@ class TelemetryBox(Gtk.Box):
         self.metric_box.append(self.metric_check_raw)
         self.metric_box.set_margin_bottom(10)
 
-        # Buttons for random things
+        # Buttons for servo control
         self.btn_enable_torque = Gtk.Button(label="Enable Torque")
         self.btn_enable_torque.connect("clicked", self.on_enable_torque)
         self.btn_enable_torque.set_size_request(100, 30)
@@ -178,9 +179,9 @@ class TelemetryBox(Gtk.Box):
         self.btn_reboot.set_size_request(100, 30)
         self.right_col.append(self.btn_reboot)
 
+        # Duration and acceleration info
         self.status_duration_label = Gtk.Label(label="Duration")
         self.status_duration_label.set_margin_top(10)
-        #self.status_duration_label.set_attributes(self.title_attrs)
         self.right_col.append(self.status_duration_label)
 
         self.status_duration_entry = Gtk.Entry()
@@ -192,7 +193,6 @@ class TelemetryBox(Gtk.Box):
 
         self.status_acceleration_label = Gtk.Label(label="Acceleration")
         self.status_acceleration_label.set_margin_top(10)
-        #self.status_acceleration_label.set_attributes(self.title_attrs)
         self.right_col.append(self.status_acceleration_label)
 
         self.status_acceleration_entry = Gtk.Entry()
@@ -201,6 +201,44 @@ class TelemetryBox(Gtk.Box):
         self.status_acceleration_entry.set_attributes(self.entry_attrs)
         self.status_acceleration_entry.set_size_request(100, 30)
         self.right_col.append(self.status_acceleration_entry)
+
+        # Accelerometer and Gyro info
+        self.coord_order = ["x", "y", "z"]
+        def create_labelled_entry(name):
+            box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            label = Gtk.Label(label=name)
+            label.set_attributes(self.title_attrs)
+            label.set_margin_start(5)
+            entry = Gtk.Entry()
+            entry.set_text("<NO VALUE YET>")
+            entry.set_editable(False)
+            entry.set_attributes(self.entry_attrs)
+            entry.set_max_width_chars(14)
+            box.append(label)
+            box.append(entry)
+            return {"box": box, "label": label, "entry": entry}
+
+        self.status_accelerometer_label = Gtk.Label(label="Accelerometer")
+        self.status_accelerometer_label.set_margin_top(10)
+        self.status_accelerometer_label.set_attributes(self.title_attrs)
+        self.right_col.append(self.status_accelerometer_label)
+        self.status_accelerometer_coords = {
+            coord: create_labelled_entry(coord.upper())
+            for coord in self.coord_order
+        }
+        for coord in self.coord_order:
+            self.right_col.append(self.status_accelerometer_coords[coord]["box"])
+
+        self.status_gyro_label = Gtk.Label(label="Gyroscope")
+        self.status_gyro_label.set_margin_top(10)
+        self.status_gyro_label.set_attributes(self.title_attrs)
+        self.right_col.append(self.status_gyro_label)
+        self.status_gyro_coords = {
+            coord: create_labelled_entry(coord.upper())
+            for coord in self.coord_order
+        }
+        for coord in self.coord_order:
+            self.right_col.append(self.status_gyro_coords[coord]["box"])
 
         self.update_leg_texts()
         self.start_refresh()
@@ -271,7 +309,7 @@ class TelemetryBox(Gtk.Box):
     def refresh(self):
         """Periodic refresh function."""
         def update_servo_order(pkt):
-            self.main_utils.cache.set("SERVO_ORDER", pkt.contents)
+            self.main_utils.cache.set("SERVO_ORDER", pkt.contents["data"])
             self.synced_servo_order = True
 
         if not self.synced_servo_order:
@@ -279,11 +317,29 @@ class TelemetryBox(Gtk.Box):
 
         self.main_utils.client_send(
             slipp.Packet("get_duration"),
-            on_recv_callback=lambda pkt: self.status_duration_entry.set_text(str(pkt.contents)))
+            on_recv_callback=lambda pkt: self.status_duration_entry.set_text(str(pkt.contents["data"])))
 
         self.main_utils.client_send(
             slipp.Packet("get_acceleration"),
-            on_recv_callback=lambda pkt: self.status_acceleration_entry.set_text(str(pkt.contents)),
+            on_recv_callback=lambda pkt: self.status_acceleration_entry.set_text(str(pkt.contents["data"])),
+        )
+
+        def update_accelerometer(pkt):
+            for i, coord in enumerate(self.coord_order):
+                self.status_accelerometer_coords[coord]["entry"].set_text(str(pkt.contents["data"][i]))
+
+        self.main_utils.client_send(
+            slipp.Packet("read_accel"),
+            on_recv_callback=update_accelerometer,
+        )
+
+        def update_gyro(pkt):
+            for i, coord in enumerate(self.coord_order):
+                self.status_gyro_coords[coord]["entry"].set_text(str(pkt.contents["data"][i]))
+
+        self.main_utils.client_send(
+            slipp.Packet("read_gyro"),
+            on_recv_callback=update_gyro,
         )
 
         def update_values(pkt):
@@ -294,12 +350,12 @@ class TelemetryBox(Gtk.Box):
                 leg, jnt = self.servo_id_lookup[servo_id]
                 self.leg_objects[leg][jnt]["raw_values"] = {
                     k: v[i]
-                    for k, v in pkt.contents.items()
+                    for k, v in pkt.contents["data"].items()
                 }
             self.update_leg_texts()
 
             torque_txt = "disabled"
-            if min(pkt.contents["TORQUE_ENABLE"]) == 1:
+            if min(pkt.contents["data"]["TORQUE_ENABLE"]) == 1:
                 torque_txt = "enabled"
             self.entry_torque_status.set_text(torque_txt)
 

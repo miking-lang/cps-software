@@ -267,3 +267,81 @@ def position_function(position):
         Lt * np.sin(theta_2), Lf + Lt * np.cos(-theta_2)
     )
     return [theta_0, -theta_1, theta_2]
+
+
+
+############# CUSTOM THINGS ADDED BY JOHN ##############
+
+def trot_gait_johnmod():
+    x = 1.2 * (Lc + Lf + Lt) / 3
+
+    y_offset = 0.2
+    y_base = 0.01
+    y_range = 0.2
+
+    front_y0 = y_base + y_offset - y_range
+    front_y = y_base + y_offset
+    back_y0 = -y_base - y_offset
+    back_y = -y_base + y_range - y_offset
+    z0 = 0.08
+    z = 0.05
+
+    factor = 2
+
+    z_up = [[0, z0], [10 * factor, z], [80 * factor, z], [10 * factor, z0]]
+    z_nothing = [[0, z0], [100 * factor, z0]]
+
+    full_forward_front = [[0, front_y0], [100 * factor, front_y]]
+    full_forward_back = [[0, back_y0], [100 * factor, back_y]]
+
+    full_backward_front = [[0, front_y], [100 * factor, front_y0]]
+    full_backward_back = [[0, back_y], [100 * factor, back_y0]]
+
+    phase_1 = {
+        "front_right": combine_movements(x, z_nothing, full_backward_front),
+        "back_right": combine_movements(x, z_up, full_forward_back),
+        "front_left": combine_movements(x, z_up, full_forward_front),
+        "back_left": combine_movements(x, z_nothing, full_backward_back),
+    }
+
+    phase_2 = {
+        "front_right": combine_movements(x, z_up, full_forward_front),
+        "back_right": combine_movements(x, z_nothing, full_backward_back),
+        "front_left": combine_movements(x, z_nothing, full_backward_front),
+        "back_left": combine_movements(x, z_up, full_forward_back),
+    }
+
+    phases = [phase_1, phase_2]
+
+    joint_trajectories = {
+        "front_right": [],
+        "back_right": [],
+        "front_left": [],
+        "back_left": [],
+    }
+
+    current_positions = {
+        "front_right": [x, front_y, z0],
+        "back_right": [x, back_y0, z0],
+        "front_left": [x, front_y0, z0],
+        "back_left": [x, back_y, z0],
+    }
+
+    movement_strings = {leg: [] for leg in joint_trajectories.keys()}
+    for phase in phases:
+        for leg in movement_strings.keys():
+            movement_strings[leg] += phase[leg]
+
+    for leg, movements in movement_strings.items():
+        for movement in movements:
+            joint_trajectories[leg].extend(
+                move_leg(leg, current_positions[leg], movement[1], movement[0])
+            )
+            current_positions[leg] = movement[1]
+
+    return (
+        joint_trajectories["back_right"],
+        joint_trajectories["back_left"],
+        joint_trajectories["front_right"],
+        joint_trajectories["front_left"],
+    )

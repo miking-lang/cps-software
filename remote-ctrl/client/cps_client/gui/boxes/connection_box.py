@@ -12,12 +12,15 @@ class ConnectionBox(Gtk.Box):
         main_utils : Class with shared utilities from the MainWindow.
         """
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+        self.set_margin_top(5)
 
         self.client = None
         self.main_utils = main_utils
 
         self.left_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        self.left_col.set_margin_start(5)
         self.right_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        self.right_col.set_margin_end(5)
 
         self.append(self.left_col)
         self.append(self.right_col)
@@ -25,14 +28,12 @@ class ConnectionBox(Gtk.Box):
         self.left_col.set_hexpand(True)
         self.right_col.set_hexpand(True)
 
-        self.entry_host = Gtk.Entry()
+        self.entry_host = self.main_utils.cache.CacheEntry("HOST", default="localhost")
         self.entry_host.set_placeholder_text("Hostname")
-        self.entry_host.set_text(str(self.main_utils.cache.get("host")))
         self.left_col.append(self.entry_host)
 
-        self.entry_port = Gtk.Entry()
+        self.entry_port = self.main_utils.cache.CacheEntry("PORT", default="8372")
         self.entry_port.set_placeholder_text("Port")
-        self.entry_port.set_text(str(self.main_utils.cache.get("port")))
         self.left_col.append(self.entry_port)
 
         self.text_status = Gtk.TextView()

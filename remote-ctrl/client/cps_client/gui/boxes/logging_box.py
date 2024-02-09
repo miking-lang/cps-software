@@ -8,14 +8,16 @@ class LoggingBox(Gtk.Box):
     """
     def __init__(self, main_utils):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        self.set_margin_top(5)
 
         self.main_utils = main_utils
 
         # Create a Gtk.Scale widget
         self.textsize_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
         self.textsize_label = Gtk.Label(label="<to be set>")
-        self.textsize_label.set_size_request(100, -1)
-        self.textsize_label.set_justify(Gtk.Justification.LEFT)
+        self.textsize_label.set_size_request(90, -1)
+        self.textsize_label.set_xalign(0.0)
+        self.textsize_label.set_margin_start(10)
         self.textsize_scale = Gtk.Scale(
             orientation=Gtk.Orientation.HORIZONTAL,
             adjustment=Gtk.Adjustment(
@@ -29,10 +31,9 @@ class LoggingBox(Gtk.Box):
         )
         self.textsize_scale.connect("value-changed", self.on_textsize_changed)
         self.textsize_scale.set_hexpand(True)
-        self.textsize_scale.set_margin_end(5) # right margin
+        self.textsize_scale.set_margin_end(10)
         self.textsize_box.append(self.textsize_label)
         self.textsize_box.append(self.textsize_scale)
-        self.textsize_box.set_margin_top(5)
         self.append(self.textsize_box)
         # Initialize the text size
         self.on_textsize_changed(self.textsize_scale)

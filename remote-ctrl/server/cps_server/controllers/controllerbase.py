@@ -1,4 +1,5 @@
 import json
+import time
 import traceback
 
 from .. import slipp
@@ -66,10 +67,16 @@ class ControllerBase:
                 return errpkt(f"Arg at index {i} is of type {type(v_arg).__name__}, expected {t_arg.__name__}")
 
         try:
+            t_start = time.time()
             ret = fn_info["fn"](self, *recv_args)
+            t_end = time.time()
+
             outpkg = slipp.Packet(
                 op="ACK", seq=packet.seq,
-                contents=ret,
+                contents={
+                    "data": ret,
+                    "exectime": t_end - t_start,
+                },
             )
         except Exception as e:
             traceback.print_exception(e)

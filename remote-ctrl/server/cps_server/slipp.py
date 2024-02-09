@@ -65,6 +65,10 @@ class Packet:
             "contents": self.contents,
         }
 
+    @property
+    def json(self):
+        return self.blob
+
     def encode(self) -> bytes:
         """Returns a sequence of bytes with encoded packet"""
         return json.dumps(self.blob).encode("utf-8") + DELIMITER

@@ -15,24 +15,40 @@ from ...import slipp, utils
 
 # Testing a standup position
 STANDUP_DEGREE_POS = [
-    [-30.0,  80.0, 0.0,   # BR
-      30.0,  80.0, 0.0,   # FR
-      30.0,  80.0, 0.0,   # BL
-     -30.0,  80.0, 0.0],  # FL
-    [-30.0,  80.0, 115.0,
-      30.0,  80.0, 115.0,
-      30.0,  80.0, 115.0,
-     -30.0,  80.0, 115.0],
-    [-30.0,  45.0, 135.0,
-      30.0,  45.0, 135.0,
-      30.0,  45.0, 135.0,
-     -30.0,  45.0, 135.0],
-    [-30.0,  10.0, 105.0,
-      30.0,  10.0, 105.0,
-      30.0,  10.0, 105.0,
-     -30.0,  10.0, 105.0],
+    [ -30,  80,   0,  # BR
+       30,  80,   0,  # FR
+       30,  80,   0,  # BL
+      -30,  80,   0], # FL
+    [ -30,  80, 130,
+       30,  80, 130,
+       30,  80, 130,
+      -30,  80, 130],
+    [ -30,  35, 120,
+       30,  35, 120,
+       30,  35, 120,
+      -30,  35, 120],
+    # Move legs inwards
+    [ -30,  35, 120,
+       30,  65, 140,
+       30,  65, 140,
+      -30,  35, 120],
+    [ -30,  35, 120,
+       30,  35, 140,
+       30,  35, 140,
+      -30,  35, 120],
+    [ -30,  65, 140,
+       30,  35, 140,
+       30,  35, 140,
+      -30,  65, 140],
+    [ -30,  35, 140,
+       30,  35, 140,
+       30,  35, 140,
+      -30,  35, 140],
+    [ -30,  60, 140,
+       30,  60, 140,
+       30,  60, 140,
+      -30,  60, 140],
 ]
-
 
 
 class ControlBox(Gtk.Box):
@@ -44,13 +60,13 @@ class ControlBox(Gtk.Box):
         main_utils : Class with shared utilities from the MainWindow.
         """
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        self.set_margin_top(5)
 
         self.main_utils = main_utils
         self.refresh_rate_ms = 250
 
         # Top status text
         self.status_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
-        self.status_box.set_margin_top(5)
         self.append(self.status_box)
 
         self.status_text = Gtk.Label(label="No Command in Progress")
@@ -90,8 +106,7 @@ class ControlBox(Gtk.Box):
         self.control_duration_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
         self.control_box.append(self.control_duration_box)
         self.control_duration_label = Gtk.Label(label="Duration")
-        self.control_duration_entry = Gtk.Entry()
-        self.control_duration_entry.set_text("600")
+        self.control_duration_entry = self.main_utils.cache.CacheEntry("CMD_DURATION", default="600")
         self.control_duration_entry.set_alignment(0.5)
         self.control_duration_entry.set_max_width_chars(9)
         self.control_duration_box.append(self.control_duration_label)
@@ -100,8 +115,7 @@ class ControlBox(Gtk.Box):
         self.control_acceleration_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
         self.control_box.append(self.control_acceleration_box)
         self.control_acceleration_label = Gtk.Label(label="Acceleration")
-        self.control_acceleration_entry = Gtk.Entry()
-        self.control_acceleration_entry.set_text("200")
+        self.control_acceleration_entry = self.main_utils.cache.CacheEntry("CMD_ACCELERATION", default="200")
         self.control_acceleration_entry.set_alignment(0.5)
         self.control_acceleration_entry.set_max_width_chars(9)
         self.control_acceleration_box.append(self.control_acceleration_label)
@@ -132,8 +146,7 @@ class ControlBox(Gtk.Box):
         self.command_edit_box.append(self.command_editopt_box)
         # Command repeat
         self.command_editopt_repeat_label = Gtk.Label(label="Repeat")
-        self.command_editopt_repeat_entry = Gtk.Entry()
-        self.command_editopt_repeat_entry.set_text("4")
+        self.command_editopt_repeat_entry = self.main_utils.cache.CacheEntry("CMD_REPEAT", default="4")
         self.command_editopt_repeat_entry.set_alignment(0.5)
         self.command_editopt_repeat_entry.set_max_width_chars(2)
         self.command_editopt_box.append(self.command_editopt_repeat_label)
@@ -144,8 +157,7 @@ class ControlBox(Gtk.Box):
         self.command_editopt_box.append(sep)
         # Command dt
         self.command_editopt_timedelta_label = Gtk.Label(label="Time delta [ms]")
-        self.command_editopt_timedelta_entry = Gtk.Entry()
-        self.command_editopt_timedelta_entry.set_text("250")
+        self.command_editopt_timedelta_entry = self.main_utils.cache.CacheEntry("CMD_TIMEDELTA", default="250")
         self.command_editopt_timedelta_entry.set_alignment(0.5)
         self.command_editopt_timedelta_entry.set_max_width_chars(4)
         self.command_editopt_box.append(self.command_editopt_timedelta_label)
@@ -168,6 +180,16 @@ class ControlBox(Gtk.Box):
         self.command_editopt_box.append(self.command_editopt_metric_radians)
         self.command_editopt_box.append(self.command_editopt_metric_raw)
         self.command_editopt_metric_last_active = "degrees"
+        sep = Gtk.Separator(orientation=Gtk.Orientation.VERTICAL)
+        sep.set_margin_start(10)
+        sep.set_margin_end(10)
+        self.command_editopt_box.append(sep)
+        # Toggle to save data from run
+        self.command_editopt_record_label = Gtk.Label(label="Record Trajectory")
+        self.command_editopt_record_switch = Gtk.Switch()
+        self.command_editopt_record_switch.set_active(False)
+        self.command_editopt_box.append(self.command_editopt_record_label)
+        self.command_editopt_box.append(self.command_editopt_record_switch)
 
         # The actual editor window
         self.command_edit_scroll = Gtk.ScrolledWindow()
@@ -208,6 +230,7 @@ class ControlBox(Gtk.Box):
             ("Lie Down From Stand", self.on_command_liedown_from_stand),
             ("Trot", self.on_command_trot),
             ("Creep", self.on_command_creep),
+            ("Trot (v2)", self.on_command_trot_johnmod),
             ("Lie Down", self.on_command_liedown),
             ("Stand", self.on_command_stand),
         ]
@@ -232,10 +255,24 @@ class ControlBox(Gtk.Box):
 
         self.start_refresh()
 
+    def set_error_status(self, txt, notify=False):
+        """Sets an error status message."""
+        self.status_text.set_text(txt)
+        self.status_bar.set_fraction(1.0)
+        self.status_bar.add_css_class("progress-bar-red")
+        if notify:
+            self.main_utils.notify(txt)
+
+    def set_ok_status(self, txt, frac=1.0, notify=False):
+        """Sets an regular status message."""
+        self.status_text.set_text(txt)
+        self.status_bar.set_fraction(frac)
+        self.status_bar.remove_css_class("progress-bar-red")
+        if notify:
+            self.main_utils.notify(txt, success=True)
+
     def on_stop_command(self, btn):
-        if len(self.command_queue) > 0:
-            self.command_queue.clear()
-            self.status_text.set_text(f"Command interrupted")
+        self._stop_running_command(f"Command interrupted")
 
     def on_command_stand_up(self, btn):
         # From lying down, stand up
@@ -260,7 +297,7 @@ class ControlBox(Gtk.Box):
         try:
             raw_values = self._get_command_raw_values()
         except Exception as e:
-            self.status_text.set_text(f"Invalid Command Format")
+            self.set_error_status(f"Invalid Command Format")
             has_error = True
 
         if self.command_editopt_metric_degrees.get_active():
@@ -371,6 +408,12 @@ class ControlBox(Gtk.Box):
             dt=(1 / utils.martin_control.CREEP_HZ),
         )
 
+    def on_command_trot_johnmod(self, btn):
+        self._on_martin_gait(
+            gait_fn=utils.martin_control.trot_gait_johnmod,
+            dt=(1 / utils.martin_control.TROT_HZ) * 2,
+        )
+
     def _on_martin_gait(self, gait_fn, dt):
         # Walk for a bit
         positions = []
@@ -414,21 +457,21 @@ class ControlBox(Gtk.Box):
             raw_values = self._get_command_raw_values()
             assert len(raw_values) > 0
         except Exception as e:
-            self.status_text.set_text(f"Invalid Command Format")
+            self.set_error_status(f"Invalid Command Format")
             return
 
         try:
             repeat = int(self.command_editopt_repeat_entry.get_text())
             assert repeat > 0
         except Exception as e:
-            self.status_text.set_text(f"Invalid Repeat Value (must be a positive integer)")
+            self.set_error_status(f"Invalid Repeat Value (must be a positive integer)")
             return
 
         try:
             command_dt_ms = int(self.command_editopt_timedelta_entry.get_text())
             assert command_dt_ms >= 100
         except Exception as e:
-            self.status_text.set_text(f"Invalid Timedelta Value (expected int >= 100)")
+            self.set_error_status(f"Invalid Timedelta Value (expected int >= 100)")
             return
 
         positions = []
@@ -445,8 +488,10 @@ class ControlBox(Gtk.Box):
         for pos in positions:
             self.command_queue.append(copy.copy(pos))
 
-        self.status_text.set_text(f"Running command ({self.command_sent}/{self.command_length})")
-        self.status_bar.set_fraction(0.0)
+        self.set_ok_status(
+            f"Running command ({self.command_sent}/{self.command_length})",
+            frac=0.0,
+        )
         self.refresh_rate_ms = command_dt_ms
 
 
@@ -461,11 +506,7 @@ class ControlBox(Gtk.Box):
             self.command_received = True
             self.command_sent_positions[-1]["robot_ack_timestamp"] = pkt.timestamp_seconds
         else:
-            self.command_received = False
-            self.status_text.set_text("Command failed")
-            self.main_utils.notify("Command failed")
-            self.refresh_rate_ms = 250
-            self.command_queue.clear()
+            self._stop_running_command("Command failed", notify=True)
 
     def _ack_telemetry(self, pkt):
         if pkt.op == "ACK":
@@ -473,22 +514,29 @@ class ControlBox(Gtk.Box):
             self.command_recv_telemetry.append({
                 "client_timestamp": datetime.now(timezone.utc).timestamp(),
                 "robot_timestamp": pkt.timestamp_seconds,
-                "contents": pkt.contents,
+                "contents": pkt.contents["data"],
+                "tm_pkt": pkt.blob,
             })
         else:
-            self.telemetry_received = False
-            self.status_text.set_text("Telemetry read failed")
-            self.main_utils.notify("Telemetry read failed")
-            self.refresh_rate_ms = 250
-            self.command_queue.clear()
+            self._stop_running_command("Telemetry read failed", notify=True)
 
     def _timeout_command(self):
-        self.command_received = False
-        self.telemetry_received = False
-        self.status_text.set_text("Command timed out")
-        self.main_utils.notify("Command timed out")
-        self.refresh_rate_ms = 250
-        self.command_queue.clear()
+        self._stop_running_command("Command timed out", notify=True)
+
+    def _stop_running_command(self, errmsg=None, okmsg=None, notify=False):
+        if self.command_length > 0:
+            self.command_received = False
+            self.telemetry_received = False
+            self.command_queue.clear()
+            self.command_sent = 0
+            self.command_length = 0
+            self.command_sent_positions = []
+            self.command_recv_telemetry = []
+            self.refresh_rate_ms = 250
+            if errmsg is not None:
+                self.set_error_status(errmsg, notify=notify)
+            elif okmsg is not None:
+                self.set_ok_status(errmsg, notify=notify)
 
     def refresh(self):
         if len(self.command_queue) > 0:
@@ -514,35 +562,33 @@ class ControlBox(Gtk.Box):
                 self.command_sent_positions.append({
                     "client_timestamp": datetime.now(timezone.utc).timestamp(),
                     "positions": pos,
+                    "cmd_pkt": cmd_pkt.blob,
                 })
                 self.command_received = False
                 self.telemetry_received = False
-                self.status_bar.set_fraction(self.command_sent / self.command_length)
-                self.status_text.set_text(f"Running command ({self.command_sent}/{self.command_length})")
+                self.set_ok_status(
+                    f"Running command ({self.command_sent}/{self.command_length})",
+                    frac=self.command_sent / self.command_length,
+                )
         elif self.command_sent == self.command_length and self.command_received and self.telemetry_received:
-            self.command_received = False
-            self.telemetry_received = False
-            self.status_text.set_text(f"Command done")
-            self.refresh_rate_ms = 250
+            if self.command_editopt_record_switch.get_active():
+                dstdir = self.main_utils.cache.cachedir / "runs"
+                os.makedirs(dstdir, exist_ok=True)
+                dstfile = dstdir / datetime.now().strftime("ctrl-%Y-%m-%d_%H%M%S.json")
+                contents = {
+                    "servo_order": self.main_utils.cache.get("SERVO_ORDER"),
+                    "sent_positions": self.command_sent_positions,
+                    "recv_telemetry": self.command_recv_telemetry,
+                }
+                try:
+                    with open(dstfile, "w+") as f:
+                        json.dump(contents, f)
+                except Exception as e:
+                    self.main_utils.notify(f"Error saving control trajectory: {str(e)}")
+                else:
+                    self.main_utils.notify(f"Saved trajectory as {str(dstfile)}", success=True)
 
-            dstdir = self.main_utils.cache.cachedir / "runs"
-            os.makedirs(dstdir, exist_ok=True)
-            dstfile = dstdir / datetime.now().strftime("ctrl-%Y-%m-%d_%H%M%S.json")
-            contents = {
-                "servo_order": self.main_utils.cache.get("SERVO_ORDER"),
-                "sent_positions": self.command_sent_positions,
-                "recv_telemetry": self.command_recv_telemetry,
-            }
-            try:
-                with open(dstfile, "w+") as f:
-                    json.dump(contents, f)
-            except Exception as e:
-                self.main_utils.notify(f"Error saving control trajectory: {str(e)}")
-            else:
-                self.main_utils.notify(f"Saved trajectory as {str(dstfile)}", success=True)
-
-            self.command_sent_positions = []
-            self.command_recv_telemetry = []
+            self._stop_running_command(okmsg=f"Command done")
 
         self.start_refresh()
 

@@ -40,7 +40,7 @@ class MainWindow(Gtk.ApplicationWindow):
         super().__init__(*args, application=application, **kwargs)
         self.__application = application
         self.__cache = JSONParameterCache(cache_name=application.get_application_id())
-        self.set_default_size(800, 600)
+        self.set_default_size(1000, 800)
         self.set_title(NAME)
 
         self.overlay = Gtk.Overlay()

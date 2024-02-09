@@ -536,7 +536,7 @@ class ControlBox(Gtk.Box):
             if errmsg is not None:
                 self.set_error_status(errmsg, notify=notify)
             elif okmsg is not None:
-                self.set_ok_status(errmsg, notify=notify)
+                self.set_ok_status(okmsg, notify=notify)
 
     def refresh(self):
         if len(self.command_queue) > 0:

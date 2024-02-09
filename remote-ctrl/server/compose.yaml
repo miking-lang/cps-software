@@ -4,7 +4,9 @@ services:
     build:
       context: ../..
       dockerfile: remote-ctrl/server/Dockerfile
-    command: "/opt/cps-software/remote-ctrl/server/server_spider.py"
+    volumes:
+      - ".:/mnt:ro"
+    command: "/mnt/server_spider.py"
     privileged: true
     ports:
       - 127.0.0.1:8372:8372

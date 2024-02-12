@@ -101,11 +101,15 @@ class CommandBox(Gtk.Box):
         self.right_col.append(self.cmdlist_refresh_btn)
         self.right_col.append(self.cmdlist_scroll)
 
-    def set_nargs_visible(self, n):
+    def set_nargs_visible(self, n, placeholders=[]):
         if len(self.arglist_args) < n:
             for i in range(len(self.arglist_args), n):
                 arg = Gtk.Entry()
                 arg.set_text("")
+                #arg.set_placeholder_text(None)
+                #if i < len(placeholders):
+                #    arg.set_placeholder_text(placeholders[i])
+                #else:
                 arg.set_placeholder_text(f"Arg {i + 1}")
                 self.arglist_args.append(arg)
                 self.middle_col.append(arg)
@@ -137,6 +141,7 @@ class CommandBox(Gtk.Box):
                     label.set_size_request(-1, 30)
                     self.cmdlist_lookup[cmd] = {"label": label}
                 self.cmdlist_lookup[cmd]["argtypes"] = info["argtypes"]
+                self.cmdlist_lookup[cmd]["argnames"] = info["argnames"]
                 self.cmdlist_lookup[cmd]["kind"] = info["kind"]
 
             self.cmdlist_store.remove_all()
@@ -153,23 +158,15 @@ class CommandBox(Gtk.Box):
             on_timeout_callback=on_timeout_callback,
         )
 
-        #i = self.cmdlist_model.get_selected()
-        #print(f"Selected: {i}")
-        #self.cmdlist_store.remove(i)
-        #self.cmdlist_store.remove_all()
-        #TEST_LIST = ["apple", "banana", "carrot", "durian", "edamer", "fromage", "grape", "halloumi"]
-        #np.random.shuffle(TEST_LIST)
-        #for tl in TEST_LIST:
-        #    label = Gtk.Label(label=tl)
-        #    label.set_size_request(-1, 30)
-        #    self.cmdlist_store.append(label)
-
     def on_select_cmdlist(self, model, pos, n_items):
         # model, pos, n_items can be ignored... pos and n_items seems to have strange behavior.
         i = self.cmdlist_model.get_selected()
         cmd = self.cmdlist_order[i]
-        n_args = len(self.cmdlist_lookup[cmd]["argtypes"])
-        self.set_nargs_visible(n_args)
+        argtypes = self.cmdlist_lookup[cmd]["argtypes"]
+        argnames = self.cmdlist_lookup[cmd]["argnames"]
+        placeholders = [f"{name} ({ty})" for name, ty in zip(argtypes, argnames)]
+        n_args = len(placeholders)
+        self.set_nargs_visible(n_args, placeholders=placeholders)
 
     def on_send_command(self, btn):
         """Send the selected command."""

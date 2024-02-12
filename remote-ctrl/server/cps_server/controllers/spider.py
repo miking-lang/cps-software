@@ -136,6 +136,14 @@ class SpiderController(ControllerBase):
     def read_all_servos_RAM(self):
         return self.dxl_handler.sync_read_all(ALL_SERVO_IDS)
 
+    @register_read(argtypes=[str, str, str])
+    def read_single_servo_registers(self, name, reg_start, reg_end):
+        return self.dxl_handler.sync_read_registers(
+            [SERVO_INDEX_LOOKUP[name]],
+            reg_start=reg_start,
+            reg_end=reg_end,
+        )
+
     @register_read(argtypes=[str, str])
     def read_all_servo_registers(self, reg_start, reg_end):
         return self.dxl_handler.sync_read_registers(ALL_SERVO_IDS,

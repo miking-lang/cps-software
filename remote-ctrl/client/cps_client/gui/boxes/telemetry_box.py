@@ -144,7 +144,7 @@ class TelemetryBox(Gtk.Box):
         self.right_col.append(self.tm_collect_box)
         self.tm_collect_label = Gtk.Label(label="Enable Collection")
         self.tm_collect_switch = Gtk.Switch()
-        self.tm_collect_switch.set_active(True)
+        self.tm_collect_switch.set_active(False)
         self.tm_collect_box.append(self.tm_collect_label)
         self.tm_collect_box.append(self.tm_collect_switch)
 

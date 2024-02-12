@@ -79,6 +79,24 @@ class SpiderController(ControllerBase):
         return {"new_acceleration": self.acceleration}
 
     @register_read()
+    def get_baudrate(self):
+        """Returns the baud rate of the Dynamixel port handler."""
+        return self.dxl_handler.get_baud_rate()
+
+    @register_write(argtypes=[int])
+    def set_baudrate(self, value):
+        """
+        Sets the baud rate of the Dynamixel port handler. The servos are not
+        modified.
+        """
+        return self.dxl_handler.set_baud_rate(value)
+
+    @register_read()
+    def get_register_list(self):
+        from ..interface.dynamixel import REGISTER_LIST
+        return [reg.json for reg in REGISTER_LIST]
+
+    @register_read()
     def get_servos(self):
         return SERVO_ORDER
 

@@ -35,8 +35,6 @@ class LoggingBox(Gtk.Box):
         self.textsize_box.append(self.textsize_label)
         self.textsize_box.append(self.textsize_scale)
         self.append(self.textsize_box)
-        # Initialize the text size
-        self.on_textsize_changed(self.textsize_scale)
 
         sep = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
         self.append(sep)
@@ -53,20 +51,27 @@ class LoggingBox(Gtk.Box):
         self.textview.set_editable(False)
         self.textview.set_cursor_visible(False)
         self.textview.set_monospace(True)
-        self.textview.add_css_class("logbox-textview")
         self.scroll.set_child(self.textview)
 
         self.total_entries = 0
         self.max_len = 2**16
         self.bold_tag = self.textbuffer.create_tag("bold", weight=Pango.Weight.BOLD)
 
+        # Common properties that all text should have
+        self.common_tag = self.textbuffer.create_tag("common",
+            size=10 * Pango.SCALE,
+        )
+
         self.grey_tag = self.textbuffer.create_tag("grey_background")
         self.grey_tag.set_property("background", "#e0e0e0")
+
+        # Initialize the text size
+        self.on_textsize_changed(self.textsize_scale)
 
     def add_log_entry(self, title, msg):
         datetxt = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         text_to_add = f"[{datetxt}] {title}: {msg}\n"
-        self.textbuffer.insert(self.textbuffer.get_start_iter(), text_to_add)
+        self.textbuffer.insert_with_tags(self.textbuffer.get_start_iter(), text_to_add, self.common_tag)
 
         start_iter = self.textbuffer.get_iter_at_offset(0)
         end_iter = self.textbuffer.get_iter_at_offset(len(datetxt) + len(title) + 4)
@@ -81,23 +86,12 @@ class LoggingBox(Gtk.Box):
 
     def on_textsize_changed(self, scale):
         new_font_size = int(scale.get_value())
-        css_provider = Gtk.CssProvider()
-        css_provider.load_from_data(f"""
-            .logbox-textview {{ font-size: {new_font_size}px; }}
-        """.encode('utf-8'))
+        self.common_tag.set_property("size", new_font_size * Pango.SCALE)
         self.textsize_label.set_text(f"Text Size: {new_font_size}")
-        self.textsize_label.set_justify(Gtk.Justification.LEFT)
-
-        context = self.get_style_context()
-        context.add_provider_for_display(
-            Gdk.Display.get_default(),
-            css_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        )
 
     def refresh(self):
         if self.textbuffer.get_char_count() > self.max_len:
             # Remove too old text
-            start_iter = self.textbuffer.get_iter_at_offset(self.max_len)
+            start_iter = self.textbuffer.get_iter_at_offset(int(self.max_len * 0.9))
             end_iter = self.textbuffer.get_end_iter()
             self.textbuffer.delete(start_iter, end_iter)

@@ -18,6 +18,14 @@ class Register:
     def __repr__(self):
         return f"Register<{self.name}|addr={self.addr}|bytelen={self.bytelen}>"
 
+    @property
+    def blob(self):
+        return {"name": self.name, "addr": self.addr, "bytelen": self.bytelen}
+
+    @property
+    def json(self):
+        return self.blob
+
     def encode(self, value : int) -> List[int]:
         """Encodes a value as a list of bytes."""
         data = [
@@ -150,6 +158,15 @@ class DynamixelHandler:
         if self.opened_port:
             print("Closing port", flush=True)
             self.portHandler.closePort()
+
+    def set_baud_rate(self, baudrate):
+        """Sets the baud rate."""
+        if not self.portHandler.setBaudRate(baudrate)
+            raise RuntimeError(f"Failed to set baudrate to {baudrate}")
+
+    def get_baud_rate(self):
+        """Retrieves the current baud rate."""
+        return self.portHandler.getBaudRate()
 
     def setup_position_control(self, ids : List[int]):
         """

@@ -182,6 +182,24 @@ class SpiderController(ControllerBase):
         )
         return dict()
 
+    @register_write(argtypes=[str, str, int])
+    def write_single_servo_register(self, reg, name, value):
+        self.dxl_handler.group_sync_write(
+            reg,
+            [SERVO_INDEX_LOOKUP[name]],
+            value,
+        )
+        return dict()
+
+    @register_write(argtypes=[str, int])
+    def write_all_servo_registers(self, reg, value):
+        self.dxl_handler.group_sync_write(
+            reg,
+            ALL_SERVO_IDS,
+            value,
+        )
+        return dict()
+
     @register_write()
     def reboot_all_servos(self):
         self.dxl_handler.reboot_servos(ALL_SERVO_IDS)

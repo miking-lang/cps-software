@@ -117,6 +117,8 @@ class CommandBox(Gtk.Box):
             arg.set_visible(is_active)
 
     def append_to_textbuffer(self, txt):
+        if txt[-1] != "\n":
+            txt = txt + "\n"
         self.status_textbuffer.insert_with_tags(
             self.status_textbuffer.get_start_iter(),
             txt,
@@ -139,7 +141,7 @@ class CommandBox(Gtk.Box):
 
             self.cmdlist_store.remove_all()
             for cmd in self.cmdlist_order:
-                self.cmdlist_store.append(self.cmdlist_lookup[cmd])
+                self.cmdlist_store.append(self.cmdlist_lookup[cmd]["label"])
 
             self.cmdlist_model.set_selected(0)
 
@@ -220,6 +222,10 @@ class CommandBox(Gtk.Box):
             "---------------------------------",
             "--------- SENT COMMAND: ---------",
             json.dumps(out_pkt.blob, indent=4),
+            "",
+            "="*80,
+            "",
+            "",
         ])
         self.append_to_textbuffer(send_txt)
 

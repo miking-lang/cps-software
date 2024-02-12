@@ -1,3 +1,4 @@
+import inspect
 import json
 import time
 import traceback
@@ -9,6 +10,7 @@ def register_command(registry, argtypes=[], kind="read"):
         registry[f.__name__] = {
             "fn": f,
             "argtypes": argtypes,
+            "argnames": inspect.getargs(f.__code__).args[1:]
             "kind": kind,
         }
         return f

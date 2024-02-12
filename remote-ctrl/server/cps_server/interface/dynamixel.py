@@ -135,6 +135,24 @@ POSITION_CONTROL_INDIRECTIONS = [
 #HIGH_BAUDRATE               = 1152000
 #PROTOCOL_VERSION            = 2.0
 
+#7   4.5M [bps]  0.000 [%]
+#6   4M [bps]    0.000 [%]
+#5   3M [bps]    0.000 [%]
+#4   2M [bps]    0.000 [%]
+#3   1M [bps]    0.000 [%]
+#2   115,200 [bps]   0.000 [%]
+#1(Default)  57,600 [bps]    0.000 [%]
+#0   9,600 [bps]     0.000 [%]
+VALID_BAUDRATES = [
+    9600,
+    57_600,
+    115_200,
+    1_000_000,
+    2_000_000,
+    3_000_000,
+    4_000_000,
+]
+
 class DynamixelHandler:
     def __init__(self, dev="/dev/ttyUSB0", baudrate=57600, protocol_version=2.0):
         self.opened_port = False

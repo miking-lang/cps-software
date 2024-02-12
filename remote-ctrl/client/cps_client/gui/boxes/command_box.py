@@ -106,11 +106,6 @@ class CommandBox(Gtk.Box):
             for i in range(len(self.arglist_args), n):
                 arg = Gtk.Entry()
                 arg.set_text("")
-                #arg.set_placeholder_text(None)
-                #if i < len(placeholders):
-                #    arg.set_placeholder_text(placeholders[i])
-                #else:
-                arg.set_placeholder_text(f"Arg {i + 1}")
                 self.arglist_args.append(arg)
                 self.middle_col.append(arg)
 
@@ -119,6 +114,12 @@ class CommandBox(Gtk.Box):
             arg.set_editable(is_active)
             arg.set_can_target(is_active)
             arg.set_visible(is_active)
+            # Update placeholder text
+            if is_active:
+                if i < len(placeholders):
+                    arg.set_placeholder_text(placeholders[i])
+                else:
+                    arg.set_placeholder_text(f"")
 
     def append_to_textbuffer(self, txt):
         if txt[-1] != "\n":

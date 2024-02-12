@@ -270,12 +270,19 @@ class DynamixelHandler:
     def sync_read_all(self, ids : List[int]):
         return self.sync_read_registers(ids, reg_start=REGISTER.TORQUE_ENABLE, reg_end=REGISTER.BACKUP_READY)
 
-    def group_sync_write(self, reg : Register, ids : List[int], values : Union[List[int], int]):
+    def group_sync_write(self,
+                         reg : Union[Register, str],
+                         ids : List[int],
+                         values : Union[List[int], int]):
         """
         Synchronized group write to all ids.
         """
+        if isinstance(reg, str):
+            reg = REGISTER_LOOKUP[reg]
         if isinstance(values, int):
             values = [values]*len(ids)
+
+        assert len(values) == len(ids), f"{len(values)} == {len(ids)}"
 
         groupSyncWrite = dxl.GroupSyncWrite(self.portHandler, self.packetHandler, reg.addr, reg.bytelen)
         for id, v in zip(ids, values):

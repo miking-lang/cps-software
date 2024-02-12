@@ -1,0 +1,9 @@
+--- c/include/dynamixel_sdk/packet_handler.h 2023-01-01 12:00:00.000000 +0000
++++ c/include/dynamixel_sdk/packet_handler.h 2023-01-01 12:00:00.000000 +0000
+@@ -80,5 +80,5 @@
+ }PacketData;
+
+-PacketData *packetData;
++extern PacketData *packetData;
+
+ WINDECLSPEC void        packetHandler       ();

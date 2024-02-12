@@ -3,6 +3,7 @@
 #include <string.h>
 #include "dxl.h"
 
+// These should probably be static? ...
 PacketData *packetData = {0};
 int g_used_port_num = 0;
 uint8_t *g_is_using = NULL;
@@ -22,6 +23,10 @@ cps_err_t dxl_init(const char *tty) {
         return CPS_ERR_FAIL;
 
     return CPS_ERR_OK;
+}
+
+void dxl_close() {
+    closePort(g_dxl_port_num);
 }
 
 dxl_err_t dxl_get_error(void) {

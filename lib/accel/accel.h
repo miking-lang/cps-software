@@ -59,6 +59,18 @@ cps_err_t cps_accel_init(cps_accel_t *acc, const char *device, int i2c_addr,
     cps_accel_range_t accel_range, cps_gyro_range_t gyro_range);
 
 /**
+ * @brief Releases the handle to accelerometer IC.
+ *
+ * Releases the I2C resources, such that others can use the accelerometer.
+ *
+ * @param acc accelerometer IC struct
+ * 
+ * @retval CPS_ERR_SYS i2c error
+ * @retval CPS_ERR_OK no error
+ */
+cps_err_t cps_accel_release(cps_accel_t *acc);
+
+/**
  * @brief Read accelerometer value.
  * 
  * @param acc accelerometer IC struct

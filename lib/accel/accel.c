@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/ioctl.h>
 #include <i2c/smbus.h>
 #include <linux/i2c-dev.h>
@@ -83,6 +84,15 @@ cps_err_t cps_accel_init(cps_accel_t *acc, const char *device, int i2c_addr,
     acc->fd = fd;
     acc->accel_range = accel_range;
     acc->gyro_range = gyro_range;
+
+    return CPS_ERR_OK;
+}
+
+cps_err_t cps_accel_release(cps_accel_t *acc)
+{
+    if (close(acc->fd) != 0) {
+        return CPS_ERR_SYS;
+    }
 
     return CPS_ERR_OK;
 }

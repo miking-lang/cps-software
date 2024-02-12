@@ -1,0 +1,46 @@
+.white-button {
+    background-color: #f0f0f0;
+    color: #0f0f0f;
+}
+.white-button:hover {
+    background-color: #ffffff;
+}
+.lightgreen-button {
+    background-color: #60e060;
+    color: #0d0d0d;
+}
+.lightgreen-button:hover {
+    background-color: #50f050;
+    color: #0d0d0d;
+}
+.red-button {
+    background-color: #c02020;
+    color: #f0f0f0;
+}
+.red-button:hover {
+    background-color: #d01010;
+    color: #0d0d0d;
+}
+.yellow-button {
+    background-color: #c0c020;
+    color: #0d0d0d;
+}
+.yellow-button:hover {
+    background-color: #d0d010;
+    color: #0d0d0d;
+}
+
+.lightblue-button {
+    background-color: #c0e0f0;
+    color: #0f0f0f;
+}
+
+
+.commandbox-edit-textview {
+    background: #e9e9e9;
+}
+
+.progress-bar-red trough progress {
+    background-color: #c02020;
+    color: #f0f0f0;
+}

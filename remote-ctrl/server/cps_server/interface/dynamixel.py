@@ -161,7 +161,7 @@ class DynamixelHandler:
 
     def set_baud_rate(self, baudrate):
         """Sets the baud rate."""
-        if not self.portHandler.setBaudRate(baudrate)
+        if not self.portHandler.setBaudRate(baudrate):
             raise RuntimeError(f"Failed to set baudrate to {baudrate}")
 
     def get_baud_rate(self):

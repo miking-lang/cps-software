@@ -43,7 +43,8 @@ class ControllerBase:
                 contents={"commands": {
                     cmd: {
                         "argtypes": [at.__name__ for at in details["argtypes"]],
-                        "kind": details["kind"]
+                        "argnames": details["argnames"],
+                        "kind": details["kind"],
                     }
                     for cmd, details in self.__registry.items()
                 }},

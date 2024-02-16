@@ -153,10 +153,13 @@ class SpiderController(ControllerBase):
 
     @register_read()
     def read_all_servo_goalplans(self):
-        return self.dxl_handler.sync_read_registers(ALL_SERVO_IDS,
+        data = self.dxl_handler.sync_read_registers(ALL_SERVO_IDS,
             reg_start="GOAL_POSITION",
             reg_end="POSITION_TRAJECTORY",
         )
+        data["accelerometer"] = self.read_accel()
+        data["gyro"] = self.read_gyro()
+        return data
 
     @register_read(argtypes=[str])
     def read_single_servo_position(self, name):

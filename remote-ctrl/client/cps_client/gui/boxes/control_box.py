@@ -9,6 +9,7 @@ from collections import deque
 from datetime import datetime, timezone
 
 from .._gtk4 import GLib, Gtk, Gdk, pango_attrlist
+from ..gui_types import Refresher
 
 from ...import slipp, utils
 
@@ -51,7 +52,7 @@ STANDUP_DEGREE_POS = [
 ]
 
 
-class ControlBox(Gtk.Box):
+class ControlBox(Refresher, Gtk.Box):
     """
     A Control box for sending motion commands to the spider.
     """
@@ -59,11 +60,14 @@ class ControlBox(Gtk.Box):
         """
         main_utils : Class with shared utilities from the MainWindow.
         """
-        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        # Initialize this as a refreshing object
+        Refresher.__init__(self, refresh_rate_ms=250)
+
+        # Setup box
+        Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=5)
         self.set_margin_top(5)
 
         self.main_utils = main_utils
-        self.refresh_rate_ms = 250
 
         # Top status text
         self.status_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
@@ -492,7 +496,7 @@ class ControlBox(Gtk.Box):
             f"Running command ({self.command_sent}/{self.command_length})",
             frac=0.0,
         )
-        self.refresh_rate_ms = command_dt_ms
+        self.self.set_refresh_rate(command_dt_ms)
 
 
     def on_update_duration_accceleration(self, btn):
@@ -532,7 +536,7 @@ class ControlBox(Gtk.Box):
             self.command_length = 0
             self.command_sent_positions = []
             self.command_recv_telemetry = []
-            self.refresh_rate_ms = 250
+            self.set_refresh_rate(250)
             if errmsg is not None:
                 self.set_error_status(errmsg, notify=notify)
             elif okmsg is not None:
@@ -549,14 +553,14 @@ class ControlBox(Gtk.Box):
                     on_recv_callback=self._ack_command,
                     on_timeout_callback=self._timeout_command,
                     # Maybe set a smaller TTL?
-                    ttl=(5.0 * self.refresh_rate_ms / 1000.0),
+                    ttl=5.0,
                 )
                 self.main_utils.client_send(
                     tm_pkt,
                     on_recv_callback=self._ack_telemetry,
                     on_timeout_callback=self._timeout_command,
                     # Maybe set a smaller TTL?
-                    ttl=(5.0 * self.refresh_rate_ms / 1000.0),
+                    ttl=5.0,
                 )
                 self.command_sent += 1
                 self.command_sent_positions.append({
@@ -589,8 +593,3 @@ class ControlBox(Gtk.Box):
                     self.main_utils.notify(f"Saved trajectory as {str(dstfile)}", success=True)
 
             self._stop_running_command(okmsg=f"Command done")
-
-        self.start_refresh()
-
-    def start_refresh(self):
-        GLib.timeout_add(self.refresh_rate_ms, self.refresh)

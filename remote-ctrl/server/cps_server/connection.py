@@ -39,28 +39,28 @@ class SpiderTCPHandler(socketserver.BaseRequestHandler):
 
         # set a timeout value of 1 second, allow for at most 30 seconds without
         # any communication
-        timeout_s = 0.05
-        max_timeout_s = 30.0
+        TIMEOUT_S = 0.05
+        MAX_TIMEOUT_S = 30.0
 
-        self.request.settimeout(timeout_s)
-        N_MAX_TIMEOUTS = int(max_timeout_s/timeout_s)
+        self.request.settimeout(TIMEOUT_S)
+        N_MAX_TIMEOUTS = int(MAX_TIMEOUT_S/TIMEOUT_S)
 
         timeout_count = 0
 
         active = True
         data = b""
         while active:
+            timed_out = False
             try:
                 recv_data = self.request.recv(2**16)
                 data += recv_data
             except (TimeoutError, socket.timeout):
                 timeout_count += 1
-            else:
-                timeout_count = 0
+                timed_out = True
             if timeout_count >= N_MAX_TIMEOUTS:
-                logprint(f"Did not get any data for {N_MAX_TIMEOUTS} seconds")
+                logprint(f"Did not get any packets for {MAX_TIMEOUT_S} seconds")
                 active = False
-            if timeout_count != 0:
+            if timed_out:
                 continue
 
             can_read_packet = True
@@ -74,8 +74,11 @@ class SpiderTCPHandler(socketserver.BaseRequestHandler):
                 if inpkt is None:
                     if msg is not None:
                         logprint("Invalid packet:", msg)
-                        outpkt = slipp.Packet("NAK")
+                        outpkt = slipp.Packet("NAK", contents={"errmsg": "invalid packet"})
+                        #outpkt = slipp.NAK(None, errmsg="invalid packet")
+                    # else: received incomplete data
                 else:
+                    timeout_count = 0
                     logprint("Received packet:", inpkt)
                     # Special cases
                     if inpkt.op == "BYE":
@@ -88,10 +91,11 @@ class SpiderTCPHandler(socketserver.BaseRequestHandler):
                         try:
                             outpkt = controller.handle_incoming_packet(inpkt)
                         except Exception as e:
-                            outpkt = slipp.Packet("NAK", seq=seq.inpkt.seq, contents={"errmsg": "internal error, see server logs"})
+                            #outpkt = slipp.Packet("NAK", seq=inpkt.seq, contents={"errmsg": "internal error, see server logs"})
+                            outpkt = slipp.NAK(inpkt, errmsg="internal error, see server logs")
 
                 if outpkt is not None:
-                    self.request.sendall(bytes(outpkt))
+                    self.request.sendall(outpkt.encode())
 
         CONNECTED_HOSTS["hosts"].remove(this_host)
         logprint("Done, terminating connection")

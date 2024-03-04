@@ -255,7 +255,7 @@ def apply_action(ctrl : "SpiderController", action):
     raw_action = [mujoco_to_dnx(a, sv) for a, sv in zip(mj_action.tolist(), SERVO_ORDER)]
     assert len(raw_action) == 12
 
-    ctrl.move_all_servos(raw_action)
+    ctrl.move_all_servos(*raw_action)
 
 
 def step(ctrl, state, model):

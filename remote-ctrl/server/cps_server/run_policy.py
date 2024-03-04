@@ -228,6 +228,9 @@ def get_obs(ctrl : "SpiderController", state):
     mj_positions = np.zeros((12,))
     for i in range(12):
         mj_positions[i] = dnx_to_mujoco(src_positions[i], SERVO_ORDER[i])
+        hwstat = spider_data["HARDWARE_ERROR_STATUS"][i]
+        if hwstat != 0:
+            print(f"Hardware error 0x{hwstat:02x} on servo {SERVO_ORDER[i]}")
 
     if state["velocity"] is None:
         state["velocity"] = np.zeros((12,))

@@ -365,7 +365,7 @@ def run_policy(file):
     time.sleep(1.0)
     ctrl.set_duration(1000)
     ctrl.set_acceleration(500)
-    ctrl.disable_torque()
+    time.sleep(1.0)
     apply_action(ctrl, np.array(stand_pos))
 
 
@@ -374,4 +374,5 @@ def run_policy(file):
     apply_action(ctrl, np.zeros((12,)))
 
 
+    ctrl.disable_torque()
     print("Done")

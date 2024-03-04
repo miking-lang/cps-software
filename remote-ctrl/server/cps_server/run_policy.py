@@ -276,13 +276,13 @@ def load_model(agent_file):
         try:
             if alg == "SAC":
                 from stable_baselines3 import SAC
-                model = SAC.load(agent_file, env=env)
+                model = SAC.load(agent_file)
             elif alg == "PPO":
                 from stable_baselines3 import PPO
-                model = PPO.load(agent_file, env=env)
+                model = PPO.load(agent_file)
             elif alg == "RecurrentPPO":
                 from sb3_contrib import RecurrentPPO
-                model = RecurrentPPO.load(agent_file, env=env)
+                model = RecurrentPPO.load(agent_file)
         except Exception as e:
             model = None
             load_errors[alg] = e

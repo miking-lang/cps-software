@@ -247,7 +247,7 @@ def apply_action(ctrl : "SpiderController", action):
     # Applies an action to the spider robot
 
     mj_action = action
-    assert mj_action.shape == (12,)
+    assert mj_action.shape == (12,), f"got action {mj_action}"
 
     SERVO_ORDER = ctrl.get_servos()
     assert len(SERVO_ORDER) == 12
@@ -267,6 +267,10 @@ def step(ctrl, state, model):
 
     # GEN ACTION FROM POLICY
     action, _states = model.predict(np.array([obs]), deterministic=True)
+    if len(action.shape) > 1:
+        action = action[0]
+
+    assert action.shape == (12,)
 
     apply_action(ctrl, action)
     t_end = time.time()

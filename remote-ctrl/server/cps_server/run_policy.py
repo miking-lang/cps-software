@@ -230,7 +230,7 @@ def get_obs(ctrl : "SpiderController", state):
         mj_positions[i] = dnx_to_mujoco(src_positions[i], SERVO_ORDER[i])
         hwstat = spider_data["HARDWARE_ERROR_STATUS"][i]
         if hwstat != 0:
-            print(f"Hardware error 0x{hwstat:02x} on servo {SERVO_ORDER[i]}")
+            print(f"Hardware error 0x{hwstat:02x} on servo {SERVO_ORDER[i]}", flush=True)
 
     if state["velocity"] is None:
         state["velocity"] = np.zeros((12,))
@@ -338,13 +338,16 @@ def run_policy(file):
     ctrl.set_duration(1000)
     ctrl.set_acceleration(500)
     ctrl.disable_torque()
+    time.sleep(0.5)
+    ctrl.reboot_all_servos()
+    time.sleep(0.5)
     ctrl.enable_torque()
 
-    print("Resetting legs")
+    print("Resetting legs", flush=True)
     apply_action(ctrl, np.zeros((12,)))
     time.sleep(2.0)
 
-    print("Going into standup position")
+    print("Going into standup position", flush=True)
     stand_pos = [
         -0.40, 0.70, 2.15,
          0.40, 0.70, 2.15,
@@ -362,8 +365,8 @@ def run_policy(file):
     for i in range(16):
         step(ctrl, state, model)
 
-    print("Model done")
-    print("Interaction delays:", state["interaction_delays"])
+    print("Model done", flush=True)
+    print("Interaction delays:", state["interaction_delays"], flush=True)
 
     time.sleep(1.0)
     ctrl.set_duration(1000)
@@ -373,10 +376,10 @@ def run_policy(file):
 
 
     time.sleep(2.0)
-    print("Resetting legs")
+    print("Resetting legs", flush=True)
     apply_action(ctrl, np.zeros((12,)))
     time.sleep(1.0)
 
 
     ctrl.disable_torque()
-    print("Done")
+    print("Done", flush=True)

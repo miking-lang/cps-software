@@ -339,7 +339,11 @@ def run_policy(file):
     ctrl.set_acceleration(500)
     ctrl.disable_torque()
     time.sleep(0.5)
-    ctrl.reboot_all_servos()
+    print("Rebooting servos", flush=True)
+    SERVO_ORDER = ctrl.get_servos()
+    for i, servo in enumerate(SERVO_ORDER):
+        print(f" - rebooting servo for {servo}", flush=True)
+        ctrl.reboot_single_servo(servo)
     time.sleep(0.5)
     ctrl.enable_torque()
 

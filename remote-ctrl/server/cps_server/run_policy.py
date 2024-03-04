@@ -247,10 +247,13 @@ def apply_action(ctrl : "SpiderController", action):
     # Applies an action to the spider robot
 
     mj_action = action
+    assert mj_action.shape == (12,)
 
     SERVO_ORDER = ctrl.get_servos()
+    assert len(SERVO_ORDER) == 12
 
-    raw_action = [mujoco_to_dnx(a, sv) for a, sv in zip(mj_action, SERVO_ORDER)]
+    raw_action = [mujoco_to_dnx(a, sv) for a, sv in zip(mj_action.tolist(), SERVO_ORDER)]
+    assert len(raw_action) == 12
 
     ctrl.move_all_servos(raw_action)
 

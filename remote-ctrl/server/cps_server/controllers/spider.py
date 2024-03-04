@@ -173,7 +173,7 @@ class SpiderController(ControllerBase):
     def move_all_servos(self, *positions):
         for v in positions:
             if v not in range(0, 4096):
-                raise ValueError(f"Servo values must be in range 0 to 4095")
+                raise ValueError(f"Servo values must be in range 0 to 4095, got value {v}")
 
         self.dxl_handler.position_control(
             ALL_SERVO_IDS,

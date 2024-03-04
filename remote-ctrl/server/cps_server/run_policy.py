@@ -292,7 +292,7 @@ def load_model(agent_file):
     if model is None:
         lines = [f"Could not trained agent from {agent_file}"]
         for alg, alg_e in load_errors.items():
-            lines.append(f"{alg} error:", alg_e)
+            lines.append(f"{alg} error: {alg_e}")
         raise RuntimeError("\n".join(lines))
 
     return model

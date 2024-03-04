@@ -166,3 +166,40 @@ cps_err_t cps_accel_read_angle(cps_accel_t *acc, cps_accel_dir_t axis,
 
     return ret;
 }
+
+
+
+/*
+WOULD BE NICE TO HAVE SOMETHING LIKE THIS!
+
+union cps_accel_values {
+    uint8_t data[2 * 7];
+    struct  __attribute__((packed)) {
+        uint16_t accel_x;
+        uint16_t accel_y;
+        uint16_t accel_z;
+        uint16_t temperature;
+        uint16_t gyro_x;
+        uint16_t gyro_y;
+        uint16_t gyro_z;
+    } values;
+}
+
+int cps_accel_read_values(cps_accel_t *acc, struct cps_accel_values *result) {
+    // https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf
+    // Encoded in bigendian
+    // 0x3B -> 0x40
+    // 0x41 -> 0x42
+    // 0x43 -> 0x48
+    int recv = i2c_smbus_read_i2c_block_data_or_emulated(acc->fd, 0x3B, 2 * 7, &result->data);
+    if (recv < 0) {
+        QUE?;
+    }
+
+    uint16_t *value_arr = (uint16_t *) result->data;
+    for (int i = 0; i < 7; i++)
+        value_arr[i] = ntohs(value_arr[i]);
+
+    return 0;
+}
+*/

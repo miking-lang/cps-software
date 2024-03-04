@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from math import pi
 import numpy as np
 import time
+from numpy.linalg import norm
 
 zero_shift_dics = {
     "BR_INNER_SHOULDER": 0.0,
@@ -340,7 +341,12 @@ def run_policy(file):
     time.sleep(2.0)
 
     print("Going into standup position")
-    stand_pos = [-0.40, 0.70, 2.15, 0.40, 0.70, 2.15, -0.40, 0.70, 2.15, 0.40, 0.70, 2.15]
+    stand_pos = [
+        -0.40, 0.70, 2.15,
+         0.40, 0.70, 2.15,
+         0.40, 0.70, 2.15,
+        -0.40, 0.70, 2.15,
+    ]
     apply_action(ctrl, np.array(stand_pos))
     time.sleep(3.0)
 

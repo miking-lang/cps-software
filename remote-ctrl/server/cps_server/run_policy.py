@@ -359,5 +359,19 @@ def run_policy(file):
     for i in range(16):
         step(ctrl, state, model)
 
-    print("Done")
+    print("Model done")
     print("Interaction delays:", state["interaction_delays"])
+
+    time.sleep(1.0)
+    ctrl.set_duration(1000)
+    ctrl.set_acceleration(500)
+    ctrl.disable_torque()
+    apply_action(ctrl, np.array(stand_pos))
+
+
+    time.sleep(2.0)
+    print("Resetting legs")
+    apply_action(ctrl, np.zeros((12,)))
+
+
+    print("Done")

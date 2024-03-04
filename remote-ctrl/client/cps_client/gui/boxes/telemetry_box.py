@@ -33,6 +33,7 @@ class TelemetryBox(Gtk.Box):
         self.main_utils = main_utils
         self.refresh_rate_ms = 1000
         self.waiting_for_tm = False
+        self.waiting_for_rom_tm = False
 
         self.left_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
         self.right_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
@@ -363,10 +364,8 @@ class TelemetryBox(Gtk.Box):
                 return None
             for i, servo_id in enumerate(self.servo_order):
                 leg, jnt = self.servo_id_lookup[servo_id]
-                self.leg_objects[leg][jnt]["raw_values"] = {
-                    k: v[i]
-                    for k, v in pkt.contents["data"].items()
-                }
+                for k, v in pkt.contents["data"].items():
+                    self.leg_objects[leg][jnt]["raw_values"][k] = v[i]
             self.update_leg_texts()
 
             torque_txt = "disabled"
@@ -386,6 +385,29 @@ class TelemetryBox(Gtk.Box):
                     ttl=2.0)
                 if ok:
                     self.waiting_for_tm = True
+
+        def rom_update_values(pkt):
+            self.waiting_for_rom_tm = False
+            if pkt.op != "ACK":
+                return None
+            for i, servo_id in enumerate(self.servo_order):
+                leg, jnt = self.servo_id_lookup[servo_id]
+                for k, v in pkt.contents["data"].items():
+                    self.leg_objects[leg][jnt]["raw_values"][k] = v[i]
+            self.update_leg_texts()
+
+        def rom_tm_timeout():
+            self.waiting_for_rom_tm = False
+
+        if not self.waiting_for_rom_tm:
+            if self.tm_collect_switch.get_active():
+                ok = self.main_utils.client_send(
+                    slipp.Packet("read_all_servo_registers", contents={"args": ["MODEL_NUMBER", "SHUTDOWN"]}),
+                    on_recv_callback=rom_update_values,
+                    on_timeout_callback=rom_tm_timeout,
+                    ttl=2.0)
+                if ok:
+                    self.waiting_for_rom_tm = True
         self.start_refresh()
 
     def start_refresh(self):

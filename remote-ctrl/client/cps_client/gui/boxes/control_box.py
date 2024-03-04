@@ -496,7 +496,7 @@ class ControlBox(Refresher, Gtk.Box):
             f"Running command ({self.command_sent}/{self.command_length})",
             frac=0.0,
         )
-        self.self.set_refresh_rate(command_dt_ms)
+        self.set_refresh_rate(command_dt_ms)
 
 
     def on_update_duration_accceleration(self, btn):

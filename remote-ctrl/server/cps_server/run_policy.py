@@ -5,6 +5,7 @@ from math import pi
 import numpy as np
 import time
 from numpy.linalg import norm
+import traceback
 
 zero_shift_dics = {
     "BR_INNER_SHOULDER": 0.0,
@@ -369,13 +370,23 @@ def run_policy(file):
     ctrl.set_duration(500)
     ctrl.set_acceleration(250)
 
-    DT = 0.25
-    T_START = time.time()
-    for i in range(16):
-        step(ctrl, state, model)
+    had_error = False
+    try:
+        T_START = time.time()
+        for i in range(16):
+            step(ctrl, state, model)
+    except Exception as e:
+        had_error = True
+        traceback.print_exc()
 
     print("Model done", flush=True)
     print("Interaction delays:", state["interaction_delays"], flush=True)
+
+    if had_error:
+        print("Performing recovery read", flush=True)
+        spider_data = ctrl.read_all_servos_RAM()
+        for k, entry in spider_data.items():
+            print(f"{k}: {entry}")
 
     time.sleep(1.0)
     ctrl.set_duration(1000)

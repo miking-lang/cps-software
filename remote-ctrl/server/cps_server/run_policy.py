@@ -32,13 +32,20 @@ def dnx_to_mujoco(angle, motor_key):
         return float((angle-2048)*pi*0.087891/180 + zero_shift_dics[motor_key])
     else:
         return float((2048-angle)*pi*0.087891/180 + zero_shift_dics[motor_key])
-    
+
 def mujoco_to_dnx(angle, motor_key):
     if motor_key in POSITIVE_JOINTS:
         # front_right_elbow and back_left_elbow are the only motors that don't have flipped sign
-        return int(2048 + round(180*(angle-zero_shift_dics[motor_key])/(pi*0.087891)))
+        v = int(2048 + round(180*(angle-zero_shift_dics[motor_key])/(pi*0.087891)))
     else:
-        return int(2048 - round(180*(angle-zero_shift_dics[motor_key])/(pi*0.087891)))
+        v = int(2048 - round(180*(angle-zero_shift_dics[motor_key])/(pi*0.087891)))
+
+    while v < 0:
+        v += 4096
+    while v >= 4096:
+        v -= 4096
+
+    return v
 
 def dnxvel_to_mujoco(vel, motor_key):
     if motor_key in POSITIVE_JOINTS:

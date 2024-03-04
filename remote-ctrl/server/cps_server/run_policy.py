@@ -278,8 +278,9 @@ def step(ctrl, state, model):
 
     state["interaction_delays"].append(t_end - t_start)
     
-    sleep_time = min(0.0, state["last_time"] + state["dt"] - t_end)
+    sleep_time = max(0.01, state["last_time"] + state["dt"] - t_end)
     time.sleep(sleep_time)
+    state["last_time"] += state["dt"]
 
 
 def load_model(agent_file):

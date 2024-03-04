@@ -346,6 +346,7 @@ def run_policy(file):
         ctrl.reboot_single_servo(servo)
     time.sleep(0.5)
     ctrl.enable_torque()
+    time.sleep(0.5)
 
     print("Resetting legs", flush=True)
     apply_action(ctrl, np.zeros((12,)))

@@ -358,3 +358,6 @@ def run_policy(file):
     T_START = time.time()
     for i in range(16):
         step(ctrl, state, model)
+
+    print("Done")
+    print("Interaction delays:", state["interaction_delays"])

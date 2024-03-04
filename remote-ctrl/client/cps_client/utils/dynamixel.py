@@ -5,25 +5,41 @@ from typing import Optional
 # Pre-processing of dynamixel data
 
 zero_shift_dics = {
-    #"BR_OUTER_SHOULDER": -0.202,
-    #"FR_OUTER_SHOULDER": -0.202,
-    #"FL_OUTER_SHOULDER": -0.273,
-    #"BL_OUTER_SHOULDER": -0.272,
-    # old values above
-    "BR_INNER_SHOULDER": 0.00624,
-    "BR_OUTER_SHOULDER": -0.142,
-    "BR_ELBOW": -0.126,
-    "FR_INNER_SHOULDER": 0.00992,
-    "FR_OUTER_SHOULDER": -0.142,
-    "FR_ELBOW": -0.126,
-    "FL_INNER_SHOULDER": 0.00654,
-    "FL_OUTER_SHOULDER": -0.143,
-    "FL_ELBOW": -0.126,
-    "BL_INNER_SHOULDER": 0.00988,
-    "BL_OUTER_SHOULDER": -0.143,
-    "BL_ELBOW": -0.126,
+    "BR_INNER_SHOULDER": 0.0,
+    "BR_OUTER_SHOULDER": -0.308,
+    "BR_ELBOW": -0.211,
+    "FR_INNER_SHOULDER": 0.0,
+    "FR_OUTER_SHOULDER": -0.308,
+    "FR_ELBOW": -0.231,
+    "FL_INNER_SHOULDER": 0.0,
+    "FL_OUTER_SHOULDER": -0.298,
+    "FL_ELBOW": -0.191,
+    "BL_INNER_SHOULDER": 0.0,
+    "BL_OUTER_SHOULDER": -0.308,
+    "BL_ELBOW": -0.231,
     "NO_KEY": 0.0,
 }
+
+#zero_shift_dics = {
+#    #"BR_OUTER_SHOULDER": -0.202,
+#    #"FR_OUTER_SHOULDER": -0.202,
+#    #"FL_OUTER_SHOULDER": -0.273,
+#    #"BL_OUTER_SHOULDER": -0.272,
+#    # old values above
+#    "BR_INNER_SHOULDER": 0.00624,
+#    "BR_OUTER_SHOULDER": -0.142,
+#    "BR_ELBOW": -0.126,
+#    "FR_INNER_SHOULDER": 0.00992,
+#    "FR_OUTER_SHOULDER": -0.142,
+#    "FR_ELBOW": -0.126,
+#    "FL_INNER_SHOULDER": 0.00654,
+#    "FL_OUTER_SHOULDER": -0.143,
+#    "FL_ELBOW": -0.126,
+#    "BL_INNER_SHOULDER": 0.00988,
+#    "BL_OUTER_SHOULDER": -0.143,
+#    "BL_ELBOW": -0.126,
+#    "NO_KEY": 0.0,
+#}
 
 POSITIVE_JOINTS = {
     "FR_ELBOW",

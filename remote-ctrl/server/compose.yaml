@@ -1,12 +1,12 @@
 services:
   spider:
-    image: mikinglang/remote-ctrl-server:0.0.1
+    image: mikinglang/remote-ctrl-server:0.0.2
     build:
       context: ../..
       dockerfile: remote-ctrl/server/Dockerfile
     volumes:
       - ".:/mnt:ro"
-    command: "/mnt/server_spider.py"
+    command: "/mnt/server.sh"
     privileged: true
     ports:
       - 127.0.0.1:8372:8372

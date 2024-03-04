@@ -28,3 +28,6 @@ alias l='ls $LS_OPTIONS -lA'
 # alias mv='mv -i'
 
 alias refresh='__curuserpath="$(pwd -P)" && rm -rf /$HOME/cps-software && cp -r /mnt /$HOME/cps-software && cd $__curuserpath && unset __curuserpath'
+
+# Activate the python py-venv
+source /root/py-venv/bin/activate

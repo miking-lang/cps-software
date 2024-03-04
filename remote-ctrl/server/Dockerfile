@@ -13,7 +13,7 @@ RUN apt-get update \
  && cp /opt/cps-software/remote-ctrl/server/bashrc.sh /root/.bashrc \
  && source /root/.bashrc \
  && pip3 install torch --index-url https://download.pytorch.org/whl/cpu \
- && pip3 install Cython tqdm tensorboard "stable-baselines3 >= 2.2.1" stable-baselines3[extra] "gymnasium==0.28.1" \
+ && pip3 install Cython tqdm tensorboard "stable-baselines3 >= 2.2.1" "gymnasium==0.28.1" \
  && cd /root \
  && wget https://github.com/ROBOTIS-GIT/DynamixelSDK/archive/3.7.31.zip \
  && unzip 3.7.31.zip \

@@ -383,6 +383,7 @@ def run_policy(file):
     print("Interaction delays:", state["interaction_delays"], flush=True)
 
     if had_error:
+        time.sleep(2.0)
         print("Performing recovery read", flush=True)
         spider_data = ctrl.read_all_servos_RAM()
         for k, entry in spider_data.items():

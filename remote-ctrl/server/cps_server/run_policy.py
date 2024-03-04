@@ -345,6 +345,8 @@ def run_policy(file):
         print(f" - rebooting servo for {servo}", flush=True)
         ctrl.reboot_single_servo(servo)
     time.sleep(0.5)
+    ctrl.reboot_all_servos()
+    time.sleep(0.5)
     ctrl.enable_torque()
     time.sleep(0.5)
 
@@ -367,8 +369,8 @@ def run_policy(file):
 
     DT = 0.25
     T_START = time.time()
-    for i in range(16):
-        step(ctrl, state, model)
+    #for i in range(16):
+    #    step(ctrl, state, model)
 
     print("Model done", flush=True)
     print("Interaction delays:", state["interaction_delays"], flush=True)

@@ -372,6 +372,7 @@ def run_policy(file):
     time.sleep(2.0)
     print("Resetting legs")
     apply_action(ctrl, np.zeros((12,)))
+    time.sleep(1.0)
 
 
     ctrl.disable_torque()

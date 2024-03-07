@@ -251,7 +251,7 @@ def get_obs(ctrl : "SpiderController", state):
 
     mujoco_obs = np.concatenate((fl_accel, fl_gyro, mj_servos))
 
-    add_to_trajectory(state, "observation", {"mujoco": mujoco_obs, "raw": spider_data})
+    add_to_trajectory(state, "observation", {"mujoco": mujoco_obs.tolist(), "raw": spider_data})
 
     return mujoco_obs
 
@@ -267,7 +267,7 @@ def apply_action(ctrl : "SpiderController", action, state):
     raw_action = [mujoco_to_dnx(a, sv) for a, sv in zip(mj_action.tolist(), SERVO_ORDER)]
     assert len(raw_action) == 12
 
-    add_to_trajectory(state, "action", {"mujoco": mj_action, "raw": raw_action})
+    add_to_trajectory(state, "action", {"mujoco": mj_action.tolist(), "raw": raw_action})
 
     ctrl.move_all_servos(*raw_action)
 
@@ -330,8 +330,6 @@ def load_model(agent_file):
 
 # Some trajetory functions
 def add_to_trajectory(state, kind, content):
-    if isinstance(content, np.ndarray):
-        content = content.tolist()
     state["trajectory"].append({"time": time.time(), "kind": kind, "content": content})
 def add_info(state, msg):
     add_to_trajectory(state, kind="info", content=msg)

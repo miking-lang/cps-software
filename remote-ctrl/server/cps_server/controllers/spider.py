@@ -209,7 +209,7 @@ class SpiderController(ControllerBase):
         t1 = self.acceleration*0.001 # Convert to seconds
 
         # Convert the maximum velocity to dynamixel units
-        velocity_max = mujoco_to_dnx(self.velocity_max)
+        velocity_max = mujoco_to_dnx(self.velocity_max, "FR_ELBOW") # We want a positive value
 
         positions_deltas = [
             pos - pos_plan

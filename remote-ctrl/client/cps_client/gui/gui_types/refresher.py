@@ -18,8 +18,13 @@ class Refresher:
         raise NotImplementedError(f"Subclass {type(self).__name__} does not implement the refresh function")
 
     def _refresh_entrypoint(self):
-        self.refresh()
-        self.start_refresh()
+        try:
+            self.refresh()
+        except Exception as e:
+            self.start_refresh()
+            raise e
+        else:
+            self.start_refresh()
 
     def start_refresh(self):
         next_refresh = self.__last_refresh

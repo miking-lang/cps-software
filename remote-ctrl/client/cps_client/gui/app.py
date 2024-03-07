@@ -181,14 +181,6 @@ class MainWindow(Gtk.ApplicationWindow):
         self.ongoing_timeouts -= 1
         self.total_timeouts += 1
         self.total_timeout_ms += self.timeout_period_ms
-
-        # Ping the server every 10 seconds
-        if self.total_timeout_ms % 10000 == 0:
-            self.connbox.client_send(slipp.Packet("PING"))
-
-        # Every second, refresh the connbox
-        if self.total_timeout_ms % 1000 == 0:
-            self.connbox.refresh()
         
         # Perform cache writeback
         if self.total_timeout_ms % 5000 == 0:

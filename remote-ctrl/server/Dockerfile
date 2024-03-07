@@ -34,4 +34,4 @@ RUN apt-get update \
  && pip3 cache purge \
  && echo "Done"
 
-CMD ["/opt/cps-software/remote-ctrl/server/server_spider.py"]
+CMD ["/bin/bash"]

@@ -1,13 +1,17 @@
 from datetime import datetime
 
 from .._gtk4 import GLib, Gtk, Gdk, Pango
+from ..gui_types import Refresher
 
-class LoggingBox(Gtk.Box):
+class LoggingBox(Refresher, Gtk.Box):
     """
     A Logging box container for showing log messages.
     """
     def __init__(self, main_utils):
-        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        # Initialize this as a refreshing object
+        Refresher.__init__(self, refresh_rate_ms=2000)
+
+        Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=5)
         self.set_margin_top(5)
 
         self.main_utils = main_utils
@@ -68,6 +72,8 @@ class LoggingBox(Gtk.Box):
         # Initialize the text size
         self.on_textsize_changed(self.textsize_scale)
 
+        self.start_refresh()
+
     def add_log_entry(self, title, msg):
         datetxt = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         text_to_add = f"[{datetxt}] {title}: {msg}\n"
@@ -82,7 +88,6 @@ class LoggingBox(Gtk.Box):
             self.textbuffer.apply_tag(self.grey_tag, start_iter, end_iter)
 
         self.total_entries += 1
-        self.refresh()
 
     def on_textsize_changed(self, scale):
         new_font_size = int(scale.get_value())

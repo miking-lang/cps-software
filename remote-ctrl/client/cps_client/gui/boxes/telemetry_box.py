@@ -1,25 +1,12 @@
 import itertools
 
 from .._gtk4 import GLib, Gtk, Gdk, Pango
+from ..gui_types import Refresher
 
 from ... import slipp, utils
 
-DEFAULT_SERVO_ORDER = [
-    "BR_INNER_SHOULDER",
-    "BR_OUTER_SHOULDER",
-    "BR_ELBOW",
-    "FR_INNER_SHOULDER",
-    "FR_OUTER_SHOULDER",
-    "FR_ELBOW",
-    "BL_INNER_SHOULDER",
-    "BL_OUTER_SHOULDER",
-    "BL_ELBOW",
-    "FL_INNER_SHOULDER",
-    "FL_OUTER_SHOULDER",
-    "FL_ELBOW",
-]
 
-class TelemetryBox(Gtk.Box):
+class TelemetryBox(Refresher, Gtk.Box):
     """
     A Telemetry box for reading telemetry from the spider.
     """
@@ -27,11 +14,13 @@ class TelemetryBox(Gtk.Box):
         """
         main_utils : Class with shared utilities from the MainWindow.
         """
-        super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+        # Initialize this as a refreshing object
+        Refresher.__init__(self, refresh_rate_ms=1000)
+
+        Gtk.Box.__init__(self, orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
         self.set_margin_top(5)
 
         self.main_utils = main_utils
-        self.refresh_rate_ms = 1000
         self.waiting_for_tm = False
         self.waiting_for_rom_tm = False
 
@@ -425,10 +414,6 @@ class TelemetryBox(Gtk.Box):
                     ttl=2.0)
                 if ok:
                     self.waiting_for_rom_tm = True
-        self.start_refresh()
-
-    def start_refresh(self):
-        GLib.timeout_add(self.refresh_rate_ms, self.refresh)
 
     def on_enable_torque(self, btn):
         self.main_utils.log("Telemetry", "enabling torque")

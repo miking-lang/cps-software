@@ -1,9 +1,10 @@
 from .._gtk4 import GLib, Gtk, Gdk
+from ..gui_types import Refresher
 
 from ...connection import ThreadedClientConnection
 from ...import slipp
 
-class ConnectionBox(Gtk.Box):
+class ConnectionBox(Refresher, Gtk.Box):
     """
     A Connection box container for handling connection to server.
     """
@@ -11,7 +12,10 @@ class ConnectionBox(Gtk.Box):
         """
         main_utils : Class with shared utilities from the MainWindow.
         """
-        super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+        # Initialize this as a refreshing object
+        Refresher.__init__(self, refresh_rate_ms=1000)
+
+        Gtk.Box.__init__(self, orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
         self.set_margin_top(5)
 
         self.client = None
@@ -72,6 +76,9 @@ class ConnectionBox(Gtk.Box):
             btn.set_size_request(-1, 40)
             self.right_col.append(btn)
 
+        self.refreshes_since_ping = 0
+        self.start_refresh()
+
     def set_status_text(self, msg):
         textbuffer = self.text_status.get_buffer()
         textbuffer.set_text(msg)
@@ -83,7 +90,13 @@ class ConnectionBox(Gtk.Box):
         return self.client.is_active
 
     def refresh(self):
-        """Refreshes the GUI for this box."""
+        """Refreshes the GUI for this box and pings the client if it is not none."""
+        if self.is_connected:
+            self.refreshes_since_ping += 1
+            if self.refreshes_since_ping >= 10:
+                self.client_send(slipp.Packet("PING"))
+                self.refreshes_since_ping = 0
+
         if self.client is not None and self.client.failed:
             self.main_utils.notify("Connection failed")
             self.set_status_text(self.client.fail_msg)

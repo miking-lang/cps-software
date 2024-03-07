@@ -6,6 +6,7 @@ services:
       dockerfile: remote-ctrl/server/Dockerfile
     volumes:
       - ".:/mnt:ro"
+      - "./_output:/output"
     command: "/mnt/server.sh"
     privileged: true
     ports:

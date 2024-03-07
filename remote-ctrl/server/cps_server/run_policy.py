@@ -6,6 +6,8 @@ import numpy as np
 import time
 from numpy.linalg import norm
 import traceback
+from datetime import datetime
+import pathlib
 
 zero_shift_dics = {
     "BR_INNER_SHOULDER": 0.0,
@@ -231,7 +233,7 @@ def get_obs(ctrl : "SpiderController", state):
         mj_positions[i] = dnx_to_mujoco(src_positions[i], SERVO_ORDER[i])
         hwstat = spider_data["HARDWARE_ERROR_STATUS"][i]
         if hwstat != 0:
-            print(f"Hardware error 0x{hwstat:02x} on servo {SERVO_ORDER[i]}", flush=True)
+            add_info(state, f"Hardware error 0x{hwstat:02x} on servo {SERVO_ORDER[i]}")
 
     if state["velocity"] is None:
         state["velocity"] = np.zeros((12,))
@@ -418,4 +420,9 @@ def run_policy(file):
     time.sleep(1.0)
 
     ctrl.disable_torque()
-    add_info(state, "Done")
+    OUTPUT_PATH = pathlib.Path("/output")
+    OUTPUT_JSON = OUTPUT_PATH / datetime.now().strftime("run_policy_%Y-%m-%d_%H%M%S.json")
+
+    add_info(state, f"Done, writing output to {OUTPUT_JSON}")
+    with open(OUTPUT_JSON, "w+") as f:
+        json.dump(state, f)

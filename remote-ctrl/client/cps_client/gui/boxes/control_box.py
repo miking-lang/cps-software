@@ -547,7 +547,7 @@ class ControlBox(Refresher, Gtk.Box):
             if self.command_received and self.telemetry_received:
                 pos = self.command_queue.popleft()
                 cmd_pkt = slipp.Packet("move_all_servos", contents={"args": copy.copy(pos)})
-                tm_pkt = slipp.Packet("read_all_servo_goalplans")
+                tm_pkt = slipp.Packet("read_all_servos_RAM")
                 self.main_utils.client_send(
                     cmd_pkt,
                     on_recv_callback=self._ack_command,

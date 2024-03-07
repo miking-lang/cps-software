@@ -1,5 +1,6 @@
 import numpy as np
 from .controllerbase import ControllerBase, register_command
+from ..run_policy import mujoco_to_dnx
 
 SERVO_INDEX_LOOKUP = {
     "BR_INNER_SHOULDER": 1,
@@ -205,11 +206,10 @@ class SpiderController(ControllerBase):
         positions_planned = data["POSITION_TRAJECTORY"]
         velocities_planned = data["VELOCITY_TRAJECTORY"]
 
-        t1 = self.acceleration
+        t1 = self.acceleration*0.001 # Convert to seconds
 
         # Convert the maximum velocity to dynamixel units
-        velocity_max = round(self.velocity_max * (4096 / (2*np.pi)))
-
+        velocity_max = mujoco_to_dnx(self.velocity_max)
 
         positions_deltas = [
             pos - pos_plan
@@ -217,8 +217,9 @@ class SpiderController(ControllerBase):
         ]
 
         velocities = [
-            min((pos_delta - 0.05*vel_plan*t1) / (2*t1), velocity_max)
+            np.sign(num)*min(abs(num / (2*t1)), velocity_max)
             for pos_delta, vel_plan in zip(positions_deltas, velocities_planned)
+            if (num := pos_delta - 0.5*vel_plan*t1)
         ]
 
         durations = [

@@ -232,7 +232,7 @@ class SpiderController(ControllerBase):
             ALL_SERVO_IDS,
             positions,
             duration=durations,
-            acceleration=t1,
+            acceleration=self.acceleration,
         )
 
         return dict()

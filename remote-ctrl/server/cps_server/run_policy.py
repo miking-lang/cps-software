@@ -330,6 +330,8 @@ def load_model(agent_file):
 
 # Some trajetory functions
 def add_to_trajectory(state, kind, content):
+    if isinstance(content, np.ndarray):
+        content = content.tolist()
     state["trajectory"].append({"time": time.time(), "kind": kind, "content": content})
 def add_info(state, msg):
     add_to_trajectory(state, kind="info", content=msg)

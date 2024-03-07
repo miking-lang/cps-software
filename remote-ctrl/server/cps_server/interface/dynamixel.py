@@ -220,8 +220,8 @@ class DynamixelHandler:
         indirections = self.sync_read_registers(ids, INDIRECT_ADDRESS_REGISTERS[0], INDIRECT_ADDRESS_REGISTERS[len(addrs) - 1])
 
         result = [
-            (drive_modes[id] == 4) and all(indirections[id][j] == addr for j, addr in enumerate(addrs))
-            for id in ids
+            (drive_modes[i] == 4) and all(indirections[i][j] == addr for j, addr in enumerate(addrs))
+            for i, id in enumerate(ids)
         ]
         return result
 

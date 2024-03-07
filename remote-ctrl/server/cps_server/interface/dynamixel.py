@@ -310,8 +310,11 @@ class DynamixelHandler:
 
         return readregs
 
-    def sync_read_all(self, ids : List[int]):
+    def sync_read_all_RAM(self, ids : List[int]):
         return self.sync_read_registers(ids, reg_start=REGISTER.TORQUE_ENABLE, reg_end=REGISTER.BACKUP_READY)
+
+    def sync_read_all_EEPROM(self, ids : List[int]):
+        return self.sync_read_registers(ids, reg_start=REGISTER.MODEL_NUMBER, reg_end=REGISTER.SHUTDOWN)
 
     def group_sync_write(self,
                          reg : Union[Register, str],

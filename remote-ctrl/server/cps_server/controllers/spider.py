@@ -138,11 +138,11 @@ class SpiderController(ControllerBase):
 
     @register_read()
     def read_all_servos_RAM(self):
-        return self.dxl_handler.sync_read_all(ALL_SERVO_IDS)
+        return self.dxl_handler.sync_read_all_RAM(ALL_SERVO_IDS)
 
     @register_read()
     def read_all_servos_EEPROM(self):
-        return self.read_all_servo_registers(ALL_SERVO_IDS, "MODEL_NUMBER", "SHUTDOWN")
+        return self.dxl_handler.sync_read_all_EEPROM(ALL_SERVO_IDS)
 
     @register_read(argtypes=[str, str, str])
     def read_single_servo_registers(self, name, reg_start, reg_end):

@@ -229,7 +229,7 @@ class SpiderController(ControllerBase):
     def calibrate_all_servos(self):
         """Recalibrates all servos."""
         all_values = self.read_all_servos_RAM()
-        if any(all_values["TORQUE_ENABLED"]):
+        if any(all_values["TORQUE_ENABLE"]):
             raise AttributeError("Cannot recalibrate torques with torque enabled")
         all_positions = all_values["PRESENT_POSITION"]
         all_offsets   = all_values["HOMING_OFFSET"]

@@ -140,6 +140,10 @@ class SpiderController(ControllerBase):
     def read_all_servos_RAM(self):
         return self.dxl_handler.sync_read_all(ALL_SERVO_IDS)
 
+    @register_read()
+    def read_all_servos_EEPROM(self):
+        return self.read_all_servo_registers(ALL_SERVO_IDS, "MODEL_NUMBER", "SHUTDOWN")
+
     @register_read(argtypes=[str, str, str])
     def read_single_servo_registers(self, name, reg_start, reg_end):
         return self.dxl_handler.sync_read_registers(
@@ -228,13 +232,15 @@ class SpiderController(ControllerBase):
     @register_write()
     def calibrate_all_servos(self):
         """Recalibrates all servos."""
-        all_values = self.read_all_servos_RAM()
-        if any(all_values["TORQUE_ENABLE"]):
+        all_ram_values = self.read_all_servos_RAM()
+        all_eeprom_values = self.read_all_servos_EEPROM()
+        if any(all_ram_values["TORQUE_ENABLE"]):
             raise AttributeError("Cannot recalibrate torques with torque enabled")
-        all_positions = all_values["PRESENT_POSITION"]
-        all_offsets   = all_values["HOMING_OFFSET"]
-        all_min_limits = all_values["MIN_POSITION_LIMIT"]
-        all_max_limits = all_values["MAX_POSITION_LIMIT"]
+
+        all_positions = all_ram_values["PRESENT_POSITION"]
+        all_offsets   = all_eeprom_values["HOMING_OFFSET"]
+        all_min_limits = all_eeprom_values["MIN_POSITION_LIMIT"]
+        all_max_limits = all_eeprom_values["MAX_POSITION_LIMIT"]
         min_pos_limits  = 12*[0]
         max_pos_limits  = 12*[0]
         new_offsets     = 12*[0]

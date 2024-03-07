@@ -214,6 +214,17 @@ class TelemetryBox(Gtk.Box):
         self.status_acceleration_entry.set_size_request(100, 30)
         self.right_col.append(self.status_acceleration_entry)
 
+        self.status_servos_setup_label = Gtk.Label(label="Servos Set Up")
+        self.status_servos_setup_label.set_margin_top(10)
+        self.right_col.append(self.status_servos_setup_label)
+
+        self.status_servos_setup_entry = Gtk.Entry()
+        self.status_servos_setup_entry.set_text("<NO STATUS YET>")
+        self.status_servos_setup_entry.set_editable(False)
+        self.status_servos_setup_entry.set_attributes(self.entry_attrs)
+        self.status_servos_setup_entry.set_size_request(100, 30)
+        self.right_col.append(self.status_servos_setup_entry)
+
         # Accelerometer and Gyro info
         self.coord_order = ["x", "y", "z"]
         def create_labelled_entry(name):
@@ -336,6 +347,12 @@ class TelemetryBox(Gtk.Box):
             self.main_utils.client_send(
                 slipp.Packet("get_acceleration"),
                 on_recv_callback=lambda pkt: self.status_acceleration_entry.set_text(str(pkt.contents["data"])),
+            )
+
+        if self.tm_collect_switch.get_active():
+            self.main_utils.client_send(
+                slipp.Packet("get_position_control_configured"),
+                on_recv_callback=lambda pkt: self.status_servos_setup_entry.set_text(any(pkt.contents["data"])),
             )
 
         def update_accelerometer(pkt):

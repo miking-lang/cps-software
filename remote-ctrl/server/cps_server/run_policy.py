@@ -246,9 +246,13 @@ def get_obs(ctrl : "SpiderController", state):
     mj_servos = np.concatenate(tuple(zip(mj_positions,mj_velocity)))
     assert mj_servos.shape == (24,)
 
-    return np.concatenate((fl_accel, fl_gyro, mj_servos))
+    mujoco_obs = np.concatenate((fl_accel, fl_gyro, mj_servos))
 
-def apply_action(ctrl : "SpiderController", action):
+    add_to_trajectory(state, "observation", {"mujoco": mujoco_obs, "raw": spider_data})
+
+    return mujoco_obs
+
+def apply_action(ctrl : "SpiderController", action, state):
     # Applies an action to the spider robot
 
     mj_action = action
@@ -259,6 +263,8 @@ def apply_action(ctrl : "SpiderController", action):
 
     raw_action = [mujoco_to_dnx(a, sv) for a, sv in zip(mj_action.tolist(), SERVO_ORDER)]
     assert len(raw_action) == 12
+
+    add_to_trajectory(state, "action", {"mujoco": mj_action, "raw": raw_action})
 
     ctrl.move_all_servos(*raw_action)
 
@@ -277,7 +283,7 @@ def step(ctrl, state, model):
 
     assert action.shape == (12,)
 
-    apply_action(ctrl, action)
+    apply_action(ctrl, action, state)
     t_end = time.time()
 
     state["interaction_delays"].append(t_end - t_start)
@@ -319,6 +325,14 @@ def load_model(agent_file):
     return model
 
 
+# Some trajetory functions
+def add_to_trajectory(state, kind, content):
+    state["trajectory"].append({"time": time.time(), "kind": kind, "content": content})
+def add_info(state, msg):
+    add_to_trajectory(state, kind="info", content=msg)
+    print(msg, flush=True)
+
+
 def run_policy(file):
     import torch
     from .controllers import SpiderController
@@ -332,6 +346,7 @@ def run_policy(file):
         "dt": 0.25,
         "last_time": None,
         "interaction_delays": [],
+        "trajectory": [],
     }
 
     ctrl = SpiderController()
@@ -353,18 +368,18 @@ def run_policy(file):
     ctrl.enable_torque()
     time.sleep(0.5)
 
-    print("Resetting legs", flush=True)
-    apply_action(ctrl, np.zeros((12,)))
+    add_info(state, "Resetting legs")
+    apply_action(ctrl, np.zeros((12,)), state)
     time.sleep(2.0)
 
-    print("Going into standup position", flush=True)
+    add_info(state, "Going into standup position")
     stand_pos = [
         -0.40, 0.70, 2.15,
          0.40, 0.70, 2.15,
          0.40, 0.70, 2.15,
         -0.40, 0.70, 2.15,
     ]
-    apply_action(ctrl, np.array(stand_pos))
+    apply_action(ctrl, np.array(stand_pos), state)
     time.sleep(3.0)
 
     ctrl.set_duration(500)
@@ -379,28 +394,28 @@ def run_policy(file):
         had_error = True
         traceback.print_exc()
 
-    print("Model done", flush=True)
-    print("Interaction delays:", state["interaction_delays"], flush=True)
+    add_info(state, "Model done")
+    add_info(state, f"Interaction delays: {state['interaction_delays']}")
 
     if had_error:
         time.sleep(2.0)
-        print("Performing recovery read", flush=True)
-        spider_data = ctrl.read_all_servos_RAM()
-        for k, entry in spider_data.items():
-            print(f"{k}: {entry}")
+        add_info(state, "Performing recovery read")
+        get_obs(ctrl, state)
+        #spider_data = ctrl.read_all_servos_RAM()
+        #for k, entry in spider_data.items():
+        #    print(f"{k}: {entry}")
 
     time.sleep(1.0)
     ctrl.set_duration(1000)
     ctrl.set_acceleration(500)
     time.sleep(1.0)
-    apply_action(ctrl, np.array(stand_pos))
+    apply_action(ctrl, np.array(stand_pos), state)
 
 
     time.sleep(2.0)
-    print("Resetting legs", flush=True)
-    apply_action(ctrl, np.zeros((12,)))
+    add_info(state, "Resetting legs")
+    apply_action(ctrl, np.zeros((12,)), state)
     time.sleep(1.0)
 
-
     ctrl.disable_torque()
-    print("Done", flush=True)
+    add_info(state, "Done")

@@ -45,7 +45,7 @@ class SpiderController(ControllerBase):
         from mi_cps import Accelerometer
         self.dev_dxl = dev_dxl
         self.dev_accel = dev_accel
-        self.dxl_handler = DynamixelHandler(dev_dxl)
+        self.dxl_handler = DynamixelHandler(dev_dxl, baudrate=4_000_000)
         self.accel_handler = Accelerometer(dev_accel, 0x68)
 
         self.duration = 1500
@@ -131,6 +131,10 @@ class SpiderController(ControllerBase):
     @register_write()
     def setup_all_servos(self):
         return self.dxl_handler.setup_position_control(ALL_SERVO_IDS)
+
+    @register_write()
+    def get_all_servos_are_setup(self):
+        return self.dxl_handler.get_position_control_configured(ALL_SERVO_IDS)
 
     @register_read()
     def read_all_servos_RAM(self):
@@ -219,4 +223,27 @@ class SpiderController(ControllerBase):
     @register_write(argtypes=[str])
     def reboot_single_servo(self, name):
         self.dxl_handler.reboot_servos([SERVO_INDEX_LOOKUP[name]])
+        return dict()
+
+    @register_write()
+    def calibrate_all_servos(self):
+        """Recalibrates all servos."""
+        all_values = self.read_all_servos_RAM()
+        if any(all_values["TORQUE_ENABLED"]):
+            raise AttributeError("Cannot recalibrate torques with torque enabled")
+        all_positions = all_values["PRESENT_POSITION"]
+        all_offsets   = all_values["HOMING_OFFSET"]
+        all_min_limits = all_values["MIN_POSITION_LIMIT"]
+        all_max_limits = all_values["MAX_POSITION_LIMIT"]
+        min_pos_limits  = 12*[0]
+        max_pos_limits  = 12*[0]
+        new_offsets     = 12*[0]
+        for i, name in enumerate(SERVO_ORDER):
+            diff = all_positions[i] - 2048
+            new_offsets[i] = all_offsets[i] - diff
+            min_pos_limits[i] = max(all_min_limits[i] - diff, 0)
+            max_pos_limits[i] = min(all_max_limits[i] - diff, 4095)
+        self.write_all_servo_registers("HOMING_OFFSET", new_offsets)
+        self.write_all_servo_registers("MIN_POSITION_LIMIT", min_pos_limits)
+        self.write_all_servo_registers("MAX_POSITION_LIMIT", max_pos_limits)
         return dict()

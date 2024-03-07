@@ -206,6 +206,25 @@ class DynamixelHandler:
         for i, addr in enumerate(addrs):
             self.group_sync_write(INDIRECT_ADDRESS_REGISTERS[i], ids, addr)
 
+    def get_position_control_configured(self, ids : List[int]) -> List[bool]:
+        """
+        Returns true if the servo has the correct position control configured.
+        """
+        drive_modes = self.sync_read_registers(ids, REGISTER.DRIVE_MODE, REGISTER.DRIVE_MODE)
+
+        addrs = []
+        for reg in POSITION_CONTROL_INDIRECTIONS:
+            for i in range(reg.bytelen):
+                addrs.append(reg.addr + i)
+
+        indirections = self.sync_read_registers(ids, INDIRECT_ADDRESS_REGISTERS[0], INDIRECT_ADDRESS_REGISTERS[len(addrs) - 1])
+
+        result = [
+            (drive_modes[id] == 4) and all(indirections[id][j] == addr for j, addr in enumerate(addrs))
+            for id in ids
+        ]
+        return result
+
     def position_control(self, ids : List[int], positions : List[int], duration : int, acceleration : int):
         """
         Performs position control in a single write.
@@ -313,7 +332,7 @@ class DynamixelHandler:
         groupSyncWrite.clearParam()
 
     def get_torque_enabled(self, ids):
-        return self.group_sync_read(REGISTER.TORQUE_ENABLE, ids)
+        return self.sync_read_registers(ids, REGISTER.TORQUE_ENABLE, REGISTER.TORQUE_ENABLE)
 
     def enable_torques(self, ids):
         return self.group_sync_write(REGISTER.TORQUE_ENABLE, ids, 1)

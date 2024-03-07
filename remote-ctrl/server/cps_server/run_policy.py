@@ -422,8 +422,8 @@ def run_policy(file):
 
     ctrl.disable_torque()
     OUTPUT_PATH = pathlib.Path("/output")
-    OUTPUT_JSON = OUTPUT_PATH / datetime.now().strftime("run_policy_%Y-%m-%d_%H%M%S.json")
+    OUTPUT_JSON = OUTPUT_PATH / datetime.now().strftime("run_policy_trajectory_%Y-%m-%d_%H%M%S.json")
 
     add_info(state, f"Done, writing output to {OUTPUT_JSON}")
     with open(OUTPUT_JSON, "w+") as f:
-        json.dump(state, f)
+        json.dump({"trajectory": state["trajectory"]}, f)

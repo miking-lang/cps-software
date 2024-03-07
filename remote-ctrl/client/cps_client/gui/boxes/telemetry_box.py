@@ -327,6 +327,8 @@ class TelemetryBox(Refresher, Gtk.Box):
         if not self.synced_servo_order:
             self.main_utils.client_send(slipp.Packet("get_servos"), on_recv_callback=update_servo_order)
 
+        # TODO: Check if we got an ACK back, otherwise do something else
+
         if self.tm_collect_switch.get_active():
             self.main_utils.client_send(
                 slipp.Packet("get_duration"),
@@ -340,8 +342,8 @@ class TelemetryBox(Refresher, Gtk.Box):
 
         if self.tm_collect_switch.get_active():
             self.main_utils.client_send(
-                slipp.Packet("get_position_control_configured"),
-                on_recv_callback=lambda pkt: self.status_servos_setup_entry.set_text(any(pkt.contents["data"])),
+                slipp.Packet("get_all_servos_are_setup"),
+                on_recv_callback=lambda pkt: self.status_servos_setup_entry.set_text(str(any(pkt.contents["data"]))),
             )
 
         def update_accelerometer(pkt):

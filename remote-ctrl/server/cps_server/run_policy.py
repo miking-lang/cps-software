@@ -8,6 +8,7 @@ from numpy.linalg import norm
 import traceback
 from datetime import datetime
 import pathlib
+import json
 
 zero_shift_dics = {
     "BR_INNER_SHOULDER": 0.0,
@@ -351,12 +352,12 @@ def run_policy(file):
         "trajectory": [],
     }
 
+    add_info(state, "Creating controller")
     ctrl = SpiderController()
     ctrl.set_baudrate(4_000_000)
     ctrl.set_duration(1000)
     ctrl.set_acceleration(500)
     ctrl.disable_torque()
-    time.sleep(0.5)
     SERVO_ORDER = ctrl.get_servos()
     #print("Rebooting servos", flush=True)
     #for i, servo in enumerate(SERVO_ORDER):
@@ -366,9 +367,9 @@ def run_policy(file):
     #ctrl.reboot_all_servos()
     #time.sleep(0.5)
     ctrl.setup_all_servos()
-    time.sleep(0.5)
+    time.sleep(0.25)
     ctrl.enable_torque()
-    time.sleep(0.5)
+    time.sleep(0.25)
 
     add_info(state, "Resetting legs")
     apply_action(ctrl, np.zeros((12,)), state)

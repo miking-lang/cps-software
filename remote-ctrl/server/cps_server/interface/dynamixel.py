@@ -210,7 +210,7 @@ class DynamixelHandler:
         """
         Returns true if the servo has the correct position control configured.
         """
-        drive_modes = self.sync_read_registers(ids, REGISTER.DRIVE_MODE, REGISTER.DRIVE_MODE)
+        drive_modes = self.sync_read_registers(ids, REGISTER.DRIVE_MODE, REGISTER.DRIVE_MODE)["DRIVE_MODE"]
 
         addrs = []
         for reg in POSITION_CONTROL_INDIRECTIONS:
@@ -219,10 +219,16 @@ class DynamixelHandler:
 
         indirections = self.sync_read_registers(ids, INDIRECT_ADDRESS_REGISTERS[0], INDIRECT_ADDRESS_REGISTERS[len(addrs) - 1])
 
-        result = [
-            (drive_modes[i] == 4) and all(indirections[i][j] == addr for j, addr in enumerate(addrs))
-            for i, id in enumerate(ids)
-        ]
+        result = []
+        for i, id in enumerate(ids):
+            ok = True
+            ok &= drive_modes[i] == 4
+            if drive_modes[i] != 4:
+                ok = False
+            for j, addr in enumerate(addrs):
+                ok &= indirections[INDIRECT_ADDRESS_REGISTERS[j].name][i] == addr
+            result.append(ok)
+
         return result
 
     def position_control(self, ids : List[int], positions : List[int], duration : int, acceleration : int):

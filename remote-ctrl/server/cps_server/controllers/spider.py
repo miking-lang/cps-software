@@ -222,7 +222,7 @@ class SpiderController(ControllerBase):
         ]
 
         durations = [
-            int(round((pos_delta - 0.5*vel_plan*t1) / vel + t1))
+            int(round((pos_delta - 0.5*vel_plan*t1) / vel + t1)) if vel != 0 else self.duration
             for pos_delta, vel, vel_plan in
             zip(positions_deltas, velocities, velocities_planned)
         ]

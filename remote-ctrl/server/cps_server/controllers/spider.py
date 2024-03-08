@@ -206,25 +206,27 @@ class SpiderController(ControllerBase):
         positions_planned = data["POSITION_TRAJECTORY"]
         velocities_planned = data["VELOCITY_TRAJECTORY"]
 
-        t1 = self.acceleration*0.001 # Convert to seconds
+        # Convert the maximum velocity to positive dynamixel units
+        velocity_max = abs(mujoco_to_dnx(self.velocity_max, "FR_ELBOW"))
 
-        # Convert the maximum velocity to dynamixel units
-        velocity_max = mujoco_to_dnx(self.velocity_max, "FR_ELBOW") # We want a positive value
+        # Convert to seconds for the computations below
+        accel_time = self.acceleration*0.001
 
-        positions_deltas = [
-            pos - pos_plan
-            for pos, pos_plan in zip(positions, positions_planned)
-        ]
-
-        velocities = [
-            np.sign(pos_delta-0.5*vel_plan*t1)*min(abs((pos_delta-0.5*vel_plan*t1) / (2*t1)), velocity_max)
-            for pos_delta, vel_plan in zip(positions_deltas, velocities_planned)
-        ]
+        def calc_duration(pos, pos_plan, vel_plan):
+            pos_delta = pos - pos_plan
+            num = pos_delta - 0.5*vel_plan*accel_time
+            # The max velocity is always positive but we need to account for the
+            # direction.
+            vel = np.sign(num)*min(abs(num / (2*accel_time)), velocity_max)
+            # Fallback to the default duration if we are at the seeked position
+            # and the planned velocity is zero.
+            dur = num / vel + accel_time if vel != 0 else self.duration
+            # change to miliseconds and convert to integer
+            return int(round(1000*dur))
 
         durations = [
-            int(round(1000*((pos_delta - 0.5*vel_plan*t1) / vel + t1))) if vel != 0 else self.duration
-            for pos_delta, vel, vel_plan in
-            zip(positions_deltas, velocities, velocities_planned)
+            calc_duration(*args)
+            for args in zip(positions, positions_planned, velocities_planned)
         ]
 
         self.dxl_handler.position_control(

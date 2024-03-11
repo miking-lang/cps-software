@@ -231,7 +231,7 @@ class DynamixelHandler:
 
         return result
 
-    def position_control(self, ids : List[int], positions : List[int], duration : int, acceleration : int):
+    def position_control(self, ids : List[int], positions : List[int], duration : Union[int, List[int]], acceleration : Union[int, List[int]]):
         """
         Performs position control in a single write.
         """

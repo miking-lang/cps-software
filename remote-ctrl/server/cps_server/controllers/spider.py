@@ -1,4 +1,6 @@
+import numpy as np
 from .controllerbase import ControllerBase, register_command
+from ..run_policy import mujoco_to_dnx
 
 SERVO_INDEX_LOOKUP = {
     "BR_INNER_SHOULDER": 1,
@@ -50,6 +52,7 @@ class SpiderController(ControllerBase):
 
         self.duration = 1500
         self.acceleration = 600
+        self.velocity_max = np.pi / 4
         self.MIN_DURATION = 100
         self.MIN_ACCELERATION = self.MIN_DURATION // 2
 
@@ -190,6 +193,58 @@ class SpiderController(ControllerBase):
             acceleration=self.acceleration,
         )
         return dict()
+
+
+    @register_write(argtypes=[int]*len(ALL_SERVO_IDS))
+    def move_all_servos_steady(self, *positions):
+        for v in positions:
+            if v not in range(0, 4096):
+                raise ValueError(f"Servo values must be in range 0 to 4095, got value {v}")
+
+        data = self.read_all_servo_planned_positions_velocities()
+
+        positions_planned = data["POSITION_TRAJECTORY"]
+        velocities_planned = data["VELOCITY_TRAJECTORY"]
+
+        # Convert the maximum velocity to positive dynamixel units
+        velocity_max = abs(mujoco_to_dnx(self.velocity_max, "FR_ELBOW"))
+
+        # Convert to seconds for the computations below
+        accel_time = self.acceleration*0.001
+
+        def calc_duration(pos, pos_plan, vel_plan):
+            pos_delta = pos - pos_plan
+            num = pos_delta - 0.5*vel_plan*accel_time
+            # The max velocity is always positive but we need to account for the
+            # direction.
+            vel = np.sign(num)*min(abs(num / (2*accel_time)), velocity_max)
+            # Fallback to the default duration if we are at the seeked position
+            # and the planned velocity is zero.
+            dur = num / vel + accel_time if vel != 0 else self.duration
+            # change to miliseconds and convert to integer
+            return int(round(1000*dur))
+
+        durations = [
+            calc_duration(*args)
+            for args in zip(positions, positions_planned, velocities_planned)
+        ]
+
+        self.dxl_handler.position_control(
+            ALL_SERVO_IDS,
+            positions,
+            duration=durations,
+            acceleration=self.acceleration,
+        )
+
+        return dict()
+
+    @register_read(argtypes=[])
+    def read_all_servo_planned_positions_velocities(self):
+        return self.dxl_handler.sync_read_registers(
+            ALL_SERVO_IDS,
+            reg_start="VELOCITY_TRAJECTORY",
+            reg_end="POSITION_TRAJECTORY",
+        )
 
     @register_write(argtypes=[str, int])
     def move_single_servo(self, name, position):

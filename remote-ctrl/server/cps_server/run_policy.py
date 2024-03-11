@@ -249,7 +249,8 @@ def get_obs(ctrl : "SpiderController", state):
     mj_servos = np.concatenate(tuple(zip(mj_positions,mj_velocity)))
     assert mj_servos.shape == (24,)
 
-    mujoco_obs = np.concatenate((fl_accel, fl_gyro, mj_servos))
+    #mujoco_obs = np.concatenate((fl_accel, fl_gyro, mj_servos))
+    mujoco_obs = mj_servos
 
     add_to_trajectory(state, "observation", {"mujoco": mujoco_obs.tolist(), "raw": spider_data})
 

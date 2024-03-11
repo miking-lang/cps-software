@@ -206,7 +206,7 @@ class SpiderController(ControllerBase):
         velocities_planned = data["VELOCITY_TRAJECTORY"]
 
         def mujoco_vel_to_dnx_angle_per_time(angle):
-            return int(round(180*(angle-zero_shift_dics[motor_key])/(pi*0.087891)))
+            return int(round(180*angle/(pi*0.087891)))
 
         # Convert the maximum velocity to positive dynamixel units
         velocity_max = abs(mujoco_vel_to_dnx_angle_per_time(self.velocity_max))

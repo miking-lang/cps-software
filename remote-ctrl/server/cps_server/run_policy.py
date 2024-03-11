@@ -269,7 +269,8 @@ def apply_action(ctrl : "SpiderController", action, state):
 
     add_to_trajectory(state, "action", {"mujoco": mj_action.tolist(), "raw": raw_action})
 
-    ctrl.move_all_servos(*raw_action)
+    #ctrl.move_all_servos(*raw_action)
+    ctrl.move_all_servos_steady(*raw_action)
 
 
 def step(ctrl, state, model):

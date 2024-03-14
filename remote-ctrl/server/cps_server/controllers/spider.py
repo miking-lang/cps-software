@@ -1,6 +1,5 @@
 import numpy as np
 from .controllerbase import ControllerBase, register_command
-from ..run_policy import mujoco_to_dnx
 
 SERVO_INDEX_LOOKUP = {
     "BR_INNER_SHOULDER": 1,
@@ -206,8 +205,11 @@ class SpiderController(ControllerBase):
         positions_planned = data["POSITION_TRAJECTORY"]
         velocities_planned = data["VELOCITY_TRAJECTORY"]
 
+        def mujoco_vel_to_dnx_angle_per_time(angle):
+            return int(round(180*angle/(np.pi*0.087891)))
+
         # Convert the maximum velocity to positive dynamixel units
-        velocity_max = abs(mujoco_to_dnx(self.velocity_max, "FR_ELBOW"))
+        velocity_max = abs(mujoco_vel_to_dnx_angle_per_time(self.velocity_max))
 
         # Convert to seconds for the computations below
         accel_time = self.acceleration*0.001

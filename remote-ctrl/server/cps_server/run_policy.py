@@ -428,6 +428,7 @@ def run_policy(file):
     #     0.40, 0.70, 2.15,
     #    -0.40, 0.70, 2.15,
     #]
+    stand_pos = STANDUP_ACTIONS[-1]
     for action in STANDUP_ACTIONS:
         apply_action(ctrl, np.array(action), state)
         time.sleep(0.5)

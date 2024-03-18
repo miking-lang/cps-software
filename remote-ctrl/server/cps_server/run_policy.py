@@ -469,10 +469,13 @@ def run_policy(file):
         #    print(f"{k}: {entry}")
 
     time.sleep(1.0)
+    for action in reversed(STANDUP_ACTIONS):
+        apply_action(ctrl, np.array(action), state)
+        time.sleep(0.5)
+    #time.sleep(1.0)
     ctrl.set_duration(1000)
     ctrl.set_acceleration(500)
-    time.sleep(1.0)
-    apply_action(ctrl, np.array(stand_pos), state)
+    #apply_action(ctrl, np.array(stand_pos), state)
 
 
     time.sleep(2.0)

@@ -32,7 +32,7 @@ POSITIVE_JOINTS = {
 }
 
 FIXED_ANGLE = None
-# FIXED_ANGLE = 98.0
+#FIXED_ANGLE = np.pi * ((90.0 - 7.0) / 180.0)
 
 def dnx_to_mujoco(angle, motor_key):
     if motor_key in POSITIVE_JOINTS:
@@ -290,6 +290,18 @@ def step(ctrl, state, model):
         action = action[0]
 
     assert action.shape == (12,)
+
+    if FIXED_ANGLE is not None:
+        assert isinstance(FIXED_ANGLE, float), f"{type(FIXED_ANGLE)}"
+        # NOTE, assuming that every 3rd action is an elbow angle
+        #print("FIXED_ANGLE:", FIXED_ANGLE)
+        new_action = np.copy(action)
+        for i in range(4):
+            idx_outsh = 3*i + 1
+            idx_elbow = 3*i + 2
+            new_action[idx_elbow] = FIXED_ANGLE + new_action[idx_outsh]
+            #print(f"i={i} old elbow: {action[idx_elbow]}, new elbow: {new_action[idx_elbow]}, outer shoulder: {action[idx_outsh]}")
+        action = new_action
 
     apply_action(ctrl, action, state)
     t_end = time.time()

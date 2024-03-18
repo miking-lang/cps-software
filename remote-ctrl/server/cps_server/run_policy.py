@@ -31,6 +31,9 @@ POSITIVE_JOINTS = {
     "BL_ELBOW",
 }
 
+FIXED_ANGLE = None
+# FIXED_ANGLE = 98.0
+
 def dnx_to_mujoco(angle, motor_key):
     if motor_key in POSITIVE_JOINTS:
         # front_right_elbow and back_left_elbow are the only motors that don't have flipped sign
@@ -375,20 +378,62 @@ def run_policy(file):
 
     add_info(state, "Resetting legs")
     apply_action(ctrl, np.zeros((12,)), state)
-    time.sleep(2.0)
-
-    add_info(state, "Going into standup position")
-    stand_pos = [
-        -0.40, 0.70, 2.15,
-         0.40, 0.70, 2.15,
-         0.40, 0.70, 2.15,
-        -0.40, 0.70, 2.15,
-    ]
-    apply_action(ctrl, np.array(stand_pos), state)
-    time.sleep(3.0)
+    time.sleep(1.0)
 
     ctrl.set_duration(500)
     ctrl.set_acceleration(250)
+
+    time.sleep(1.0)
+
+    add_info(state, "Going into standup position")
+    STANDUP_ACTIONS = [
+        [   -0.52309,     1.3963, 0.00069025,
+             0.52309,     1.3963, 0.00063209,
+             0.52309,     1.3963, 0.00063209,
+            -0.52309,     1.3955, 0.00074842],
+        [   -0.52309,     1.3963,     2.2695,
+             0.52309,     1.3963,     2.2694,
+             0.52309,     1.3963,     2.2694,
+            -0.52309,     1.3955,     2.2695],
+        [   -0.52309,    0.70,     2.0946,
+             0.52309,    0.70,     2.0945,
+             0.52309,    0.70,     2.0945,
+            -0.52309,    0.70,     2.0946],
+        [   -0.52309,    0.70,     2.0946,
+             0.52309,     1.1339,     2.15,
+             0.52309,     1.1339,     2.15,
+            -0.52309,    0.70,     2.0946],
+        [   -0.52309,    0.70,     2.0946,
+             0.52309,    0.70,     2.15,
+             0.52309,    0.70,     2.15,
+            -0.52309,    0.70,     2.0946],
+        [   -0.52309,     1.1339,     2.15,
+             0.52309,    0.70,     2.15,
+             0.52309,    0.70,     2.15,
+            -0.52309,     1.1347,     2.15],
+        [   -0.52309,    0.70,     2.15,
+             0.52309,    0.70,     2.15,
+             0.52309,    0.70,     2.15,
+            -0.52309,    0.70,     2.15],
+        [
+                -0.40, 0.70, 2.15,
+                 0.40, 0.70, 2.15,
+                 0.40, 0.70, 2.15,
+                -0.40, 0.70, 2.15
+        ]
+    ]
+    #stand_pos = [
+    #    -0.40, 0.70, 2.15,
+    #     0.40, 0.70, 2.15,
+    #     0.40, 0.70, 2.15,
+    #    -0.40, 0.70, 2.15,
+    #]
+    for action in STANDUP_ACTIONS:
+        apply_action(ctrl, np.array(action), state)
+        time.sleep(0.5)
+
+    add_info(state, "NOW STANDING")
+    time.sleep(3.0)
 
     had_error = False
     try:

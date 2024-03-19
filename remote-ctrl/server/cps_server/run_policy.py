@@ -32,7 +32,10 @@ POSITIVE_JOINTS = {
 }
 
 FIXED_ANGLE = None
+ACTION_DELTA = None
+
 #FIXED_ANGLE = np.pi * ((90.0 - 7.0) / 180.0)
+#ACTION_DELTA = 0.2
 
 def dnx_to_mujoco(angle, motor_key):
     if motor_key in POSITIVE_JOINTS:
@@ -291,6 +294,17 @@ def step(ctrl, state, model):
 
     assert action.shape == (12,)
 
+    if ACTION_DELTA is not None:
+        # Apply output from policy as delta on the observed state
+        new_action = np.copy(action)
+        new_action = np.zeros(action.shape, dtype=np.float32)
+        for i in range(12):
+            # This is from the simulation, in practice we just use the read values
+            #jid = self.model.actuator(i).trnid[0]
+            #obs = self.data.joint(jid).qpos.item()
+            new_action[i] = obs[2*i] + action[i]
+        action = new_action
+
     if FIXED_ANGLE is not None:
         assert isinstance(FIXED_ANGLE, float), f"{type(FIXED_ANGLE)}"
         # NOTE, assuming that every 3rd action is an elbow angle
@@ -302,6 +316,23 @@ def step(ctrl, state, model):
             new_action[idx_elbow] = FIXED_ANGLE + new_action[idx_outsh]
             #print(f"i={i} old elbow: {action[idx_elbow]}, new elbow: {new_action[idx_elbow]}, outer shoulder: {action[idx_outsh]}")
         action = new_action
+
+    # Apply action space clipping
+    action_limits = np.array([
+        [-np.pi / 4, 0.15], # inner shoulder
+        [-1.3963, 1.5708],
+        [np.pi/4, 2.7925],
+        [-0.15,      np.pi / 4],
+        [-1.3963, 1.5708],
+        [np.pi/4, 2.7925],
+        [-np.pi / 4, 0.15],
+        [-1.3963, 1.5708],
+        [np.pi/4, 2.7925],
+        [-0.15,      np.pi / 4],
+        [-1.3963, 1.5708],
+        [np.pi/4, 2.7925],
+    ], dtype=np.float32)
+    action = np.clip(action, action_limits[:,0], action_limits[:,1])
 
     apply_action(ctrl, action, state)
     t_end = time.time()

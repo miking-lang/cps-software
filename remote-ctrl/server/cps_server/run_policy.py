@@ -33,9 +33,11 @@ POSITIVE_JOINTS = {
 
 FIXED_ANGLE = None
 ACTION_DELTA = None
+CONSTANT_ELBOW = None
 
 #FIXED_ANGLE = np.pi * ((90.0 - 7.0) / 180.0)
 #ACTION_DELTA = 0.2
+#CONSTANT_ELBOW = 2.50
 
 N_STEPS = 4 * 4
 
@@ -317,6 +319,11 @@ def step(ctrl, state, model):
             idx_elbow = 3*i + 2
             new_action[idx_elbow] = FIXED_ANGLE + new_action[idx_outsh]
             #print(f"i={i} old elbow: {action[idx_elbow]}, new elbow: {new_action[idx_elbow]}, outer shoulder: {action[idx_outsh]}")
+        action = new_action
+    elif CONSTANT_ELBOW is not None:
+        new_action = np.copy(action)
+        for i in range(4):
+            new_action[3*i + 2] = CONSTANT_ELBOW
         action = new_action
 
     # Apply action space clipping

@@ -37,6 +37,8 @@ ACTION_DELTA = None
 #FIXED_ANGLE = np.pi * ((90.0 - 7.0) / 180.0)
 #ACTION_DELTA = 0.2
 
+N_STEPS = 4 * 4
+
 def dnx_to_mujoco(angle, motor_key):
     if motor_key in POSITIVE_JOINTS:
         # front_right_elbow and back_left_elbow are the only motors that don't have flipped sign
@@ -482,7 +484,7 @@ def run_policy(file):
     had_error = False
     try:
         T_START = time.time()
-        for i in range(16):
+        for i in range(N_STEPS):
             step(ctrl, state, model)
     except Exception as e:
         had_error = True
